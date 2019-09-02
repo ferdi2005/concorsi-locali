@@ -12,7 +12,7 @@ class ContestController < ApplicationController
         @creators.push(creator)
       end
     end
-    @creators.sort_by{|gp| gp.photos.where(contest: @contest).count}.reverse  
+    @creators = @creators.sort_by{|gp| gp.photos.where(contest: @contest).count}.reverse  
   end
 
   def upload
