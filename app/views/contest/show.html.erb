@@ -1,5 +1,12 @@
-<%=image_tag @contest.logo if @contest.logo.attached? %>
-<h1 class="title"><%= @contest.name %></h1>
+
+<div class="columns">
+  <div class="column">
+    <%=image_tag @contest.logo.variant(resize_to_limit: [200, 200]) if @contest.logo.attached? %>
+  </div>
+  <div class="column">
+    <h1 class="title"><%= @contest.name %></h1>
+  </div>
+</div>
 <h2 class="subtitle">Il grafico</h2>
 <%= line_chart Photo.where(contest: @contest).group_by_day(:photodate).count, xmin: '2019-09-01', xmax: '2019-09-30'%>
 <br />
