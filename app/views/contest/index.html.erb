@@ -19,16 +19,17 @@ document.addEventListener("turbolinks:load", function() {
 <h2 class="subtitle">Le statistiche dei concorsi regionali</h2>
 <table class="table is-striped">
   <thead>
+    <th>Pos.</th>
     <th>Logo del concorso</th>
     <th>Nome del concorso</th>
     <th>Foto caricate</th>
-    <th>Posizione (sui concorsi regionali)</th>
     <th>Foto usate sui progetti (ns0)</th>
     <th>Links</th>
   </thead>
   <tbody>
     <% @contests.reverse.each do |contest| %>
       <tr>
+      <th><%= contest.position %>º</th>
         <td><% if contest.logo.attached? %>
 
         <%= image_tag contest.logo.variant(resize_to_limit: [200, 200]) %> 
@@ -39,8 +40,7 @@ document.addEventListener("turbolinks:load", function() {
         <% end %></td>
         <td><%= link_to contest.name, contest %></td>
         <td><%= contest.photos.count %></td>
-        <td><%= contest.position %></td>
-        <td><%= contest.photos.where(usedonwiki: true).count %> (<%= contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0%>) </td>
+        <td><%= contest.photos.where(usedonwiki: true).count %> (<%= contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0%>%) </td>
         <td><%= link_to 'Grafico, statistiche dettagliate e classifica utenti', contest, class: 'button is-link' %>
 
               </tr>
