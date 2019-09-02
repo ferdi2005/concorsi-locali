@@ -25,7 +25,7 @@ namespace :db do
     Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Lazio', name: 'Wiki Loves Lazio', url: 'https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali/#9')
     puts 'Creating Lazio...'
     # Abruzzo
-    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Abruzzo', name: 'Wiki Loves Lazio', url: 'https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali/#10')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Abruzzo', name: 'Wiki Loves Abruzzo', url: 'https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali/#10')
     puts 'Creating Abruzzo...'
     puts 'Done'
 
