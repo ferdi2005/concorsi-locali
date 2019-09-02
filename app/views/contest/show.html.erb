@@ -1,7 +1,7 @@
 <%=image_tag @contest.logo if @contest.logo.attached? %>
 <h1 class="title"><%= @contest.name %></h1>
 <h2 class="subtitle">Il grafico</h2>
-<%= line_chart Photo.where(contest: @contest).group_by_day(:photodate).count %>
+<%= line_chart Photo.where(contest: @contest).group_by_day(:photodate).count, xmin: '2019-09-01', xmax: '2019-09-30'%>
 <br />
 <h2 class="subtitle">La classifica degli utenti</h2>
 
@@ -12,14 +12,15 @@
     <th>Foto usate su wiki</th>
   </thead>
   <tbody>
-    <% Creator.all.each do |contest| %>
+    <% @creators.each do |creator| %>
       <tr>
         <td><%= link_to creator.username, "https://commons.wikimedia.org/wiki/User:#{creator.username}" %></td>
         <td><%= creator.photos.where(contest: @contest).count %></td>
-        <td><%= creator.photos.where(contest: @contest, usedonwiki: true).count %> (<%= contest.photos.where(contest: @contest, usedonwiki: true).count.percentage_of(creator.photos.where(contest: @contest).count)) %></td>
+        <td><%= creator.photos.where(contest: @contest, usedonwiki: true).count %> (<%= creator.photos.where(contest: @contest, usedonwiki: true).count.to_f / creator.photos.where(contest: @contest).count.to_f * 100.0 %>)</td>
       </tr>
     <% end %>
   </tbody>
 </table>
 
-<%= link_to 'Foto caricate', "https://commons.wikimedia.org/wiki/#{contest.category}", class: 'button is-link is-big' %>
+<%= link_to 'Categoria delle foto caricate', "https://commons.wikimedia.org/wiki/#{@contest.category}", class: 'button is-link is-big' %>
+<%= link_to 'Pagina ufficiale del concorso', @contest.url, class: 'button is-danger is-big' %>

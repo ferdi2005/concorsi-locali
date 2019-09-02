@@ -27,7 +27,7 @@ document.addEventListener("turbolinks:load", function() {
     <th>Links</th>
   </thead>
   <tbody>
-    <% Contest.all.each do |contest| %>
+    <% @contests.reverse.each do |contest| %>
       <tr>
         <td><% if contest.logo.attached? %>
 
@@ -37,20 +37,13 @@ document.addEventListener("turbolinks:load", function() {
         <%= link_to 'Aggiungi il logo', upload_path(id: contest.id) %> 
         
         <% end %></td>
-        <td><%= contest.name %></td>
+        <td><%= link_to contest.name, contest %></td>
         <td><%= contest.photos.count %></td>
         <td><%= contest.position %></td>
         <td><%= contest.photos.where(usedonwiki: true).count %> (<%= contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0%>) </td>
-        <td><%= link_to 'Grafico, statistiche dettagliate e classifica utenti', contest, class: 'button is-small is-link' %>
-        
-        <br/>
-        
-        <%= link_to 'Foto caricate', "https://commons.wikimedia.org/wiki/#{contest.category}", class: 'button is-small is-danger' %>
-        
-        <br />
-        
-        <%= link_to 'Pagina ufficiale del concorso', contest.url, class: 'button is-small is-primary' %></td>
-      </tr>
+        <td><%= link_to 'Grafico, statistiche dettagliate e classifica utenti', contest, class: 'button is-link' %>
+
+              </tr>
     <% end %>
   </tbody>
 </table>
