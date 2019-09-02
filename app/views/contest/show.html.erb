@@ -1,2 +1,25 @@
-<h1>Contest#show</h1>
-<p>Find me in app/views/contest/show.html.erb</p>
+<%=image_tag @contest.logo if @contest.logo.attached? %>
+<h1 class="title"><%= @contest.name %></h1>
+<h2 class="subtitle">Il grafico</h2>
+<%= line_chart Photo.where(contest: @contest).group_by_day(:photodate).count %>
+<br />
+<h2 class="subtitle">La classifica degli utenti</h2>
+
+<table class="table is-striped">
+  <thead>
+    <th>Nome utente</th>
+    <th>Foto caricate</th>
+    <th>Foto usate su wiki</th>
+  </thead>
+  <tbody>
+    <% Creator.all.each do |contest| %>
+      <tr>
+        <td><%= link_to creator.username, "https://commons.wikimedia.org/wiki/User:#{creator.username}" %></td>
+        <td><%= creator.photos.where(contest: @contest).count %></td>
+        <td><%= creator.photos.where(contest: @contest, usedonwiki: true).count %> (<%= contest.photos.where(contest: @contest, usedonwiki: true).count.percentage_of(creator.photos.where(contest: @contest).count)) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= link_to 'Foto caricate', "https://commons.wikimedia.org/wiki/#{contest.category}", class: 'button is-link is-big' %>

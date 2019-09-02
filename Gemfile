@@ -23,7 +23,7 @@ gem 'jbuilder', '~> 2.7'
 # gem 'bcrypt', '~> 3.1.7'
 
 # Use Active Storage variant
-# gem 'image_processing', '~> 1.2'
+gem 'image_processing', '~> 1.2'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.4.2', require: false
@@ -55,4 +55,11 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem "sidekiq", "~> 6.0"
 
-gem "httparty", "~> 0.17.0"
+gem "httparty", github: 'jnunemaker/httparty'
+gem "chartkick", "~> 3.2"
+
+gem "groupdate", "~> 4.1"
+
+gem "addressable", "~> 2.7"
+
+gem "sidekiq-scheduler", "~> 3.0"
