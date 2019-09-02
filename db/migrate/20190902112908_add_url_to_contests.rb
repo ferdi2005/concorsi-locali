@@ -1,0 +1,5 @@
+class AddUrlToContests < ActiveRecord::Migration[6.0]
+  def change
+    add_column :contests, :url, :string
+  end
+end

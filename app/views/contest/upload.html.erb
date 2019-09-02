@@ -1,0 +1,85 @@
+<h1 class="title">Maschera inserimento foto <%= @contest.name %></h1>
+<script>
+addEventListener("direct-upload:initialize", event => {
+  const { target, detail } = event
+  const { id, file } = detail
+  target.insertAdjacentHTML("beforebegin", `
+    <div id="direct-upload-${id}" class="direct-upload direct-upload--pending">
+      <div id="direct-upload-progress-${id}" class="direct-upload__progress" style="width: 0%"></div>
+      <span class="direct-upload__filename">${file.name}</span>
+    </div>
+  `)
+})
+ 
+addEventListener("direct-upload:start", event => {
+  const { id } = event.detail
+  const element = document.getElementById(`direct-upload-${id}`)
+  element.classList.remove("direct-upload--pending")
+})
+ 
+addEventListener("direct-upload:progress", event => {
+  const { id, progress } = event.detail
+  const progressElement = document.getElementById(`direct-upload-progress-${id}`)
+  progressElement.style.width = `${progress}%`
+})
+ 
+addEventListener("direct-upload:error", event => {
+  event.preventDefault()
+  const { id, error } = event.detail
+  const element = document.getElementById(`direct-upload-${id}`)
+  element.classList.add("direct-upload--error")
+  element.setAttribute("title", error)
+})
+ 
+addEventListener("direct-upload:end", event => {
+  const { id } = event.detail
+  const element = document.getElementById(`direct-upload-${id}`)
+  element.classList.add("direct-upload--complete")
+})
+</script>
+
+<style>
+  .direct-upload {
+    display: inline-block;
+    position: relative;
+    padding: 2px 4px;
+    margin: 0 3px 3px 0;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    font-size: 11px;
+    line-height: 13px;
+  }
+  
+  .direct-upload--pending {
+    opacity: 0.6;
+  }
+  
+  .direct-upload__progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    opacity: 0.2;
+    background: #0076ff;
+    transition: width 120ms ease-out, opacity 60ms 60ms ease-in;
+    transform: translate3d(0, 0, 0);
+  }
+  
+  .direct-upload--complete .direct-upload__progress {
+    opacity: 0.4;
+  }
+  
+  .direct-upload--error {
+    border-color: red;
+  }
+  
+  input[type=file][data-direct-upload-url][disabled] {
+    display: none;
+  }
+  </style>
+  <p><%= @contest.errors.full_messages if @contest.errors.any? %></p>
+  <%= form_for(@contest, url: upload_path(id: @contest.id), method: :post) do |f| %>
+    <%= f.file_field :logo, multiple: false, direct_upload: true %>
+    <%= f.hidden_field :id, value: @contest.id %>
+    <%= f.submit 'Carica logo', class: 'button is-primary is-big' %>
+  <% end %>
