@@ -33,7 +33,7 @@ class ContestController < ApplicationController
   end
 
   def data
-    UpdateDataJob.perform_now
+    UpdateDataJob.perform_now(false)
     return :ok
   end
 end

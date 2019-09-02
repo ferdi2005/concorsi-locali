@@ -2,7 +2,7 @@ require "addressable/uri"
 class UpdateDataJob < ApplicationJob
   queue_as :default
 
-  def perform(*args)
+  def perform(ext = true)
     Contest.all.each do |contest|
       request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
 
@@ -21,5 +21,14 @@ class UpdateDataJob < ApplicationJob
         end
       end
     end
+    if ext == true
+      puts 'okK'
+      Photo.all.each do |photo|
+        globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo.pageid}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo.pageid.to_s]['globalusage'].empty?
+        if !globalusage != photo.usedonwiki
+          photo.update_attribute(:usedonwiki, !globalusage)
+        end
+      end
+    end 
   end
 end
