@@ -4,7 +4,7 @@ class UpdateDataJob < ApplicationJob
 
   def perform(*args)
     Contest.all.each do |contest|
-      request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&format=json"
+      request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
 
       photolist = HTTParty.get(request_photolist, uri_adapter: Addressable::URI).to_a
 
