@@ -44,7 +44,7 @@
 <br />
 <!-- 
 <h2 class="subtitle">Utenti partecipanti al concorso regionale</h2>
-<%= line_chart Creator.all.group_by_day{ |u| u.created_at }.count, xmin: '2019-09-01', xmax: '2019-09-30'%>
+line_chart Creator.all.group_by_day{ |u| u.created_at }.count, xmin: '2019-09-01', xmax: '2019-09-30'
 -->
 
 <br />
