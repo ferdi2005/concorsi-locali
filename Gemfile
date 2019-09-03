@@ -63,3 +63,4 @@ gem "groupdate", "~> 4.1"
 gem "addressable", "~> 2.7"
 
 gem "sidekiq-cron", "~> 1.1"
+gem "sentry-raven", "~> 2.11"
