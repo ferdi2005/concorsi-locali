@@ -1,4 +1,0 @@
-:schedule:
-  UpdateDataJob:
-    cron: '*/10 * * * *'
-    class: UpdateDataJob

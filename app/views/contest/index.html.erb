@@ -17,13 +17,14 @@ document.addEventListener("turbolinks:load", function() {
 
 <h1 class="title">Wiki Loves Monuments Italia 2019</h1>
 <h2 class="subtitle">Le statistiche dei concorsi regionali</h2>
-<table class="table is-striped">
+<table id="elenco-concorsi" class="table is-striped">
   <thead>
     <th>Pos.</th>
     <th>Logo del concorso</th>
     <th>Nome del concorso</th>
     <th>Foto caricate</th>
     <th>Foto usate sui progetti (ns0)</th>
+    <th>Utenti partecipanti</th>
     <th>Links</th>
   </thead>
   <tbody>
@@ -40,8 +41,17 @@ document.addEventListener("turbolinks:load", function() {
         <% end %></td>
         <td><%= link_to contest.name, contest %></td>
         <td><%= contest.photos.count %></td>
-        <td><%= contest.photos.where(usedonwiki: true).count %> (<%= contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0%>%) </td>
-        <td><%= link_to 'Grafico, statistiche dettagliate e classifica utenti', contest, class: 'button is-link' %>
+        <td><%= contest.photos.where(usedonwiki: true).count %> (<%= (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).truncate(3)%>%) </td>
+       <!-- Conto degli utenti partecipanti -->
+       <% creators = [] %>
+    <% Creator.all.each do |creator| %>
+       <% if creator.photos.where(contest: contest).any? %>
+       <% creators.push(creator) %>
+       <% end %>
+    <% end %>
+    <% creators = creators.sort_by{|gp| gp.photos.where(contest: contest).count}.reverse %>
+        <td><%= creators.count %></td>
+        <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link' %>
 
               </tr>
     <% end %>
