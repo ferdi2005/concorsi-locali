@@ -12,10 +12,12 @@ class UpdateDataJob < ApplicationJob
       photolist.each do |photo|
       unless Photo.find_by(pageid: photo['pageid'])
           photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&pageids=#{photo['pageid']}&prop=imageinfo&iiprop=user|timestamp|userid&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
+          creationdate = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&meta=globaluserinfo&guiuser=#{photoinfo['user']}&format=json").to_a[1][1]['globaluserinfo']['registration']
           globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo['pageid']}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].empty?
 
           unless @creator = Creator.find_by(username: photoinfo['user'])
-            @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'])
+            @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: creationdate)
+            @creator.update_attribute(:proveniencecontest, contest.id) if creationdate.to_date == Date.today
           end
           Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
         end

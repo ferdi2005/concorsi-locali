@@ -62,4 +62,4 @@ gem "groupdate", "~> 4.1"
 
 gem "addressable", "~> 2.7"
 
-gem "sidekiq-scheduler", "~> 3.0"
+gem "sidekiq-cron", "~> 1.1"
