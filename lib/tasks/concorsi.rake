@@ -30,6 +30,22 @@ namespace :db do
     # Lake Como
     Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Lake Como', name: 'Wiki Loves Monuments - Lake Como', url: 'https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali/#5')
     puts 'Creating Lake Como...'
+
+    puts 'Now creating only regions without contest...'
+
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Aosta Valley', name: "Valle d'Aosta", url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Calabria', name: 'Calabria', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Campania', name: 'Campania', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Emilia-Romagna', name: 'Emilia-Romagna', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Friuli-Venezia Giulia', name: 'Friuli-Venezia Giulia', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Marche', name: 'Marche', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Molise', name: 'Molise', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Piedmont', name: 'Piemonte', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Sardinia', name: 'Sardegna', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Sicily', name: 'Sicilia', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Trentino-South Tyrol‎‎', name: 'Trentino-Alto Adige', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Umbria', name: 'Umbria', url: 'https://wikilovesmonuments.wikimedia.it')
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Veneto', name: 'Veneto', url: 'https://wikilovesmonuments.wikimedia.it')
     puts 'Done'
 
   end
