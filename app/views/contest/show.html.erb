@@ -48,7 +48,7 @@
 -->
 
 <br />
-<% if Creator.where(proveniencecontest: @contest.id).any? %>
+<% if Creator.where(proveniencecontest: @contest.id).count > 0 %>
   <h2 class="subtitle">Utenti iscritti appositamente per WLM</h2>
   <%= line_chart Creator.where(proveniencecontest: @contest.id).group_by_day(:creationdate).count, xmin: '2019-09-01', xmax: '2019-09-30'%>
 <% end %>
