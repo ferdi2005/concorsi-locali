@@ -25,6 +25,7 @@ document.addEventListener("turbolinks:load", function() {
     <th>Foto caricate</th>
     <th>Foto usate sui progetti (ns0)</th>
     <th>Utenti partecipanti</th>
+    <th>Utenti iscritti appositamente</th>
     <th>Links</th>
   </thead>
   <tbody>
@@ -51,6 +52,7 @@ document.addEventListener("turbolinks:load", function() {
     <% end %>
     <% creators = creators.sort_by{|gp| gp.photos.where(contest: contest).count}.reverse %>
         <td><%= creators.count %></td>
+        <td><%= Creator.where(proveniencecontest: contest.id).count %> (<%= (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).truncate(3)%>%)</td>
         <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link' %>
 
               </tr>
