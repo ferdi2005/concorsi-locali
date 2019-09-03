@@ -1,4 +1,6 @@
-<h1 class="title">Maschera inserimento foto <%= @contest.name %></h1>
+<%= provide(:title, "Carica il logo di #{@contest.name}") %>
+
+<h1 class="title">Maschera inserimento logo <%= @contest.name %></h1>
 <script>
 addEventListener("direct-upload:initialize", event => {
   const { target, detail } = event

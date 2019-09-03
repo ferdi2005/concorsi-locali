@@ -1,18 +1,24 @@
-<div id="pageloader" class="pageloader is-active"><h1 class="title h1">Aggiorno i dati...</h1></div>
+<%= provide(:title, 'Home') %>
+<div id="pageloader" class="pageloader is-active"><h1 class="title h1" >Aggiorno i dati...</h1></div>
 
 <script>
-document.addEventListener("turbolinks:load", function() {
+if(!window.location.hash) {
+    document.addEventListener("turbolinks:load", function() {
 
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById('pageloader').classList.remove('is-active');
-            Turbolinks.reload();
-        };
-    }
-    xhttp.open("GET", "data", true);
-    xhttp.send(); 
-})
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                      document.getElementById('pageloader').classList.remove('is-active');
+                      window.location = window.location + '#list';
+                      window.location.reload();
+            }
+        }
+        xhttp.open("GET", "data", true);
+        xhttp.send(); 
+  })
+} else {
+                        document.getElementById('pageloader').classList.remove('is-active');
+}
 </script>
 
 <h1 class="title">Wiki Loves Monuments Italia 2019</h1>
@@ -53,9 +59,23 @@ document.addEventListener("turbolinks:load", function() {
     <% creators = creators.sort_by{|gp| gp.photos.where(contest: contest).count}.reverse %>
         <td><%= creators.count %></td>
         <td><%= Creator.where(proveniencecontest: contest.id).count %> (<%= (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).truncate(3)%>%)</td>
-        <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link' %>
+        <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
 
-              </tr>
+     </tr>
     <% end %>
   </tbody>
 </table>
+
+<% Contest.all.each do |contest| %>
+  <% if contest.photos.count == 0 %>
+  <!-- Contest stats doesn't work for empty contests -->
+    <script>
+      document.getElementById('<%= contest.id%>').setAttribute('disabled', 'wlm-zeroelements');
+      
+      document.getElementById('<%= contest.id%>').addEventListener('click', function (event) {
+            event.preventDefault();
+        });
+
+    </script>
+  <% end %>
+<% end %>
