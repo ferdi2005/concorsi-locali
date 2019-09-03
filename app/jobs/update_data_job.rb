@@ -17,7 +17,7 @@ class UpdateDataJob < ApplicationJob
 
           unless @creator = Creator.find_by(username: photoinfo['user'])
             @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: creationdate)
-            @creator.update_attribute(:proveniencecontest, contest.id) if creationdate.to_date == Date.today
+            @creator.update_attribute(:proveniencecontest, contest.id) if creationdate.to_date == photoinfo['timestamp'].to_date
           end
           Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
         end
