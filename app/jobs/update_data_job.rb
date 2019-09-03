@@ -17,14 +17,14 @@ class UpdateDataJob < ApplicationJob
 
           unless @creator = Creator.find_by(username: photoinfo['user'])
             @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: creationdate)
-            @creator.update_attribute(:proveniencecontest, contest.id) if creationdate.to_date == photoinfo['timestamp'].to_date
+            @creator.update_attribute(:proveniencecontest, contest.id) if creationdate.to_date == photoinfo['timestamp'].to_date || creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))
           end
           Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
         end
       end
     end
     if ext == true
-      puts 'okK'
+      puts 'Inizio a cercare le foto che sono state usate su Wiki'
       Photo.all.each do |photo|
         globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo.pageid}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo.pageid.to_s]['globalusage'].empty?
         if !globalusage != photo.usedonwiki
