@@ -1,6 +1,6 @@
 require 'active_record'
 namespace :db do
-  desc "Crea tutti i concorsi locali per l'Italia presenti sul sito alla data del 2 settembre"
+  desc "Crea tutti i concorsi locali per l'Italia presenti sul sito alla data del 3 settembre 2019"
   task :concorsi => :environment do
     # Contest(id: integer, category: string, name: string, created_at: datetime, updated_at: datetime, url: string)
     # Puglia
@@ -27,6 +27,9 @@ namespace :db do
     # Abruzzo
     Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Abruzzo', name: 'Wiki Loves Abruzzo', url: 'https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali/#10')
     puts 'Creating Abruzzo...'
+    # Lake Como
+    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Lake Como', name: 'Wiki Loves Monuments - Lake Como', url: 'https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali/#5')
+    puts 'Creating Lake Como...'
     puts 'Done'
 
   end
