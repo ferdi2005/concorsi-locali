@@ -36,8 +36,19 @@
   </tbody>
 </table>
 
-<%= link_to 'Categoria delle foto caricate', "https://commons.wikimedia.org/wiki/#{@contest.category}", class: 'button is-link is-big' %>
-<%= link_to 'Pagina ufficiale del concorso', @contest.url, class: 'button is-danger is-big' %>
+<div class="buttons is-centered">
+  <%= link_to 'Categoria delle foto caricate', "https://commons.wikimedia.org/wiki/#{@contest.category}", class: 'button is-link is-big' %>
+  <%= link_to 'Pagina ufficiale del concorso', @contest.url, class: 'button is-danger is-big' %>
+</div>
 
-<h2 class="subtitle">Utenti iscritti appositamente per WLM</h2>
-<%= line_chart Creator.where(proveniencecontest: @contest.id).group_by_day(:creationdate).count, xmin: '2019-09-01', xmax: '2019-09-30'%>
+<br />
+<!-- 
+<h2 class="subtitle">Utenti partecipanti al concorso regionale</h2>
+<%= line_chart Creator.all.group_by_day{ |u| u.created_at }.count, xmin: '2019-09-01', xmax: '2019-09-30'%>
+-->
+
+<br />
+<% if Creator.where(proveniencecontest: @contest.id).any? %>
+  <h2 class="subtitle">Utenti iscritti appositamente per WLM</h2>
+  <%= line_chart Creator.where(proveniencecontest: @contest.id).group_by_day(:creationdate).count, xmin: '2019-09-01', xmax: '2019-09-30'%>
+<% end %>
