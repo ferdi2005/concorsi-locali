@@ -1,4 +1,4 @@
-<%= provide(:title, 'Home') %>
+<%= provide(:title, "Statistiche #{Date.today.strftime('%d-%m-%Y')}") %>
 <div id="pageloader" class="pageloader is-active"><h1 class="title h1" >Aggiorno i dati...</h1></div>
 
 <script>
@@ -28,15 +28,17 @@ if(!window.location.hash) {
     <th>Logo del concorso</th>
     <th>Nome del concorso</th>
     <th>Foto caricate</th>
-    <th>Foto usate sui progetti (ns0)</th>
+    <th>Foto usate (ns0)</th>
+    <th>%</th>
     <th>Utenti partecipanti</th>
-    <th>Utenti iscritti appositamente</th>
+    <th>Utenti iscritti <br/>per WLM</th>
+    <th>%</th>
     <th>Links</th>
   </thead>
   <tbody>
     <% @contests.reverse.each do |contest| %>
       <tr>
-      <th><%= contest.position %>º</th>
+      <th><%= contest.position %></th>
         <td><% if contest.logo.attached? %>
 
         <%= image_tag contest.logo.variant(resize_to_limit: [200, 200]) %> 
@@ -47,7 +49,8 @@ if(!window.location.hash) {
         <% end %></td>
         <td><%= link_to contest.name, contest %></td>
         <td><%= contest.photos.count %></td>
-        <td><%= contest.photos.where(usedonwiki: true).count %> (<%= (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).truncate(3)%>%) </td>
+        <td><%= contest.photos.where(usedonwiki: true).count %></td>
+        <td><%= (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).truncate(1) unless (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).nan? %> <%= '0.0' if (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).nan? %></td>
        <!-- Conto degli utenti partecipanti -->
        <% creators = [] %>
     <% Creator.all.each do |creator| %>
@@ -57,7 +60,8 @@ if(!window.location.hash) {
     <% end %>
     <% creators = creators.sort_by{|gp| gp.photos.where(contest: contest).count}.reverse %>
         <td><%= creators.count %></td>
-        <td><%= Creator.where(proveniencecontest: contest.id).count %> (<%= (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).truncate(3)%>%)</td>
+        <td><%= Creator.where(proveniencecontest: contest.id).count %> </td>
+        <td><%= (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).truncate(1) unless (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).nan? %> <%= '0.0' if (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).nan? %></td>
         <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
 
      </tr>
@@ -80,3 +84,14 @@ if(!window.location.hash) {
 <% end %>
 <br />
 <%= link_to 'Trova i monumenti WLM vicino a te', 'https://wlm.puglia.wiki', class: 'button is-danger' %>
+
+<!-- Datatable -->
+<script>
+$(document).ready(function() {
+    $('#elenco-concorsi').DataTable( {
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    } );
+} );</script>

@@ -15,4 +15,8 @@
 //= require activestorage
 //= require chartkick
 //= require Chart.bundle
+//= require jquery-3.3.1
+//= require jquery.dataTables
+//= reauire datatables
+//= require dataTables.buttons
 //= require_tree .
