@@ -9,6 +9,7 @@ class UpdateDataJob < ApplicationJob
       photolist = HTTParty.get(request_photolist, uri_adapter: Addressable::URI).to_a
 
       photolist = photolist[1][1]['categorymembers']
+     begin
       photolist.each do |photo|
       unless Photo.find_by(pageid: photo['pageid'])
           photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&pageids=#{photo['pageid']}&prop=imageinfo&iiprop=user|timestamp|userid&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
@@ -33,4 +34,7 @@ class UpdateDataJob < ApplicationJob
       end
     end 
   end
+end
+rescue => e
+  puts e
 end
