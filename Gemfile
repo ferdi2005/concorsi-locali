@@ -42,6 +42,11 @@ group :development do
   gem 'spring-watcher-listen', '~> 2.0.0'
 end
 
+group :production do
+  gem "sentry-raven", "~> 2.11"
+end
+
+
 group :test do
   # Adds support for Capybara system testing and selenium driver
   gem 'capybara', '>= 2.15'
@@ -63,6 +68,5 @@ gem "groupdate", "~> 4.1"
 gem "addressable", "~> 2.7"
 
 gem "sidekiq-cron", "~> 1.1"
-gem "sentry-raven", "~> 2.11"
 
-gem "skylight", "~> 4.1"
+# gem "skylight", "~> 4.1"
