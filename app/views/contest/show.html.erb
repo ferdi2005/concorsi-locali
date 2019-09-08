@@ -27,7 +27,7 @@
   <tbody>
     <% @creators.each do |creator| %>
       <tr>
-        <td><%= link_to creator.username, "https://commons.wikimedia.org/wiki/User:#{creator.username}" %></td>
+        <td><%= link_to creator.username, creator %></td>
         <td><%= creator.photos.where(contest: @contest).count %></td>
         <td><%= creator.photos.where(contest: @contest, usedonwiki: true).count %> (<%= (creator.photos.where(contest: @contest, usedonwiki: true).count.to_f / creator.photos.where(contest: @contest).count.to_f * 100.0).truncate(1) %>%)</td>
         <td><%= creator.creationdate.strftime('%d/%m/%Y')%> (<%= creator.proveniencecontest == @contest.id ? 'Sì' : 'No' %>)</td>
