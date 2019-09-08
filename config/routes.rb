@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   root 'contest#index'
   resources :contest, only: [:show]
+  resources :creators, only: [:show]
   get 'upload', to: 'contest#upload'
   post 'upload', to: 'contest#uploadpost'
   get 'data', to: 'contest#data'
