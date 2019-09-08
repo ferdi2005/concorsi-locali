@@ -7,8 +7,11 @@ class UpdateDataJob < ApplicationJob
       request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
 
       photolist = HTTParty.get(request_photolist, uri_adapter: Addressable::URI).to_a
-
-      photolist = photolist[1][1]['categorymembers']
+      if photolist[2].nil?
+        photolist = photolist[1][1]['categorymembers']
+      else
+        photolist = photolist[2][1]['categorymembers']
+      end
       unless photolist.nil?
         photolist.each do |photo|
           unless Photo.find_by(pageid: photo['pageid'])
