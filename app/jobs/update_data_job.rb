@@ -10,25 +10,17 @@ class UpdateDataJob < ApplicationJob
       if photolist[2].nil?
         photolist = photolist[1][1]['categorymembers']
       else
+        cmcontinue = photolist[1][1]['cmcontinue']
+        continue = photolist[1][1]['continue']
         photolist = photolist[2][1]['categorymembers']
-        cmcontinue = photolist[1]['cmcontinue']
-        continue = photolist[1]['continue']
       end
 
-      if ext == true
-        while continue == '-||'
-          request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
-          new_photolist = HTTParty.get(request_photolist, uri_adapter: Addressable::URI).to_a
+        if continue == '-||'
+          new_request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
+          new_photolist = HTTParty.get(new_request_photolist, uri_adapter: Addressable::URI).to_a
+          new_photolist = new_photolist[1][1]['categorymembers']
           photolist += new_photolist
-          if photolist[2].nil?
-            break 
-          end
-          unless photolist[2].nil?
-            cmcontinue = new_photolist[1]['cmcontinue']
-            continue = new_photolist[1]['continue']
-          end
         end
-      end
       unless photolist.nil?
         photolist.each do |photo|
           unless Photo.find_by(pageid: photo['pageid'])
