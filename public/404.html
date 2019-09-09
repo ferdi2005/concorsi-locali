@@ -3,7 +3,7 @@
   <head>
     <title>Errore 404</title>
 
-    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <link rel="stylesheet" type="text/css" href="bulma.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
 
@@ -20,8 +20,9 @@
 
   <body>
     <div class="page-center">
-      <h1 class="title">Pagina non trovata</h1>
-        <%= link_to 'Torna alla home', root_path, class: 'button is-primary' %>
+        <img style="-webkit-user-select: none; display: block; margin: auto; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); cursor: zoom-in;" src="https://http.cat/404" width="713" height="571">
+      <h1 class="title">Pagina non trovata o utente inesistente</h1>
+        <a href="/" class="button is-primary is-big">Torna alla home</a>
     </div>
   </body>
 
