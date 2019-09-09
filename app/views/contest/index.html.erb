@@ -1,10 +1,9 @@
 <%= provide(:title, "Statistiche #{Date.today.strftime('%d-%m-%Y')}") %>
-<div id="pageloader" class="pageloader is-active"><h1 class="title h1" >Aggiorno i dati...</h1></div>
+<div id="pageloader" class="pageloader"><h1 class="title h1" >Aggiorno i dati...</h1></div>
 
 <script>
 if(!window.location.hash) {
-    document.addEventListener("turbolinks:load", function() {
-
+  document.getElementById('pageloader').classList.add('is-active');
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
@@ -12,9 +11,14 @@ if(!window.location.hash) {
                       window.location.reload();
             }
         }
-        xhttp.open("GET", "data", true);
-        xhttp.send(); 
-  })
+        try {
+                  xhttp.open("GET", "data", true);
+                   xhttp.send(); 
+        } catch (error) {
+            document.getElementById('pageloader').classList.remove('is-active');
+            alert("Errore durante l'aggiornamento dei dati. Segnala questo codice. Errore:"+ error);
+
+        }
 } else {
                         document.getElementById('pageloader').classList.remove('is-active');
 }
@@ -52,23 +56,29 @@ if(!window.location.hash) {
         <td><%= contest.photos.where(usedonwiki: true).count %></td>
         <td><%= (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).truncate(1) unless (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).nan? %> <%= '0.0' if (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).nan? %></td>
        <!-- Conto degli utenti partecipanti -->
-       <% creators = [] %>
-    <% Creator.all.each do |creator| %>
-       <% if creator.photos.where(contest: contest).any? %>
-       <% creators.push(creator) %>
-       <% end %>
-    <% end %>
-    <% creators = creators.sort_by{|gp| gp.photos.where(contest: contest).count}.reverse %>
-        <td><%= creators.count %></td>
+        <td id="USERCOUNT-<%=contest.id%>"><div class="loader"></div></td>
+
         <td><%= Creator.where(proveniencecontest: contest.id).count %> </td>
-        <td><%= (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).truncate(1) unless (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).nan? %> <%= '0.0' if (Creator.where(proveniencecontest: contest.id).count.to_f / creators.count.to_f * 100.0).nan? %></td>
+        <td id="PERCENTUAL-<%=contest.id %>"><div class="loader"></td>
+        <script>
+          var url = 'http://' + location.host + '/usercount?id=<%=contest.id %>'
+          $.ajax({url: url, success: function(result){
+            $('#USERCOUNT-<%=contest.id %>').html(result);
+            var percentual = <%= Creator.where(proveniencecontest: contest.id).count.to_f %> / result * 100.0;
+            if (isNaN(percentual)) {
+              percentual = 0.0;
+            } else {
+              var percentual = percentual.toFixed(1);
+            }
+            $('#PERCENTUAL-<%=contest.id %>').html(percentual + '%');
+          }});
+        </script>
         <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
 
      </tr>
     <% end %>
   </tbody>
 </table>
-
 <% Contest.all.each do |contest| %>
   <% if contest.photos.count == 0 %>
   <!-- Contest stats doesn't work for empty contests -->
@@ -84,7 +94,22 @@ if(!window.location.hash) {
 <% end %>
 <br />
 <%= link_to 'Trova i monumenti WLM vicino a te', 'https://wlm.puglia.wiki', class: 'button is-danger' %>
+<br />
+<h1 class="subtitle">Pagina personale di un utente</h1>
+  <div class="control">
+    <input class="input" name="id" type="text" id="username">
+  </div>
+  <br/>
+  <div class="control">
+    <a class="button is-primary is-small" id="username-submit">Invia</a>
+  </div>
 
+<script>
+  $('#username-submit').click(function(){
+    var link = 'https://' + location.hostname + '/uploaders/' + $('#username').val();
+    $('#username-submit').attr('href', link);
+  });
+</script>
 <!-- Datatable -->
 <script>
 $(document).ready(function() {

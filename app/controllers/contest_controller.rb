@@ -36,6 +36,17 @@ class ContestController < ApplicationController
     UpdateDataJob.perform_now(false)
     return :ok
   end
+  
+  def usercount 
+    @contest = Contest.find(params[:id])
+    count = 0
+      Creator.all.each do |creator|
+        if creator.photos.where(contest: @contest).any?
+          count += 1
+        end
+      end
+      render :json => count
+  end
 end
 private
 def params_ok
