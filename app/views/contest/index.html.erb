@@ -60,19 +60,6 @@ if(!window.location.hash) {
 
         <td><%= Creator.where(proveniencecontest: contest.id).count %> </td>
         <td id="PERCENTUAL-<%=contest.id %>"><div class="loader"></td>
-        <script>
-          var url = 'usercount?id=<%=contest.id %>'
-          $.ajax({url: url, success: function(result){
-            $('#USERCOUNT-<%=contest.id %>').html(result);
-            var percentual = <%= Creator.where(proveniencecontest: contest.id).count.to_f %> / result * 100.0;
-            if (isNaN(percentual)) {
-              percentual = 0.0;
-            } else {
-              var percentual = percentual.toFixed(1);
-            }
-            $('#PERCENTUAL-<%=contest.id %>').html(percentual + '%');
-          }});
-        </script>
         <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
 
      </tr>
@@ -111,12 +98,34 @@ if(!window.location.hash) {
   });
 </script>
 <!-- Datatable -->
-<script>
-$(document).ready(function() {
-    $('#elenco-concorsi').DataTable( {
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print'
-        ]
-    } );
-} );</script>
+<!-- Loading percentuals -->
+
+        <script>
+        $(document).ready(function(){          
+        
+        <% Contest.all.each do |contest| %>
+        var url = 'usercount?id=<%=contest.id %>';
+          console.log('Doing <%=contest.name %>');
+          $.ajax({url: url, success: function(result){
+            $('#USERCOUNT-<%=contest.id %>').html(result);
+            var percentual = <%= Creator.where(proveniencecontest: contest.id).count.to_f %> / result * 100.0;
+            if (isNaN(percentual)) {
+              percentual = 0.0
+            }
+              var percentual = percentual.toFixed(1);
+            $('#PERCENTUAL-<%=contest.id %>').html(percentual + '%');
+                                console.log('Result <%=contest.name %>:' + result);
+                                                    console.log('Done <%=contest.name %>');
+          }})
+        <% end %>
+          $(document).ajaxStop(function() {
+                      $('#elenco-concorsi').DataTable( {
+                        dom: 'Bfrtip',
+                        buttons: [
+                            'copy', 'csv', 'excel', 'pdf', 'print'
+                        ]
+                      } );
+                  })
+          });
+        </script>
+
