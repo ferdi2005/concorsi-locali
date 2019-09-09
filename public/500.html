@@ -1,66 +1,37 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>We're sorry, but something went wrong (500)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <head>
+    <title>Errore 404</title>
+
+    <link rel="stylesheet" type="text/css" href="bulma.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+
   <style>
-  .rails-default-error-page {
-    background-color: #EFEFEF;
-    color: #2E2F30;
-    text-align: center;
-    font-family: arial, sans-serif;
-    margin: 0;
-  }
-
-  .rails-default-error-page div.dialog {
-    width: 95%;
-    max-width: 33em;
-    margin: 4em auto 0;
-  }
-
-  .rails-default-error-page div.dialog > div {
-    border: 1px solid #CCC;
-    border-right-color: #999;
-    border-left-color: #999;
-    border-bottom-color: #BBB;
-    border-top: #B00100 solid 4px;
-    border-top-left-radius: 9px;
-    border-top-right-radius: 9px;
-    background-color: white;
-    padding: 7px 12% 0;
-    box-shadow: 0 3px 8px rgba(50, 50, 50, 0.17);
-  }
-
-  .rails-default-error-page h1 {
-    font-size: 100%;
-    color: #730E15;
-    line-height: 1.5em;
-  }
-
-  .rails-default-error-page div.dialog > p {
-    margin: 0 0 1em;
-    padding: 1em;
-    background-color: #F7F7F7;
-    border: 1px solid #CCC;
-    border-right-color: #999;
-    border-left-color: #999;
-    border-bottom-color: #999;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
-    border-top-color: #DADADA;
-    color: #666;
-    box-shadow: 0 3px 8px rgba(50, 50, 50, 0.17);
-  }
+    .page-center {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      position: fixed;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
-</head>
 
-<body class="rails-default-error-page">
-  <!-- This file lives in public/500.html -->
-  <div class="dialog">
-    <div>
-      <h1>We're sorry, but something went wrong.</h1>
+  <body>
+    <div class="page-center">
+        <img style="-webkit-user-select: none; display: block; margin: auto; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); cursor: zoom-in;" src="https://http.cat/500" width="713" height="571">      
+        <h1 class="title">Si è verificato un errore imprevisto (500)</h1>
+        <h2 class="subtitle">Apri un issue nella <a href="https://github.com/ferdi2005/concorsi-locali">repository</a> per segnalarlo.</h2>
+        <a href="/" class="button is-primary is-big">Torna alla home</a>
     </div>
-    <p>If you are the application owner check the logs for more information.</p>
+  </body>
+
+<footer class="footer">
+  <div class="content has-text-centered">
+      Statstiche sui concorsi locali di <strong>Wiki Loves Monuments Italia</strong> - <a href="https://github.com/ferdi2005/concorsi-locali">Codice sorgente</a> - Licenza MIT.
+      <br/>
+      I loghi caricati su questo sito vengono rilasciati ai termini della licenza CC-BY-SA 4.0
   </div>
-</body>
+</footer>
 </html>
