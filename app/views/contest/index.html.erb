@@ -61,7 +61,7 @@ if(!window.location.hash) {
         <td><%= Creator.where(proveniencecontest: contest.id).count %> </td>
         <td id="PERCENTUAL-<%=contest.id %>"><div class="loader"></td>
         <script>
-          var url = 'http://' + location.host + '/usercount?id=<%=contest.id %>'
+          var url = 'usercount?id=<%=contest.id %>'
           $.ajax({url: url, success: function(result){
             $('#USERCOUNT-<%=contest.id %>').html(result);
             var percentual = <%= Creator.where(proveniencecontest: contest.id).count.to_f %> / result * 100.0;
