@@ -1,3 +1,4 @@
+<%= provide(:title, "#{@uploader.username}") %>
 <a href="https://commons.wikimedia.org/wiki/User:<%= @uploader.username %>"><h1 class="title is-1"><%= @uploader.username %></a>
 <% if @uploader.photos.count > 0 %>
 <a href="#grafico" class="button is-big is-info" data-turbolinks="false">Vai subito al grafico</a>

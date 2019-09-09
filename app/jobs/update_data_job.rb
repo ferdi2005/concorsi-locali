@@ -15,13 +15,17 @@ class UpdateDataJob < ApplicationJob
         photolist = photolist[2][1]['categorymembers']
       end
 
+      unless photolist.nil?
         if continue == '-||'
           new_request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
           new_photolist = HTTParty.get(new_request_photolist, uri_adapter: Addressable::URI).to_a
-          new_photolist = new_photolist[1][1]['categorymembers']
-          photolist += new_photolist
+          unless new_photolist.nil?
+            new_photolist = new_photolist[1][1]['categorymembers']
+            unless new_photolist.nil?
+              photolist += new_photolist
+            end
+          end
         end
-      unless photolist.nil?
         photolist.each do |photo|
           unless Photo.find_by(pageid: photo['pageid'])
               photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&pageids=#{photo['pageid']}&prop=imageinfo&iiprop=user|timestamp|userid&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
