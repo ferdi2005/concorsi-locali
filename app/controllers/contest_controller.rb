@@ -16,7 +16,7 @@ class ContestController < ApplicationController
   end
 
   def upload
-    unless @contest = Contest.find_by(id: params[:id])
+    unless (@contest = Contest.find_by(id: params[:id]))
       redirect_to root_path
       flash[:error] = 'ID NON VALIDO'
     end
