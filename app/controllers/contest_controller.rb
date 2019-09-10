@@ -1,7 +1,7 @@
 class ContestController < ApplicationController
   include ContestHelper
   def index
-    @contests = Contest.all.sort_by{ |contest| contest.photos.count }
+    @contests = Contest.with_attached_logo.includes(:photos).sort_by{ |contest| contest.photos.count }
   end
 
   def show
