@@ -1,6 +1,6 @@
 class CreatorsController < ApplicationController
   def show
-    unless @uploader = Creator.find_by(id: params[:id])
+    unless (@uploader = Creator.find_by(id: params[:id]))
       @uploader = Creator.where('LOWER(username) = ?', params[:id].to_s.downcase).includes(:photos).first
     end
 
