@@ -35,7 +35,7 @@ class UpdateDataJob < ApplicationJob
 
                 @creationdate = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&meta=globaluserinfo&guiuser=#{photoinfo['user']}&format=json", uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']['registration'] unless photoinfo['user'].match?(/&/)
                 @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
-                @creator.update_attribute(:proveniencecontest, contest.id) if creationdate.to_date == photoinfo['timestamp'].to_date || creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))
+                @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))
               end
               Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
           end
