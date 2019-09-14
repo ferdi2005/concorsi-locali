@@ -33,7 +33,14 @@ class UpdateDataJob < ApplicationJob
 
               unless (@creator = Creator.find_by(username: photoinfo['user']))
                   photoinfo['user'] = photoinfo['user'].gsub!('&', '%26')
-                  @creationdate = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&meta=globaluserinfo&guiuser=#{photoinfo['user']}&format=json", uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']['registration'] unless photoinfo['user'].nil?
+                  unless photoinfo['user'].nil?
+                  begin
+                    @creationdate = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&meta=globaluserinfo&guiuser=#{photoinfo['user']}&format=json", uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']['registration']
+                  rescue NoMethodError => e
+                    puts e
+                    # dummy date
+                    @creationdate = '2009-01-01'
+                  end
                 @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
                 @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))
               end
