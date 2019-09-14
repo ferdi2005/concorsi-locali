@@ -41,6 +41,7 @@ class UpdateDataJob < ApplicationJob
                     # dummy date
                     @creationdate = '2009-01-01'
                   end
+                end
                 @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
                 @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))
               end
