@@ -1,29 +1,4 @@
 <%= provide(:title, "Statistiche #{Date.today.strftime('%d-%m-%Y')}") %>
-<div id="pageloader" class="pageloader"><h1 class="title h1" >Aggiorno i dati...</h1></div>
-
-<script>
-if(!window.location.hash) {
-  document.getElementById('pageloader').classList.add('is-active');
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                      window.location = window.location + '#list';
-                      window.location.reload();
-            }
-        }
-        try {
-                  xhttp.open("GET", "data", true);
-                   xhttp.send(); 
-        } catch (error) {
-            document.getElementById('pageloader').classList.remove('is-active');
-            alert("Errore durante l'aggiornamento dei dati. Segnala questo codice. Errore:"+ error);
-
-        }
-} else {
-                        document.getElementById('pageloader').classList.remove('is-active');
-}
-</script>
-
 <h1 class="title">Wiki Loves Monuments Italia 2019</h1>
 <h2 class="subtitle">Le statistiche dei concorsi regionali</h2>
 <table id="elenco-concorsi" class="table is-striped">
@@ -54,13 +29,12 @@ if(!window.location.hash) {
         <td><%= link_to contest.name, contest %></td>
         <td><%= contest.photos.count %></td>
         <td><%= contest.photos.where(usedonwiki: true).count %></td>
-        <td><%= (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).truncate(1) unless (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).nan? %> <%= '0.0' if (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).nan? %></td>
+        <td><%= (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).truncate(1) unless (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.where(usedonwiki: true).count.to_f / contest.photos.count.to_f * 100.0).nan? %></td>
        <!-- Conto degli utenti partecipanti -->
-        <td id="USERCOUNT-<%=contest.id%>"><div class="loader"></div></td>
-
-        <td><%= Creator.where(proveniencecontest: contest.id).count %> </td>
-        <td id="PERCENTUAL-<%=contest.id %>"><div class="loader"></td>
-        <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
+        <td><%= contest.creators %></td>
+        <td><%= contest.creatorsapposta %> </td>
+        <td><%= (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).truncate(1) unless (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0 %> <%= '0.0' if (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0%></td>
+	        <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
 
      </tr>
     <% end %>
@@ -97,28 +71,7 @@ if(!window.location.hash) {
     $('#username-submit').attr('href', link);
   });
 </script>
-<!-- Datatable -->
-<!-- Loading percentuals -->
-
-        <script>
-        $(document).ready(function(){          
-        if (window.location.hash) {
-          <% Contest.all.each do |contest| %>
-          var url = 'usercount?id=<%=contest.id %>';
-            console.log('Doing <%=contest.name %>');
-            $.ajax({url: url, success: function(result){
-              $('#USERCOUNT-<%=contest.id %>').html(result);
-              var percentual = <%= Creator.where(proveniencecontest: contest.id).count.to_f %> / result * 100.0;
-              if (isNaN(percentual)) {
-                percentual = 0.0
-              }
-                var percentual = percentual.toFixed(1);
-              $('#PERCENTUAL-<%=contest.id %>').html(percentual + '%');
-                                  console.log('Result <%=contest.name %>:' + result);
-                                                      console.log('Done <%=contest.name %>');
-            }})
-          <% end %>
-            $(document).ajaxStop(function() {
+  <script>
                         $('#elenco-concorsi').DataTable( {
                           dom: 'Bfrtip',
                           buttons: [
@@ -127,6 +80,5 @@ if(!window.location.hash) {
                         } );
                     })
               }
-            })
         </script>
 
