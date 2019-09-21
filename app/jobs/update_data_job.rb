@@ -2,7 +2,7 @@ require "addressable/uri"
 class UpdateDataJob < ApplicationJob
   queue_as :default
 
-  def perform(ext = true)
+  def perform
     Contest.all.each do |contest|
       request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
 
@@ -41,7 +41,7 @@ class UpdateDataJob < ApplicationJob
                     # dummy date
                     @creationdate = '2009-01-01'
                   end
-                end
+              end
                 @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
                 unless @creationdate.nil?
                   @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))
@@ -54,14 +54,13 @@ class UpdateDataJob < ApplicationJob
         end
       end
     end
-    if ext == true
-      puts 'Inizio a cercare le foto che sono state usate su Wiki'
-      Photo.all.each do |photo|
-        globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo.pageid}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo.pageid.to_s]['globalusage'].try(:empty?)
-        if !globalusage != photo.usedonwiki
-          photo.update_attribute(:usedonwiki, !globalusage)
-        end
+      # Inizio salvataggio del conto dei creatori.
+      Contest.all.each do |contest|
+        @creators = Creator.all.select { |m| m.photos.where(contest: contest).any? }.count
+        contest.update_attribute(:creators, @creators)
+        creatorsapposta = Creator.where(proveniencecontest: contest.id).count
+        contest.update_attribute(:creatorsapposta, creatorsapposta) 
       end
-    end 
+  
   end
 end

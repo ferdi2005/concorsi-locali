@@ -1,1 +1,2 @@
-Sidekiq::Cron::Job.create(name: 'Update Data Job every 10 minutes', cron: '*/10 * * * *', class: 'UpdateDataJob')
+Sidekiq::Cron::Job.create(name: 'Update Data Job', cron: '*/20 * * 9 *', class: 'UpdateDataJob')
+Sidekiq::Cron::Job.create(name: 'Update Global Usage', cron: '01 0 * * *', class: 'UpdateGlobalUsageJob')
