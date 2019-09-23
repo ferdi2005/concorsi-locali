@@ -31,7 +31,7 @@ class UpdateDataJob < ApplicationJob
               photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&pageids=#{photo['pageid']}&prop=imageinfo&iiprop=user|timestamp|userid&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
               globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo['pageid']}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
 
-              unless (@creator = Creator.find_by(username: photoinfo['user']))
+              unless (@creator = Creator.find_by(username: photoinfo['user']) || @creator = Creator.find_by(userid: photoinfo['userid']))
                   photoinfo['user'] = photoinfo['user'].gsub!('&', '%26')
                   unless photoinfo['user'].nil?
                   begin
@@ -41,11 +41,11 @@ class UpdateDataJob < ApplicationJob
                     # dummy date
                     @creationdate = '2009-01-01'
                   end
+                  @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
+                  unless @creationdate.nil?
+                    @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))  
+              end                
               end
-                @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
-                unless @creationdate.nil?
-                  @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))
-                end
               end
               unless photoinfo['user'] == nil
                 Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
@@ -56,7 +56,8 @@ class UpdateDataJob < ApplicationJob
     end
       # Inizio salvataggio del conto dei creatori.
       Contest.all.each do |contest|
-        @creators = Creator.all.select { |m| m.photos.where(contest: contest).any? }.count
+        @creators = Creator.includes(:photos).select { |m| m.photos.where(contest: contest).any? }.count
+
         contest.update_attribute(:creators, @creators)
         creatorsapposta = Creator.where(proveniencecontest: contest.id).count
         contest.update_attribute(:creatorsapposta, creatorsapposta) 
