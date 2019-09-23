@@ -4,8 +4,8 @@ class UpdateDataJob < ApplicationJob
 
   def perform
     Contest.all.each do |contest|
+      puts 'Ottengo la categoria...'
       request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
-
       photolist = HTTParty.get(request_photolist, uri_adapter: Addressable::URI).to_a
       if photolist[2].nil?
         photolist = photolist[1][1]['categorymembers']
@@ -14,23 +14,25 @@ class UpdateDataJob < ApplicationJob
         continue = photolist[1][1]['continue']
         photolist = photolist[2][1]['categorymembers']
       end
-
       unless photolist.nil?
         if continue == '-||'
+          puts 'Ottengo la continuazione della categoria...'
           new_request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
           new_photolist = HTTParty.get(new_request_photolist, uri_adapter: Addressable::URI).to_a
           unless new_photolist.nil?
             new_photolist = new_photolist[1][1]['categorymembers']
             unless new_photolist.nil?
+              puts 'Sommo le liste di foto...'
               photolist += new_photolist
             end
           end
         end
+        puts 'Inizio a processare le singole foto...'
         photolist.each do |photo|
           unless Photo.find_by(pageid: photo['pageid'])
               photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&pageids=#{photo['pageid']}&prop=imageinfo&iiprop=user|timestamp|userid&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
               globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo['pageid']}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
-
+              puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
               unless (@creator = Creator.find_by(username: photoinfo['user']) || @creator = Creator.find_by(userid: photoinfo['userid']))
                   photoinfo['user'] = photoinfo['user'].gsub!('&', '%26')
                   unless photoinfo['user'].nil?
@@ -41,6 +43,7 @@ class UpdateDataJob < ApplicationJob
                     # dummy date
                     @creationdate = '2009-01-01'
                   end
+                  puts "Creo l'utente #{photoinfo['user']}"
                   @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
                   unless @creationdate.nil?
                     @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))  
@@ -54,7 +57,8 @@ class UpdateDataJob < ApplicationJob
         end
       end
     end
-      # Inizio salvataggio del conto dei creatori.
+    
+    puts 'Inizio salvataggio del conto dei creatori.'
       Contest.all.each do |contest|
         @creators = Creator.includes(:photos).select { |m| m.photos.where(contest: contest).any? }.count
 
