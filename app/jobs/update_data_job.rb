@@ -39,7 +39,7 @@ class UpdateDataJob < ApplicationJob
         puts 'Inizio a processare le singole foto...'
         unless photolist.count == contest.photos.count
           photolist.each do |photo|
-            unless Photo.find_by(pageid: photo['pageid'])
+            unless Photo.find_by(name: photo['title'])
                 photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&pageids=#{photo['pageid']}&prop=imageinfo&iiprop=user|timestamp|userid&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
                 globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo['pageid']}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
@@ -63,6 +63,7 @@ class UpdateDataJob < ApplicationJob
                   Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
                   break if photolist.count == contest.photos.count
             end
+            contest.update_attribute(:count, photolist.count)
         end
       end
       end
