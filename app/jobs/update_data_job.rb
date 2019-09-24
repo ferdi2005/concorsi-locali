@@ -61,6 +61,7 @@ class UpdateDataJob < ApplicationJob
                   end
                 end
                   Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
+                  break if photolist.count == contest.photos.count
             end
         end
       end
