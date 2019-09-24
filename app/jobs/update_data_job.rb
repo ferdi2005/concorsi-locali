@@ -3,6 +3,7 @@ class UpdateDataJob < ApplicationJob
   queue_as :default
 
   def perform
+    start = Time.now
     Contest.all.each do |contest|
       puts 'Ottengo la categoria...'
       request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
@@ -14,18 +15,26 @@ class UpdateDataJob < ApplicationJob
         continue = photolist[1][1]['continue']
         photolist = photolist[2][1]['categorymembers']
       end
-      unless photolist.nil?
-        if continue == '-||'
+       unless photolist.nil?
+        while continue == '-||'
           puts 'Ottengo la continuazione della categoria...'
           new_request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
           new_photolist = HTTParty.get(new_request_photolist, uri_adapter: Addressable::URI).to_a
           unless new_photolist.nil?
-            new_photolist = new_photolist[1][1]['categorymembers']
+            if new_photolist[2].nil?
+              new_photolist = new_photolist[1][1]['categorymembers']
+              noph = true
+            else
+              cmcontinue = new_photolist[1][1]['cmcontinue']
+              continue = new_photolist[1][1]['continue']
+              new_photolist = new_photolist[2][1]['categorymembers']
+            end      
             unless new_photolist.nil?
               puts 'Sommo le liste di foto...'
               photolist += new_photolist
             end
           end
+          break if noph
         end
         puts 'Inizio a processare le singole foto...'
         photolist.each do |photo|
@@ -35,7 +44,7 @@ class UpdateDataJob < ApplicationJob
               puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
               unless (@creator = Creator.find_by(username: photoinfo['user']) || @creator = Creator.find_by(userid: photoinfo['userid']))
                   photoinfo['user'] = photoinfo['user'].gsub!('&', '%26')
-                  unless photoinfo['user'].nil?
+                unless photoinfo['user'].nil?
                   begin
                     @creationdate = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&meta=globaluserinfo&guiuser=#{photoinfo['user']}&format=json", uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']['registration']
                   rescue NoMethodError => e
@@ -47,14 +56,12 @@ class UpdateDataJob < ApplicationJob
                   @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
                   unless @creationdate.nil?
                     @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))  
-              end                
+                  end                
+                end
               end
-              end
-              unless photoinfo['user'] == nil
                 Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
-              end
           end
-        end
+      end
       end
     end
     
@@ -66,6 +73,7 @@ class UpdateDataJob < ApplicationJob
         creatorsapposta = Creator.where(proveniencecontest: contest.id).count
         contest.update_attribute(:creatorsapposta, creatorsapposta) 
       end
-  
+      puts 'Tempo di esecuzione'
+      puts Time.now - start
   end
 end
