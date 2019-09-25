@@ -16,6 +16,7 @@ class UpdateDataJob < ApplicationJob
         photolist = photolist[2][1]['categorymembers']
       end
        unless photolist.nil?
+        if contest.photos.count > 500
         while continue == '-||'
           puts 'Ottengo la continuazione della categoria...'
           new_request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
@@ -23,7 +24,7 @@ class UpdateDataJob < ApplicationJob
           unless new_photolist.nil?
             if new_photolist[2].nil?
               new_photolist = new_photolist[1][1]['categorymembers']
-              noph = true
+              @noph = true
             else
               cmcontinue = new_photolist[1][1]['cmcontinue']
               continue = new_photolist[1][1]['continue']
@@ -34,8 +35,9 @@ class UpdateDataJob < ApplicationJob
               photolist += new_photolist
             end
           end
-          break if noph
+          break if @noph
         end
+      end
         puts 'Inizio a processare le singole foto...'
         unless photolist.count == contest.photos.count
           photolist.each do |photo|
@@ -64,6 +66,7 @@ class UpdateDataJob < ApplicationJob
                   break if photolist.count == contest.photos.count
             end
         end
+        contest.update_attribute(:count, photolist.count)
       end
       end
       contest.update_attribute(:count, photolist.count)
