@@ -63,10 +63,10 @@ class UpdateDataJob < ApplicationJob
                   Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
                   break if photolist.count == contest.photos.count
             end
-            contest.update_attribute(:count, photolist.count)
         end
       end
       end
+      contest.update_attribute(:count, photolist.count)
     end
     
     puts 'Inizio salvataggio del conto dei creatori.'
