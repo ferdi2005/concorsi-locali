@@ -38,7 +38,6 @@ class UpdateDataJob < ApplicationJob
           end
         end
       end
-      contest.update_attribute(:count, photolist.count)
         puts 'Inizio a processare le singole foto...'
         unless photolist.count == contest.photos.count
           photolist.each do |photo|

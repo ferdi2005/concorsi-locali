@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_09_21_113600) do
+ActiveRecord::Schema.define(version: 2019_09_24_203112) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -44,6 +44,7 @@ ActiveRecord::Schema.define(version: 2019_09_21_113600) do
     t.string "url"
     t.integer "creators"
     t.float "creatorsapposta"
+    t.integer "count"
   end
 
   create_table "creators", force: :cascade do |t|
