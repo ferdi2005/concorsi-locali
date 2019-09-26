@@ -24,6 +24,7 @@ class UpdateDataJob < ApplicationJob
           unless new_photolist.nil?
             if new_photolist[2].nil?
               new_photolist = new_photolist[1][1]['categorymembers']
+              continue = false
               @noph = true
             else
               cmcontinue = new_photolist[1][1]['cmcontinue']
@@ -35,7 +36,6 @@ class UpdateDataJob < ApplicationJob
               photolist += new_photolist
             end
           end
-          break if @noph
         end
       end
       contest.update_attribute(:count, photolist.count)
