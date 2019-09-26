@@ -38,6 +38,7 @@ class UpdateDataJob < ApplicationJob
           break if @noph
         end
       end
+      contest.update_attribute(:count, photolist.count)
         puts 'Inizio a processare le singole foto...'
         unless photolist.count == contest.photos.count
           photolist.each do |photo|
@@ -66,10 +67,8 @@ class UpdateDataJob < ApplicationJob
                   break if photolist.count == contest.photos.count
             end
         end
-        contest.update_attribute(:count, photolist.count)
       end
       end
-      contest.update_attribute(:count, photolist.count)
     end
     
     puts 'Inizio salvataggio del conto dei creatori.'
