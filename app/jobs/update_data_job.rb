@@ -46,7 +46,7 @@ class UpdateDataJob < ApplicationJob
                 globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo['pageid']}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
                 if Creator.where(username: photoinfo['user']).or(Creator.where(username: photoinfo['userid'])).count > 0
-                  @creator = Creator.where(username: photoinfo['user']).org(Creator.where(username: photoinfo['userid'])).first
+                  @creator = Creator.where(username: photoinfo['user']).or(Creator.where(username: photoinfo['userid'])).first
                     photoinfo['user'] = photoinfo['user'].gsub!('&', '%26')
                   unless photoinfo['user'].nil?
                     begin
