@@ -1,5 +1,10 @@
-class UpdatePhotosCountJob < ApplicationJob
-  queue_as :default
+class UpdatePhotosCountWorker
+  include Sidekiq::Worker
+  sidekiq_options({
+    # Should be set to true (enables uniqueness for async jobs)
+    # or :all (enables uniqueness for both async and scheduled jobs)
+    unique: true
+  })
 
   def perform(*args)
     Contest.all.each do |contest|

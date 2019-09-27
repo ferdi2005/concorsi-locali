@@ -70,3 +70,5 @@ gem "addressable", "~> 2.7"
 gem "sidekiq-cron", "~> 1.1"
 
 gem "skylight", "~> 4.1"
+
+gem "sidekiq-middleware", "~> 0.3.0"

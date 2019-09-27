@@ -1,5 +1,10 @@
-class UpdateGlobalUsageJob < ApplicationJob
-  queue_as :default
+class UpdateGlobalUsageWorker
+  include Sidekiq::Worker
+  sidekiq_options({
+    # Should be set to true (enables uniqueness for async jobs)
+    # or :all (enables uniqueness for both async and scheduled jobs)
+    unique: true
+  })
 
   def perform(*args)
     puts 'Inizio a cercare le foto che sono state usate su Wiki'
