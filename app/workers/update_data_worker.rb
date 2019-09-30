@@ -45,29 +45,24 @@ class UpdateDataWorker
         puts 'Inizio a processare le singole foto...'
         unless photolist.count == contest.photos.count
           photolist.each do |photo|
-            unless Photo.find_by(name: photo['title'])
+            if Photo.where(name: photo['title']).count == 0
                 photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&pageids=#{photo['pageid']}&prop=imageinfo&iiprop=user|timestamp|userid&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
                 globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo['pageid']}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
-                if Creator.where(username: photoinfo['user']).or(Creator.where(username: photoinfo['userid'])).count > 0
-                  @creator = Creator.where(username: photoinfo['user']).or(Creator.where(username: photoinfo['userid'])).first
-                    photoinfo['user'] = photoinfo['user'].gsub!('&', '%26')
-                  unless photoinfo['user'].nil?
-                    begin
-                      @creationdate = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&meta=globaluserinfo&guiuser=#{photoinfo['user']}&format=json", uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']['registration']
-                    rescue NoMethodError => e
-                      puts e
-                      # dummy date
-                      @creationdate = '2009-01-01'
-                    end
+                photoinfo['user'] = photoinfo['user'].gsub!('&', '%26')
+                @userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&meta=globaluserinfo&guiid=#{photoinfo['userid']}&format=json", uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']
+                @registration = @userinfo['registration']
+                @name = @userinfo['name']
+                if Creator.where(username: @name).or(Creator.where(username: photoinfo['userid'])).count > 0
+                  @creator = Creator.where(username: photoinfo['user']).or(Creator.where(userid: photoinfo['userid'])).first
+                else
                     puts "Creo l'utente #{photoinfo['user']}"
-                    @creator = Creator.create(username: photoinfo['user'], userid: photoinfo['userid'], creationdate: @creationdate)
+                    @creator = Creator.create(username: @name, userid: photoinfo['userid'], creationdate: @creationdate)
                     unless @creationdate.nil?
                       @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))  
-                    end                
-                  end
+                    end
                 end
-                  Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
+                  @photo = Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
                   break if photolist.count == contest.photos.count
             end
         end
