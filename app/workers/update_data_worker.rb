@@ -10,8 +10,8 @@ class UpdateDataWorker
     start = Time.now
     Contest.includes(:photos).each do |contest|
       puts 'Ottengo la categoria...'
-      request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
-      photolist = HTTParty.get(request_photolist, uri_adapter: Addressable::URI).to_a
+      request_photolist = "https://commons.wikimedia.org/w/api.php"
+      photolist = HTTParty.get(request_photolist, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_a
       if photolist[2].nil?
         photolist = photolist[1][1]['categorymembers']
       else
@@ -20,11 +20,10 @@ class UpdateDataWorker
         photolist = photolist[2][1]['categorymembers']
       end
        unless photolist.nil?
-        if contest.photos.count > 500
         while continue == '-||'
           puts 'Ottengo la continuazione della categoria...'
-          new_request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
-          new_photolist = HTTParty.get(new_request_photolist, uri_adapter: Addressable::URI).to_a
+          new_request_photolist = "https://commons.wikimedia.org/w/api.php"
+          new_photolist = HTTParty.get(new_request_photolist, query: {action: :query, list: :categorymembers,cmtitle: contest.category, cmlimit: 500, cmdir: :newer, cmcontinue: cmcontinue, format: :json },uri_adapter: Addressable::URI).to_a
           unless new_photolist.nil?
             if new_photolist[2].nil?
               new_photolist = new_photolist[1][1]['categorymembers']
@@ -40,19 +39,17 @@ class UpdateDataWorker
               photolist += new_photolist
             end
           end
-        end
       end
         puts 'Inizio a processare le singole foto...'
         unless photolist.count == contest.photos.count
           photolist.each do |photo|
-            if Photo.where(name: photo['title']).count == 0
-                photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&pageids=#{photo['pageid']}&prop=imageinfo&iiprop=user|timestamp|userid&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
-                globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo['pageid']}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
+            unless Photo.where(name: photo['title']).any?
+                photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query,pageids: photo['pageid'], prop: :imageinfo, iiprop: 'user|timestamp|userid', format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
+                globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php",query: {action: :query, prop: :globalusage, pageids:photo['pageid'], gunamespace: 0, format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
-                photoinfo['user'] = photoinfo['user'].gsub!('&', '%26')
-                @userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&meta=globaluserinfo&guiid=#{photoinfo['userid']}&format=json", uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']
+                @userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, meta: :globaluserinfo, guiuser: photoinfo['user'], format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']
                 @registration = @userinfo['registration']
-                @name = @userinfo['name']
+                @name = photoinfo['user']
                 if Creator.where(username: @name).or(Creator.where(username: photoinfo['userid'])).count > 0
                   @creator = Creator.where(username: photoinfo['user']).or(Creator.where(userid: photoinfo['userid'])).first
                 else
@@ -67,7 +64,6 @@ class UpdateDataWorker
             end
         end
       end
-      end
     end
     
     puts 'Inizio salvataggio del conto dei creatori.'
@@ -81,4 +77,5 @@ class UpdateDataWorker
       puts 'Tempo di esecuzione'
       puts Time.now - start
   end
+end
 end
