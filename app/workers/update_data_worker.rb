@@ -49,6 +49,7 @@ class UpdateDataWorker
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
                 @userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, meta: :globaluserinfo, guiuser: photoinfo['user'], format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']
                 @registration = @userinfo['registration']
+                @creationdate = @registration
                 @name = photoinfo['user']
                 if Creator.where(username: @name).or(Creator.where(username: photoinfo['userid'])).count > 0
                   @creator = Creator.where(username: photoinfo['user']).or(Creator.where(userid: photoinfo['userid'])).first
