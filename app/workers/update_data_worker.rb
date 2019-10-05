@@ -8,7 +8,7 @@ class UpdateDataWorker
   })
   def perform
     start = Time.now
-    Contest.includes(:photos).each do |contest|
+    Contest.all.each do |contest|
       puts 'Ottengo la categoria...'
       request_photolist = "https://commons.wikimedia.org/w/api.php"
       photolist = HTTParty.get(request_photolist, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_a
@@ -19,11 +19,12 @@ class UpdateDataWorker
         continue = photolist[1][1]['continue']
         photolist = photolist[2][1]['categorymembers']
       end
-       unless photolist.nil?
+
+      unless photolist.nil?
         while continue == '-||'
           puts 'Ottengo la continuazione della categoria...'
           new_request_photolist = "https://commons.wikimedia.org/w/api.php"
-          new_photolist = HTTParty.get(new_request_photolist, query: {action: :query, list: :categorymembers,cmtitle: contest.category, cmlimit: 500, cmdir: :newer, cmcontinue: cmcontinue, format: :json },uri_adapter: Addressable::URI).to_a
+          new_photolist = HTTParty.get(new_request_photolist, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, cmcontinue: cmcontinue, format: :json }, uri_adapter: Addressable::URI).to_a
           unless new_photolist.nil?
             if new_photolist[2].nil?
               new_photolist = new_photolist[1][1]['categorymembers']
@@ -36,14 +37,13 @@ class UpdateDataWorker
             end      
             unless new_photolist.nil?
               puts 'Sommo le liste di foto...'
-              photolist += new_photolist
+              photolist = photolist += new_photolist
             end
           end
-      end
+        end
+        photolist.reject! { |photo| Photo.where(name: photo['title']).any? }
         puts 'Inizio a processare le singole foto...'
-        unless photolist.count == contest.photos.count
           photolist.each do |photo|
-            unless Photo.where(name: photo['title']).any?
                 photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query,pageids: photo['pageid'], prop: :imageinfo, iiprop: 'user|timestamp|userid', format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
                 globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php",query: {action: :query, prop: :globalusage, pageids:photo['pageid'], gunamespace: 0, format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
@@ -61,9 +61,7 @@ class UpdateDataWorker
                     end
                 end
                   @photo = Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
-                  break if photolist.count == contest.photos.count
             end
-        end
       end
     end
     
@@ -78,5 +76,4 @@ class UpdateDataWorker
       puts 'Tempo di esecuzione'
       puts Time.now - start
   end
-end
 end
