@@ -2,10 +2,10 @@ update_data_job:
   cron: "*/15 * * 9 *"
   class: "UpdateDataWorker"
 update_global_usage_job:
-  cron: "01 0 * * *"
+  cron: "01 0 * 9 *"
   class: "UpdateDataWorker"
 update_photos_count_job:
-  cron: "*/5 * * * *"
+  cron: "*/5 * * 9 *"
   class: "UpdatePhotosCountWorker"
 delete_wrong_creators_job:
   cron: "*/18 * * 9 *"
