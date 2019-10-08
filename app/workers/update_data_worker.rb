@@ -9,7 +9,7 @@ class UpdateDataWorker
   def perform
     start = Time.now
     Contest.all.each do |contest|
-      puts 'Ottengo la categoria...'
+      puts "Ottengo la categoria della regione #{contest.name} (#{contest.category})..."
       request_photolist = "https://commons.wikimedia.org/w/api.php"
       photolist = HTTParty.get(request_photolist, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_a
       if photolist[2].nil?
@@ -44,7 +44,8 @@ class UpdateDataWorker
         photolist.reject! { |photo| Photo.where(name: photo['title']).any? }
         puts 'Inizio a processare le singole foto...'
           photolist.each do |photo|
-                photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query,pageids: photo['pageid'], prop: :imageinfo, iiprop: 'user|timestamp|userid', format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
+            if photo['ns'] == '6'
+              photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query,pageids: photo['pageid'], prop: :imageinfo, iiprop: 'user|timestamp|userid', format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
                 globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php",query: {action: :query, prop: :globalusage, pageids:photo['pageid'], gunamespace: 0, format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
                 @userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, meta: :globaluserinfo, guiuser: photoinfo['user'], format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']
@@ -62,6 +63,7 @@ class UpdateDataWorker
                 end
                   @photo = Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
             end
+          end
       end
     end
     
