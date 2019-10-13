@@ -41,10 +41,10 @@ class UpdateDataWorker
             end
           end
         end
-        photolist.reject! { |photo| Photo.where(name: photo['title']).any? }
+        photolist.reject! { |photo| Photo.where(name: photo['title']).count > 0 }
         puts 'Inizio a processare le singole foto...'
           photolist.each do |photo|
-            if photo['ns'] == '6'
+            if photo['ns'].to_s == '6'
               photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query,pageids: photo['pageid'], prop: :imageinfo, iiprop: 'user|timestamp|userid', format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
                 globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php",query: {action: :query, prop: :globalusage, pageids:photo['pageid'], gunamespace: 0, format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
@@ -62,8 +62,8 @@ class UpdateDataWorker
                     end
                 end
                   @photo = Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
-            end
-          end
+              end
+                end
       end
     end
     
