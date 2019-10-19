@@ -19,7 +19,6 @@ class UpdatePhotosCountWorker
         photolist = photolist[2][1]['categorymembers']
       end
       unless photolist.nil?
-        if contest.photos.count > 500
           while continue == '-||'
             puts 'Ottengo la continuazione della categoria...'
             new_request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
@@ -41,7 +40,6 @@ class UpdatePhotosCountWorker
             end
           end
         end
-      end
     contest.update_attribute(:count, photolist.count)
     end
   end
