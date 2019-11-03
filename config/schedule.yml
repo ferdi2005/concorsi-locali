@@ -7,6 +7,3 @@ update_global_usage_job:
 update_photos_count_job:
   cron: "*/5 * * 9 *"
   class: "UpdatePhotosCountWorker"
-delete_wrong_creators_job:
-  cron: "*/18 * * 9 *"
-  class: "DeleteWrongCreatorsWorker"
