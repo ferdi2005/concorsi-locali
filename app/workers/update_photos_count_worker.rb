@@ -8,7 +8,7 @@ class UpdatePhotosCountWorker
 
   def perform(*args)
     Contest.all.each do |contest|
-      puts 'Ottengo la categoria...'
+      puts "Ottengo la categoria #{contest.name}..."
       request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
       photolist = HTTParty.get(request_photolist, uri_adapter: Addressable::URI).to_a
       if photolist[2].nil?
@@ -40,7 +40,9 @@ class UpdatePhotosCountWorker
             end
           end
         end
-    contest.update_attribute(:count, photolist.count)
+        photolist.uniq!
+        photolist.reject! { |p| p['ns'] != 6}
+        contest.update_attribute(:count, photolist.count)
     end
   end
 end
