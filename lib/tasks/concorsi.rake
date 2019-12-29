@@ -44,7 +44,6 @@ namespace :db do
     Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Sardinia', name: 'Sardegna', url: 'https://wikilovesmonuments.wikimedia.it')
     Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Sicily', name: 'Sicilia', url: 'https://wikilovesmonuments.wikimedia.it')
     Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Trentino-South Tyrol‎‎', name: 'Trentino-Alto Adige', url: 'https://wikilovesmonuments.wikimedia.it')
-    Contest.create(category: 'Category:Images from Wiki Loves Monuments 2019 in Italy - Umbria', name: 'Umbria', url: 'https://wikilovesmonuments.wikimedia.it')
     puts 'Done'
 
   end
