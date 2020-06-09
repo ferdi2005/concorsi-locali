@@ -1,0 +1,37 @@
+{"level":"info","msg":"Using kube context '\u001b[1;37mdevspace-concorsilocali\u001b[0m'","time":"2020-04-14T20:57:24+02:00"}
+{"level":"info","msg":"Using namespace '\u001b[1;37mconcorsilocali\u001b[0m'","time":"2020-04-14T20:57:24+02:00"}
+{"level":"info","msg":"Created image pull secret concorsilocali/devspace-auth-dscr-io","time":"2020-04-14T20:57:29+02:00"}
+{"level":"info","msg":"Couldn't find a running docker daemon. Will fallback to kaniko","time":"2020-04-14T20:57:29+02:00"}
+{"level":"info","msg":"Building image 'dscr.io/ferdi2005/concorsilocali:rF6BuXp' with engine 'kaniko'","time":"2020-04-14T20:57:31+02:00"}
+{"level":"warning","msg":"Using CMD statement for injecting restart helper because ENTRYPOINT is missing in Dockerfile and `images.*.entrypoint` is also not configured","time":"2020-04-14T20:57:31+02:00"}
+{"level":"info","msg":"Uploaded files to container","time":"2020-04-14T20:58:37+02:00"}
+{"level":"info","msg":"Build pod has started","time":"2020-04-14T20:58:42+02:00"}
+{"level":"info","msg":"Printing logs of pod:container \u001b[1;37mdevspace-build-sl5n5\u001b[0m:\u001b[1;37mkaniko\u001b[0m","time":"2020-04-14T20:58:42+02:00"}
+{"level":"fatal","msg":"Error during image build: Error building image (Exit Code 1)","time":"2020-04-14T21:00:22+02:00"}
+{"level":"info","msg":"Using kube context '\u001b[1;37mdevspace-concorsilocali\u001b[0m'","time":"2020-04-14T21:06:07+02:00"}
+{"level":"info","msg":"Using namespace '\u001b[1;37mconcorsilocali\u001b[0m'","time":"2020-04-14T21:06:07+02:00"}
+{"level":"info","msg":"Couldn't find a running docker daemon. Will fallback to kaniko","time":"2020-04-14T21:06:14+02:00"}
+{"level":"info","msg":"Building image 'dscr.io/ferdi2005/concorsilocali:Cfcls6Q' with engine 'kaniko'","time":"2020-04-14T21:06:16+02:00"}
+{"level":"warning","msg":"Using CMD statement for injecting restart helper because ENTRYPOINT is missing in Dockerfile and `images.*.entrypoint` is also not configured","time":"2020-04-14T21:06:16+02:00"}
+{"level":"info","msg":"Uploaded files to container","time":"2020-04-14T21:08:13+02:00"}
+{"level":"info","msg":"Build pod has started","time":"2020-04-14T21:08:16+02:00"}
+{"level":"info","msg":"Printing logs of pod:container \u001b[1;37mdevspace-build-bw8bl\u001b[0m:\u001b[1;37mkaniko\u001b[0m","time":"2020-04-14T21:08:16+02:00"}
+{"level":"fatal","msg":"Error during image build: Error building image (Exit Code 1)","time":"2020-04-14T21:09:42+02:00"}
+{"level":"info","msg":"Using kube context '\u001b[1;37mdevspace-concorsilocali\u001b[0m'","time":"2020-04-14T21:10:55+02:00"}
+{"level":"info","msg":"Using namespace '\u001b[1;37mconcorsilocali\u001b[0m'","time":"2020-04-14T21:10:55+02:00"}
+{"level":"info","msg":"Couldn't find a running docker daemon. Will fallback to kaniko","time":"2020-04-14T21:11:02+02:00"}
+{"level":"info","msg":"Building image 'dscr.io/ferdi2005/concorsilocali:Q6X1b5D' with engine 'kaniko'","time":"2020-04-14T21:11:05+02:00"}
+{"level":"warning","msg":"Using CMD statement for injecting restart helper because ENTRYPOINT is missing in Dockerfile and `images.*.entrypoint` is also not configured","time":"2020-04-14T21:11:05+02:00"}
+{"level":"info","msg":"Uploaded files to container","time":"2020-04-14T21:12:29+02:00"}
+{"level":"info","msg":"Build pod has started","time":"2020-04-14T21:12:34+02:00"}
+{"level":"info","msg":"Printing logs of pod:container \u001b[1;37mdevspace-build-qqcws\u001b[0m:\u001b[1;37mkaniko\u001b[0m","time":"2020-04-14T21:12:34+02:00"}
+{"level":"fatal","msg":"Error building image: Error during image build: Error building image (Exit Code 1)","time":"2020-04-14T21:14:44+02:00"}
+{"level":"info","msg":"Using kube context '\u001b[1;37mdevspace-concorsilocali\u001b[0m'","time":"2020-04-15T12:06:16+02:00"}
+{"level":"info","msg":"Using namespace '\u001b[1;37mconcorsilocali\u001b[0m'","time":"2020-04-15T12:06:16+02:00"}
+{"level":"info","msg":"Couldn't find a running docker daemon. Will fallback to kaniko","time":"2020-04-15T12:06:27+02:00"}
+{"level":"info","msg":"Building image 'dscr.io/ferdi2005/concorsilocali:uPZo186' with engine 'kaniko'","time":"2020-04-15T12:06:29+02:00"}
+{"level":"warning","msg":"Using CMD statement for injecting restart helper because ENTRYPOINT is missing in Dockerfile and `images.*.entrypoint` is also not configured","time":"2020-04-15T12:06:29+02:00"}
+{"level":"info","msg":"Uploaded files to container","time":"2020-04-15T12:07:39+02:00"}
+{"level":"info","msg":"Build pod has started","time":"2020-04-15T12:07:44+02:00"}
+{"level":"info","msg":"Printing logs of pod:container \u001b[1;37mdevspace-build-njk5b\u001b[0m:\u001b[1;37mkaniko\u001b[0m","time":"2020-04-15T12:07:44+02:00"}
+{"level":"fatal","msg":"Error building image: Error during image build: Error building image (Exit Code 1)","time":"2020-04-15T12:08:56+02:00"}
