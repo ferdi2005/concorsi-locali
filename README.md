@@ -2,7 +2,7 @@
 [PROGETTO SU PHABRICATOR ED ISSUE TRACKING](https://phabricator.wikimedia.org/tag/wlm-italy-stats/)
 ![GitHub](https://img.shields.io/github/license/ferdi2005/concorsi-locali)
 ![GitHub Release Date](https://img.shields.io/github/release-date/ferdi2005/concorsi-locali)
-![Maintenance](https://img.shields.io/maintenance/yes/2019)
+![Maintenance](https://img.shields.io/maintenance/yes/2020)
 ![GitHub issues](https://img.shields.io/github/issues/ferdi2005/concorsi-locali)
 ![GitHub repo size](https://img.shields.io/github/repo-size/ferdi2005/concorsi-locali)
 
