@@ -13,7 +13,7 @@
 </div>
 <% end %>
 <h2 class="subtitle">Il grafico</h2>
-<%= line_chart Photo.where(contest: @contest).group_by_day(:photodate).count, xmin: '2019-09-01', xmax: '2019-09-30'%>
+<%= line_chart Photo.where(contest: @contest).group_by_day(:photodate).count, xmin: "#{DateTime.now.strftime('%Y')}-09-01", xmax: "#{DateTime.now.strftime('%Y')}-09-30"%>
 <br />
 <h2 class="subtitle">La classifica degli utenti</h2>
 
@@ -42,13 +42,9 @@
 </div>
 
 <br />
-<!-- 
-<h2 class="subtitle">Utenti partecipanti al concorso regionale</h2>
-line_chart Creator.all.group_by_day{ |u| u.created_at }.count, xmin: '2019-09-01', xmax: '2019-09-30'
--->
 
 <br />
 <% if Creator.where(proveniencecontest: @contest.id).count > 0 %>
   <h2 class="subtitle">Utenti iscritti appositamente per WLM</h2>
-  <%= line_chart Creator.where(proveniencecontest: @contest.id).group_by_day(:creationdate).count, xmin: '2019-09-01', xmax: '2019-09-30'%>
+  <%= line_chart Creator.where(proveniencecontest: @contest.id).group_by_day(:creationdate).count, xmin:  "#{DateTime.now.strftime('%Y')}-09-01", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
 <% end %>
