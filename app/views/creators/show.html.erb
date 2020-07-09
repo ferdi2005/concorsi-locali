@@ -13,6 +13,6 @@
 <% end %>
 <div id="grafico">
   <h2 class="subtitle">Il grafico</h2>
-  <%= line_chart @uploader.photos.group_by_day(:photodate).count, xmin: '2019-09-01', xmax: '2019-09-30'%>
+  <%= line_chart @uploader.photos.group_by_day(:photodate).count, xmin:  "#{DateTime.now.strftime('%Y')}-09-01", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
 </div>
 <% end %>

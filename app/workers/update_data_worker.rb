@@ -58,7 +58,7 @@ class UpdateDataWorker
                     puts "Creo l'utente #{photoinfo['user']}"
                     @creator = Creator.create(username: @name, userid: photoinfo['userid'], creationdate: @creationdate)
                     unless @creationdate.nil?
-                      @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30/08/2019'), Date.parse('30/09/2019'))  
+                      @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30 august'), Date.parse('30 september'))  
                     end
                 end
                   @photo = Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
