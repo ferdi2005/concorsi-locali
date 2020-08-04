@@ -46,6 +46,7 @@ class UpdateDataWorker
           photolist.each do |photo|
             if photo['ns'].to_s == '6'
               photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query,pageids: photo['pageid'], prop: :imageinfo, iiprop: 'user|timestamp|userid', format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
+              if photoinfo['timestamp'].to_date.between?(Date.parse('1 september'), Date.parse('30 september'))
                 globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php",query: {action: :query, prop: :globalusage, pageids:photo['pageid'], gunamespace: 0, format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
                 puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
                 @userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, meta: :globaluserinfo, guiuser: photoinfo['user'], format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']
@@ -64,6 +65,7 @@ class UpdateDataWorker
                   @photo = Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
               end
                 end
+              end
       end
     end
     
