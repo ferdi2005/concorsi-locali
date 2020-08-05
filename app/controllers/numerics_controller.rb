@@ -201,7 +201,7 @@ class NumericsController < ApplicationController
             photocount = '0.0' if (Creator.where.not(proveniencecontest: nil).count.to_f / Creator.count.to_f * 100.0).nan? || Creator.where.not(proveniencecontest: nil).count == 0 || Creator.count == 0
         end
         json = { 
-            'postfix': 'Percentuale degli utenti iscritti apposta',
+            'postfix': 'Percentuale',
             'data': { 
                 "value": photocount.to_s + "%"
              }
