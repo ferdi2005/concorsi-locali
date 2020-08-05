@@ -99,10 +99,10 @@ class NumericsController < ApplicationController
 
     def days
         if Date.today.month == 9
-            name = "Giorni alla fine di WLM"
+            name = "Fine di WLM"
             date = Date.parse('30 september').strftime("%Y-%m-%d")
         else
-            name = "Giorni a WLM"
+            name = "Inizio di WLM"
             date = Date.parse('1 september').strftime("%Y-%m-%d")
         end
         respond_to do |format|
