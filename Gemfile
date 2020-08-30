@@ -61,7 +61,7 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem "sidekiq", "~> 6.0"
 
 gem "httparty", github: 'jnunemaker/httparty'
-gem "chartkick", "~> 3.2"
+gem "chartkick", "~> 3.4"
 
 gem "groupdate", "~> 4.1"
 
