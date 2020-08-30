@@ -7,3 +7,9 @@ update_global_usage_job:
 update_photos_count_job:
   cron: "*/5 * * 9 *"
   class: "UpdatePhotosCountWorker"
+first_wlm_data_population_worker:
+  cron: "30 7 31 8 *"
+  class: "FirstWlmDataPopulationWorker"
+update_nophoto_data_worker:
+  cron: "30 7 * 9 *"
+  class: "UpdateNophotoDataWorker"

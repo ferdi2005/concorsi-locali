@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  count: 1
+  monuments: 1
+  with_commons: 1
+  with_image: 1
+  nowlm: 1
+
+two:
+  count: 1
+  monuments: 1
+  with_commons: 1
+  with_image: 1
+  nowlm: 1

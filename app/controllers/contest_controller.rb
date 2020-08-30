@@ -2,6 +2,10 @@ class ContestController < ApplicationController
   include ContestHelper
   def index
     @contests = Contest.with_attached_logo.includes(:photos).sort_by{ |contest| contest.photos.count }
+    @nophotograph = {}
+    Nophoto.where(regione: nil).each do |nop|
+      @nophotograph[nop.created_at] = nop.count
+    end
   end
 
   def show
@@ -13,6 +17,10 @@ class ContestController < ApplicationController
       end
     end
     @creators = @creators.sort_by{|gp| gp.photos.where(contest: @contest).count}.reverse
+    @nophotograph = {}
+    Nophoto.where(regione: @contest.region).each do |nop|
+      @nophotograph[nop.created_at] = nop.count
+    end
   end
 
   def upload
