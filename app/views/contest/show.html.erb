@@ -48,3 +48,5 @@
   <h2 class="subtitle">Utenti iscritti appositamente per WLM</h2>
   <%= line_chart Creator.where(proveniencecontest: @contest.id).group_by_day(:creationdate).count, xmin:  "#{DateTime.now.strftime('%Y')}-09-01", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
 <% end %>
+
+<p><b>Nome della categoria:</b> <%= @contest.category %></p>
