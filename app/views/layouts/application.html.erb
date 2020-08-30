@@ -28,9 +28,9 @@
       I dati vengono aggiornati ogni 5-15 (solo numero foto-tutti i dati) minuti nel mese di settembre - ultimo aggiornamento: <%= Sidekiq::Cron::Job.find('update_data_job').last_enqueue_time unless Sidekiq::Cron::Job.find('update_data_job').nil? %><%= Sidekiq::Cron::Job.find('Update Data Job').last_enqueue_time unless Sidekiq::Cron::Job.find('Update Data Job').nil? %>
 
       <br />
-      Non esitare a segnalare eventuali incongruenze
+      Non esitare a segnalare eventuali incongruenze a <%= link_to "Ferdinando Traversa", "https://ferdinando.me" %>.
       <br />
-      I loghi caricati su questo sito vengono rilasciati ai termini della licenza CC-BY-SA 4.0
+      I loghi caricati su questo sito vengono rilasciati ai termini della licenza CC-BY-SA 4.0, i dati sotto CC-0.
   </div>
 </footer>
 </html>
