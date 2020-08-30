@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_09_24_203112) do
+ActiveRecord::Schema.define(version: 2020_08_30_121536) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -45,6 +45,12 @@ ActiveRecord::Schema.define(version: 2019_09_24_203112) do
     t.integer "creators"
     t.float "creatorsapposta"
     t.integer "count"
+    t.integer "nophoto"
+    t.integer "monuments"
+    t.integer "with_commons"
+    t.integer "with_image"
+    t.integer "nowlm"
+    t.string "region"
   end
 
   create_table "creators", force: :cascade do |t|
@@ -54,6 +60,17 @@ ActiveRecord::Schema.define(version: 2019_09_24_203112) do
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "creationdate"
     t.integer "proveniencecontest"
+  end
+
+  create_table "nophotos", force: :cascade do |t|
+    t.integer "count"
+    t.integer "monuments"
+    t.integer "with_commons"
+    t.integer "with_image"
+    t.integer "nowlm"
+    t.string "regione"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "photos", force: :cascade do |t|

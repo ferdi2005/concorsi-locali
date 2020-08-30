@@ -2,81 +2,96 @@
 <h1 class="title">Wiki Loves Monuments Italia <%=DateTime.now.strftime('%Y') %></h1>
 <h2 class="subtitle">Le statistiche dei concorsi regionali</h2>
 <table id="elenco-concorsi" class="table is-striped">
-  <thead>
-    <th>Pos.</th>
-    <th>Logo del concorso</th>
-    <th>Nome del concorso</th>
-    <th>Foto caricate</th>
-    <th>Foto usate (ns0)</th>
-    <th>%</th>
-    <th>Utenti partecipanti</th>
-    <th>Utenti iscritti <br/>per WLM</th>
-    <th>%</th>
-    <th>Links</th>
-  </thead>
-  <tbody>
-    <% @contests.reverse.each do |contest| %>
-      <tr>
-      <th><%= contest.position %></th>
-        <td><% if contest.logo.attached? %>
+    <thead>
+        <th>Pos.</th>
+        <th>Logo del concorso</th>
+        <th>Nome del concorso</th>
+        <th>Foto caricate</th>
+        <th>Foto usate (ns0)</th>
+        <th>%</th>
+        <th>Utenti partecipanti</th>
+        <th>Utenti iscritti <br />per WLM</th>
+        <th>%</th>
+        <th>Monumenti senza foto</th>
+        <th>Links</th>
+    </thead>
+    <tbody>
+        <% @contests.reverse.each do |contest| %>
+        <tr>
+            <th><%= contest.position %></th>
+            <td><% if contest.logo.attached? %>
 
-        <%= image_tag contest.logo.variant(resize_to_limit: [200, 200]) %> 
-        <% else %> 
+                <%= link_to contest do %><%= image_tag contest.logo.variant(resize_to_limit: [200, 200]) %><% end %>
+                <% else %>
 
-        <%= link_to 'Aggiungi il logo', upload_path(id: contest.id) %> 
-        
-        <% end %></td>
-        <td><%= link_to contest.name, contest %></td>
-        <td><%= contest.count %></td>
-        <td><%= contest.photos.where(usedonwiki: true).count %></td>
-        <td><%= (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).nan? %></td>
-       <!-- Conto degli utenti partecipanti -->
-        <td><%= contest.creators %></td>
-        <td><%= contest.creatorsapposta %> </td>
-        <td><%= (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).truncate(1) unless (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0 %> <%= '0.0' if (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0%></td>
-	        <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
+                <%= link_to 'Aggiungi il logo', upload_path(id: contest.id) %>
 
-     </tr>
-    <% end %>
-  </tbody>
+                <% end %></td>
+            <td><%= link_to contest.name, contest %></td>
+            <td><%= contest.count %></td>
+            <td><%= contest.photos.where(usedonwiki: true).count %></td>
+            <td><%= (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).nan? %></td>
+            <!-- Conto degli utenti partecipanti -->
+            <td><%= contest.creators %></td>
+            <td><%= contest.creatorsapposta %> </td>
+            <td><%= (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).truncate(1) unless (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0 %> <%= '0.0' if (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0%></td>
+            <td><%= contest.nophoto %></td>
+            <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
+
+        </tr>
+        <% end %>
+    </tbody>
 </table>
 <% @contests.each do |contest| %>
-  <% if contest.count == 0 %>
-  <!-- Contest stats doesn't work for empty contests -->
-    <script>
-      document.getElementById('<%= contest.id%>').setAttribute('disabled', 'wlm-zeroelements');
-      
-      document.getElementById('<%= contest.id%>').addEventListener('click', function (event) {
-            event.preventDefault();
-        });
+<% if contest.count == 0 %>
+<!-- Contest stats doesn't work for empty contests -->
+<script>
+    document.getElementById('<%= contest.id%>').setAttribute('disabled', 'wlm-zeroelements');
 
-    </script>
-  <% end %>
+    document.getElementById('<%= contest.id%>').addEventListener('click', function(event) {
+        event.preventDefault();
+    });
+</script>
+<% end %>
 <% end %>
 <br />
-<%= link_to 'Trova i monumenti WLM vicino a te', 'https://wlm.puglia.wiki', class: 'button is-danger' %>
+<%= link_to 'Trova i monumenti WLM vicino a te', 'https://cerca.wikilovesmonuments.it', class: 'button is-danger' %>
+
 <br />
 <h1 class="subtitle">Pagina personale di un utente</h1>
-  <div class="control">
+<div class="control">
     <input class="input" name="id" type="text" id="username">
-  </div>
-  <br/>
-  <div class="control">
+</div>
+<br />
+<div class="control">
     <a class="button is-primary is-small" id="username-submit">Invia</a>
-  </div>
+</div>
 
 <script>
-  $('#username-submit').click(function(){
-    var link = 'https://' + location.hostname + '/creators/' + $('#username').val();
-    $('#username-submit').attr('href', link);
-  });
+    $('#username-submit').click(function() {
+        var link = 'https://' + location.hostname + '/creators/' + $('#username').val();
+        $('#username-submit').attr('href', link);
+    });
 </script>
-  <script>
-                        $('#elenco-concorsi').DataTable( {
-                          dom: 'Bfrtip',
-                          buttons: [
-                              'copy', 'csv', 'excel', 'pdf', 'print'
-                          ]
-                        } );
-        </script>
+<script>
+    $('#elenco-concorsi').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    });
+</script>
 
+<br />
+
+<% if Nophoto.where(regione: nil).count > 0 %>
+<h2 class="subtitle">Grafico monumenti senza foto</h2>
+<%= line_chart @nophotograph, xmin:  "#{DateTime.now.strftime('%Y')}-08-30", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
+<p><b>Monumenti totali partecipanti</b>: <%= Nophoto.where(regione: nil).last.monuments %>
+<p><b>Monumenti senza foto oggi</b>: <%= Nophoto.where(regione: nil).last.count %>
+<p><b>Monumenti CON foto oggi</b>: <%= Nophoto.where(regione: nil).last.monuments - Nophoto.where(regione: nil).last.count %>
+<p><b>Monumenti senza foto prima dell'inizio di WLM</b>: <%= Nophoto.where(regione: nil).first.count %>
+<p><b>Monumenti con una categoria su Commons</b>: <%= Nophoto.where(regione: nil).last.with_commons %>
+<p><b>Monumenti con un'immagine su Wikidata</b>: <%= Nophoto.where(regione: nil).last.with_image %>
+<p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= Nophoto.where(regione: nil).last.nowlm %>
+    <% end %>
