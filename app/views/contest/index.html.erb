@@ -91,7 +91,7 @@
 
 <% if Nophoto.where(regione: nil).count > 0 %>
 <h2 class="subtitle">Grafico monumenti senza foto</h2>
-<%= line_chart @nophotograph, xmin:  "#{DateTime.now.strftime('%Y')}-08-30", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
+<%= line_chart @nophotograph, xmin:  "#{DateTime.now.strftime('%Y')}-08-31", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
 <% a = Nophoto.where(regione: nil).last.monuments %>
 <% b = Nophoto.where(regione: nil).last.count %>
 <p><b>Monumenti totali partecipanti</b>: <%= Nophoto.where(regione: nil).last.monuments %>
