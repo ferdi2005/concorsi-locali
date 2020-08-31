@@ -14,6 +14,7 @@
         <th>%</th>
         <th>Monumenti partecipanti</th>
         <th>Monumenti senza foto</th>
+        <th>%</th>
         <th>Links</th>
     </thead>
     <tbody>
@@ -37,7 +38,8 @@
             <td><%= contest.creatorsapposta %> </td>
             <td><%= (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).truncate(1) unless (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0 %> <%= '0.0' if (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0%></td>
             <td><%= contest.monuments %></td>
-            <td><%= contest.nophoto %> (<%= (contest.nophoto.to_f / contest.monuments.to_f * 100.0).truncate(1) unless (contest.nophoto.to_f / contest.monuments.to_f * 100.0).nan? || contest.nophoto == 0 || contest.monuments == 0 %> <%= '0.0' if (contest.nophoto.to_f / contest.monuments.to_f * 100.0).nan? || contest.nophoto == 0 || contest.monuments == 0%>%)</td>
+            <td><%= contest.nophoto %></td>
+            <td>(<%= (contest.nophoto.to_f / contest.monuments.to_f * 100.0).truncate(1) unless (contest.nophoto.to_f / contest.monuments.to_f * 100.0).nan? || contest.nophoto == 0 || contest.monuments == 0 %> <%= '0.0' if (contest.nophoto.to_f / contest.monuments.to_f * 100.0).nan? || contest.nophoto == 0 || contest.monuments == 0%>%)</td>
             <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
 
         </tr>
