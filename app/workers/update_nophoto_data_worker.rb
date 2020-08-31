@@ -3,7 +3,7 @@ class UpdateNophotoDataWorker
 
   def perform(*args)
     nophotodata = HTTParty.get("https://cerca.wikilovesmonuments.it/allregionsdifference.json").to_a
-    nophotodata.each do |nop|
+    nophotodata.last(21).each do |nop|
       if nop["regione"].nil?
         Nophoto.create(count: nop["count"], monuments: nop["monuments"], with_commons: nop["with_commons"], with_image: nop["with_image"], nowlm: nop["nowlm"])
       else
