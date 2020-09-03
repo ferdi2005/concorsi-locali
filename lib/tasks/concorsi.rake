@@ -11,9 +11,6 @@ namespace :db do
     # Toscana
     Contest.create(region: "Toscana", category: "Category:Images from Wiki Loves Monuments #{DateTime.now.strftime("%Y")} in Italy - Tuscany", name: "Wiki Loves Toscana", url: "https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali")
     puts "Creating Toscana..."
-    # Lake Como
-    Contest.create(category: "Category:Images from Wiki Loves Monuments #{DateTime.now.strftime("%Y")} in Italy - Lake Como", name: "Wiki Loves Monuments - Lake Como", url: "https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali")
-    puts "Creating Lake Como..."
     # Abruzzo
     Contest.create(region: "Abruzzo", category: "Category:Images from Wiki Loves Monuments #{DateTime.now.strftime("%Y")} in Italy - Abruzzo", name: "Wiki Loves Abruzzo", url: "https://wikilovesmonuments.wikimedia.it/concorso/concorsi-locali")
     puts "Creating Abruzzo..."
