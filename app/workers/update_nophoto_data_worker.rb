@@ -9,7 +9,7 @@ class UpdateNophotoDataWorker
       else
         Nophoto.create(count: nop["count"], monuments: nop["monuments"], with_commons: nop["with_commons"], with_image: nop["with_image"], nowlm: nop["nowlm"], regione: nop["regione"])
         regione = Contest.find_by(region: nop["regione"])
-        regione.update_attributes(nophoto: nop["count"], monuments: nop["monuments"], with_commons: nop["with_commons"], with_image: nop["with_image"], nowlm: nop["nowlm"])
+        regione.update_attributes(nophoto: nop["count"], monuments: nop["monuments"], with_commons: nop["with_commons"], with_image: nop["with_image"], nowlm: nop["nowlm"]) unless regione.nil?
       end
     end
   end
