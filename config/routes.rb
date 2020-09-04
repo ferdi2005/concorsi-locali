@@ -1,5 +1,5 @@
-# require 'sidekiq/web'
-# require 'sidekiq/cron/web'
+require 'sidekiq/web'
+require 'sidekiq/cron/web'
 Rails.application.routes.draw do
   root 'contest#index'
   resources :contest, only: [:show]
@@ -7,7 +7,9 @@ Rails.application.routes.draw do
   get 'upload', to: 'contest#upload'
   post 'upload', to: 'contest#uploadpost'
   
-  # mount Sidekiq::Web => '/secret-sidekiq'
+  if ENV['WEBSIDEKIQ'] == "TRUE"
+    mount Sidekiq::Web => '/sidekiq'
+  end
 
   scope '/numerics' do
     get 'totalphotos', to: 'numerics#totalphotos'
