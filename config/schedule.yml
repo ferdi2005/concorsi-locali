@@ -11,5 +11,5 @@ first_wlm_data_population_worker:
   cron: "30 7 31 8 *"
   class: "FirstWlmDataPopulationWorker"
 update_nophoto_data_worker:
-  cron: "30 7 * 9 *"
+  cron: "0 10 * 9 *"
   class: "UpdateNophotoDataWorker"
