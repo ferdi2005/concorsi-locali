@@ -102,3 +102,8 @@
 <p><b>Monumenti con un'immagine su Wikidata</b>: <%= Nophoto.where(regione: nil).last.with_image %>
 <p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= Nophoto.where(regione: nil).last.nowlm %>
     <% end %>
+
+<div class="buttons">
+    <%= link_to "Aiuta a creare le categorie per i monumenti con un'immagine su Wikidata ma sprovvisti di categoria", "https://it.wikipedia.org/wiki/Progetto:Wiki_Loves_Monuments_2019/Manutenzione/Monumenti_con_immagine_senza_categoria", class: 'button is-warning' %>
+    <%= link_to "Aiuta a creare le categorie per i monumenti con delle immagini partecipanti a WLM ma sprovvisti di categoria", "https://it.wikipedia.org/wiki/Progetto:Wiki_Loves_Monuments_2019/Manutenzione/Monumenti_senza_categoria_con_foto_caricate", class: 'button is-danger' %>
+</div>
