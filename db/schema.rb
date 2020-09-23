@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_30_121536) do
+ActiveRecord::Schema.define(version: 2020_09_23_184407) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -51,6 +51,7 @@ ActiveRecord::Schema.define(version: 2020_08_30_121536) do
     t.integer "with_image"
     t.integer "nowlm"
     t.string "region"
+    t.integer "year", default: 2020
   end
 
   create_table "creators", force: :cascade do |t|
