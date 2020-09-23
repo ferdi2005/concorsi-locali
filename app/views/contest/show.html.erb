@@ -13,7 +13,7 @@
 </div>
 <% end %>
 <h2 class="subtitle">Il grafico</h2>
-<%= line_chart Photo.where(contest: @contest).group_by_day(:photodate).count, xmin: "#{DateTime.now.strftime('%Y')}-09-01", xmax: "#{DateTime.now.strftime('%Y')}-09-30"%>
+<%= line_chart Photo.where(contest: @contest).group_by_day(:photodate).count, xmin: "#{@contest.year}-09-01", xmax: "#{@contest.year}-09-30"%>
 <br />
 <h2 class="subtitle">La classifica degli utenti</h2>
 
@@ -46,12 +46,12 @@
 <br />
 <% if Creator.where(proveniencecontest: @contest.id).count > 0 %>
 <h2 class="subtitle">Utenti iscritti appositamente per WLM</h2>
-<%= line_chart Creator.where(proveniencecontest: @contest.id).group_by_day(:creationdate).count, xmin:  "#{DateTime.now.strftime('%Y')}-09-01", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
+<%= line_chart Creator.where(proveniencecontest: @contest.id).group_by_day(:creationdate).count, xmin:  "#{@contest.year}-09-01", xmax:  "#{@contest.year}-09-30"%>
 <% end %>
 
 <% if Nophoto.where(regione: @contest.region).count > 0 && !@contest.region.nil? %>
 <h2 class="subtitle">Grafico monumenti senza foto</h2>
-<%= line_chart @nophotograph, xmin:  "#{DateTime.now.strftime('%Y')}-08-31", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
+<%= line_chart @nophotograph, xmin:  "#{@contest.year}-08-31", xmax:  "#{@contest.year}-09-30"%>
 <p><b>Monumenti totali partecipanti</b>: <%= Nophoto.where(regione: @contest.region).last.monuments %>
 <p><b>Monumenti senza foto oggi</b>: <%= Nophoto.where(regione: @contest.region).last.count %> (<%= (@contest.nophoto.to_f / @contest.monuments.to_f * 100.0).truncate(1) unless (@contest.nophoto.to_f / @contest.monuments.to_f * 100.0).nan? || @contest.nophoto == 0 || @contest.monuments == 0 %> <%= '0.0' if (@contest.nophoto.to_f / @contest.monuments.to_f * 100.0).nan? || @contest.nophoto == 0 || @contest.monuments == 0%>%)
 <p><b>Monumenti CON foto oggi</b>: <%= Nophoto.where(regione: @contest.region).last.monuments - Nophoto.where(regione: @contest.region).last.count %>
