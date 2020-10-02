@@ -6,6 +6,11 @@ class ContestController < ApplicationController
     Nophoto.where(regione: nil).each do |nop|
       @nophotograph[nop.created_at] = nop.count
     end
+
+    @nophotographpercent = {}
+    Nophoto.where(regione: nil).each do |nop|
+      @nophotograph[nop.created_at] = nop.percent
+    end
   end
 
   def show
@@ -21,6 +26,12 @@ class ContestController < ApplicationController
     Nophoto.where(regione: @contest.region).each do |nop|
       @nophotograph[nop.created_at] = nop.count
     end
+
+    @nophotographpercent = {}
+    Nophoto.where(regione: @contest.region).each do |nop|
+      @nophotograph[nop.created_at] = nop.percent
+    end
+
   end
 
   def upload
