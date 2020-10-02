@@ -14,7 +14,7 @@ class ContestController < ApplicationController
   end
 
   def show
-    @contest = Contest.find(params[:id])
+    @contest = Contest.includes(:photos).find(params[:id])
     @creators = []
     Creator.all.each do |creator|
       if creator.photos.where(contest: @contest).any?
