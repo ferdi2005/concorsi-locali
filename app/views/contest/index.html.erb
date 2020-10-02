@@ -31,8 +31,8 @@
                 <% end %></td>
             <td><%= link_to contest.name, contest %></td>
             <td><%= contest.count %></td>
-            <td><%= contest.photos.where(usedonwiki: true).count %></td>
-            <td><%= (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.where(usedonwiki: true).count.to_f / contest.count.to_f * 100.0).nan? %></td>
+            <td><%= contest.photos.select{|p| p.usedonwiki == true }.count %></td>
+            <td><%= (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).nan? %></td>
             <!-- Conto degli utenti partecipanti -->
             <td><%= contest.creators %></td>
             <td><%= contest.creatorsapposta %> </td>
