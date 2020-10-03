@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 class ContestController < ApplicationController
   include ContestHelper
   def index
-    @contests = Contest.with_attached_logo.includes(:photos).sort_by{ |contest| contest.photos.count }
+    @contests = Contest.with_attached_logo.includes(:photos).sort_by { |contest| contest.photos.count }
     @nophotograph = {}
     Nophoto.where(regione: nil).each do |nop|
       @nophotograph[nop.created_at] = nop.count
@@ -17,11 +19,9 @@ class ContestController < ApplicationController
     @contest = Contest.includes(:photos).find(params[:id])
     @creators = []
     Creator.all.each do |creator|
-      if creator.photos.where(contest: @contest).any?
-        @creators.push(creator)
-      end
+      @creators.push(creator) if creator.photos.where(contest: @contest).any?
     end
-    @creators = @creators.sort_by{|gp| gp.photos.where(contest: @contest).count}.reverse
+    @creators = @creators.sort_by { |gp| gp.photos.where(contest: @contest).count }.reverse
     @nophotograph = {}
     Nophoto.where(regione: @contest.region).each do |nop|
       @nophotograph[nop.created_at] = nop.count
@@ -31,7 +31,6 @@ class ContestController < ApplicationController
     Nophoto.where(regione: @contest.region).each do |nop|
       @nophotographpercent[nop.created_at] = nop.percent
     end
-
   end
 
   def upload
