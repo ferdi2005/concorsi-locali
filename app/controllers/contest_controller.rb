@@ -9,7 +9,7 @@ class ContestController < ApplicationController
 
     @nophotographpercent = {}
     Nophoto.where(regione: nil).each do |nop|
-      @nophotograph[nop.created_at] = nop.percent
+      @nophotographpercent[nop.created_at] = nop.percent
     end
   end
 
@@ -29,7 +29,7 @@ class ContestController < ApplicationController
 
     @nophotographpercent = {}
     Nophoto.where(regione: @contest.region).each do |nop|
-      @nophotograph[nop.created_at] = nop.percent
+      @nophotographpercent[nop.created_at] = nop.percent
     end
 
   end
