@@ -99,8 +99,8 @@
 <% b = Nophoto.where(regione: nil).last.count %>
 <p><b>Monumenti totali partecipanti</b>: <%= Nophoto.where(regione: nil).last.monuments %>
 <p><b>Monumenti senza foto oggi</b>: <%= Nophoto.where(regione: nil).last.count %> (<%= (b.to_f / a.to_f * 100.0).truncate(1) unless (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0 %> <%= '0.0' if (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0%>%)
-<p><b>Monumenti CON foto oggi</b>: <%= Nophoto.where(regione: nil).last.monuments - Nophoto.where(regione: nil).last.count %> (<%= Nophoto.where(regione: nil).first.percent %> %)
-<p><b>Monumenti senza foto prima dell'inizio di WLM</b>: <%= Nophoto.where(regione: nil).first.count %>
+<p><b>Monumenti CON foto oggi</b>: <%= Nophoto.where(regione: nil).last.monuments - Nophoto.where(regione: nil).last.count %>
+<p><b>Monumenti senza foto prima dell'inizio di WLM</b>: <%= Nophoto.where(regione: nil).first.count %>  (<%= Nophoto.where(regione: nil).first.percent %> %)
 <p><b>Monumenti con una categoria su Commons</b>: <%= Nophoto.where(regione: nil).last.with_commons %>
 <p><b>Monumenti con un'immagine su Wikidata</b>: <%= Nophoto.where(regione: nil).last.with_image %>
 <p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= Nophoto.where(regione: nil).last.nowlm %>
