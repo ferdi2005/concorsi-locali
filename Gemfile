@@ -65,7 +65,7 @@ gem "chartkick", "~> 3.4"
 
 gem "groupdate", "~> 4.1"
 
-gem "addressable", "~> 2.7"
+gem "addressable", "~> 2.8"
 
 gem "sidekiq-cron", "~> 1.1"
 
