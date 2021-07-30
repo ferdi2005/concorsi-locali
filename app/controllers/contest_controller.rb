@@ -1,5 +1,7 @@
 class ContestController < ApplicationController
   include ContestHelper
+  http_basic_authenticate_with name: "wikilovesmonuments", password: ENV["SECRET_PASSWORD"], only: [:upload, :uploadpost]
+  
   def index
     @contests = Contest.with_attached_logo.includes(:photos).sort_by{ |contest| contest.photos.count }
     @nophotograph = {}
