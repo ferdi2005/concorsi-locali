@@ -3,22 +3,14 @@ class DeleteNonwlmPhotosWorker
 
   def perform(*args)
     Photo.all.each do |photo|
-      templates = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {:action=>:query, :prop=>:templates, :pageids=> photo.pageid, :tllimit => :max, :format=>:json}).to_a[1][1]["pages"].first[1]["templates"]
-      
-      unless templates.nil?
-        templates.each do |template|
-          if template["title"] == "Template:Monumento italiano"
-            @monumentoitaliano = true
-            puts "Foto #{photo.name} esaminata e ancora attiva"
-          end
-        end
-      end
-      
-      unless @monumentoitaliano == true
-        puts "Foto #{photo.name} cancellata"
+      # Verifica che la fotografia sia ancora parte del concorso cercandone i template e trovando quello che identifica una foto partecipante al concorso
+
+      templates = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {:action=>:query, :prop=>:templates, :pageids=> photo.pageid, :tllimit => :max, :format=>:json}).to_h["query"]["pages"][photo.pageid.to_s]["templates"]
+
+      unless templates.any? { |t| t["title"] == "Template:Monumento italiano" }
         photo.destroy
-        if photo.creator.photos.count == 1
-          puts "Autore #{photo.creator.name} cancellato"
+        if photo.creator.photos.count == 0
+          # Se all'autore non sono rimaste fotografie, lo elimino per non lasciarne conto
           photo.creator.destroy
         end
       end

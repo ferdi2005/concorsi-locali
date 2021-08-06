@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_10_01_220207) do
+ActiveRecord::Schema.define(version: 2021_08_05_230651) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -56,7 +56,7 @@ ActiveRecord::Schema.define(version: 2020_10_01_220207) do
 
   create_table "creators", force: :cascade do |t|
     t.string "username"
-    t.integer "userid"
+    t.bigint "userid"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.datetime "creationdate"
@@ -78,7 +78,7 @@ ActiveRecord::Schema.define(version: 2020_10_01_220207) do
   create_table "photos", force: :cascade do |t|
     t.string "name"
     t.bigint "contest_id", null: false
-    t.integer "pageid"
+    t.bigint "pageid"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.bigint "creator_id", null: false

@@ -3,15 +3,17 @@ class UpdateGlobalUsageWorker
   sidekiq_options({
     # Should be set to true (enables uniqueness for async jobs)
     # or :all (enables uniqueness for both async and scheduled jobs)
-    unique: true
+    unique: :all
   })
 
   def perform(*args)
-    puts 'Inizio a cercare le foto che sono state usate su Wiki'
-    Photo.all.each do |photo|
-      globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php?action=query&prop=globalusage&pageids=#{photo.pageid}&gunamespace=0&format=json", uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo.pageid.to_s]['globalusage'].try(:empty?)
-      if !globalusage != photo.usedonwiki
-        photo.update_attribute(:usedonwiki, !globalusage)
+    Photo.in_batches(of: 50) do |batch|
+      # Cerco le foto usate sui progetti Wikimedia in gruppi di 50
+      globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: { :action => :query, :prop => :globalusage, :pageids => batch.pluck(:pageid).join("|"), :gunamespace => 0, gulimit: 50, :format => :json}, uri_adapter: Addressable::URI).to_h["query"]["pages"]
+      
+      batch.each do |photo|
+        # Aggiorna la singola foto sulla base di quanto verificato (invertendo poiché blank a true significa foto non usata)
+        photo.update!(usedonwiki: !globalusage[photo.pageid.to_s]["globalusage"].blank?)
       end
     end
   end
