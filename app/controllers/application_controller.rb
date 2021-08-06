@@ -7,7 +7,7 @@ class ApplicationController < ActionController::Base
     
     if Date.today.month == 10
       UpdateDataWorker.perform_async
-      flash[:info] = "Verrà iniziato l'aggiornamento manuale dei dati. Ricarica questa pagina tra un po'"
+      flash[:info] = "Verrà iniziato l'aggiornamento manuale dei dati. Ricarica questa pagina tra qualche minuto."
     end
   end
 
