@@ -4,80 +4,68 @@ class UpdateDataWorker
   sidekiq_options({
     # Should be set to true (enables uniqueness for async jobs)
     # or :all (enables uniqueness for both async and scheduled jobs)
-    unique: true
+    unique: :all
   })
+
   def perform
-    start = Time.now
     Contest.all.each do |contest|
       puts "Ottengo la categoria della regione #{contest.name} (#{contest.category})..."
-      request_photolist = "https://commons.wikimedia.org/w/api.php"
-      photolist = HTTParty.get(request_photolist, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_a
-      if photolist[2].nil?
-        photolist = photolist[1][1]['categorymembers']
-      else
-        cmcontinue = photolist[1][1]['cmcontinue']
-        continue = photolist[1][1]['continue']
-        photolist = photolist[2][1]['categorymembers']
+      
+      # Facendo uso del generator categorymembers, ottiene le informazioni sulle foto nella categoria d'elezione 
+      commons_api = "https://commons.wikimedia.org/w/api.php"
+      request = HTTParty.get(commons_api, query: {action: :query, prop: :imageinfo, iiprop: 'user|timestamp|userid', generator: :categorymembers, gcmtitle: contest.category, gcmdir: :newer, gcmlimit: 500, format: :json}, uri_adapter: Addressable::URI).to_h
+
+      photolist = request["query"]["pages"]
+
+      # Procede con la continuazione
+      while !request["continue"].nil?
+        request = HTTParty.get(commons_api, query: {action: :query, prop: :imageinfo, iiprop: 'user|timestamp|userid', generator: :categorymembers, gcmtitle: contest.category, gcmdir: :newer, gcmcontinue: request["continue"]["gcmcontinue"], gcmlimit: 500, format: :json}, uri_adapter: Addressable::URI).to_h
+        photolist.merge!(request["query"]["pages"]) # Unisce i due hash
       end
 
-      unless photolist.nil?
-        while continue == '-||'
-          puts 'Ottengo la continuazione della categoria...'
-          new_request_photolist = "https://commons.wikimedia.org/w/api.php"
-          new_photolist = HTTParty.get(new_request_photolist, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, cmcontinue: cmcontinue, format: :json }, uri_adapter: Addressable::URI).to_a
-          unless new_photolist.nil?
-            if new_photolist[2].nil?
-              new_photolist = new_photolist[1][1]['categorymembers']
-              continue = false
-              @noph = true
-            else
-              cmcontinue = new_photolist[1][1]['cmcontinue']
-              continue = new_photolist[1][1]['continue']
-              new_photolist = new_photolist[2][1]['categorymembers']
-            end      
-            unless new_photolist.nil?
-              puts 'Sommo le liste di foto...'
-              photolist = photolist += new_photolist
-            end
+      # Rimuove le fotografie che già esistono in memoria o che non sono foto (namespace 6)
+      photolist.reject! { |_, photo| Photo.exists?(name: photo['title']) || photo['ns'] != 6 }
+      
+      photolist.each do |_, photo|
+        # Shortcut alle informazioni più proprie dell'immagine
+        photoinfo = photo['imageinfo'][0]
+
+        # Procede solo se la fotografia è stata scattata nel periodo di Settembre
+        next unless photoinfo['timestamp'].to_date.between?(Date.parse("1 september #{contest.year}"), Date.parse("30 september #{contest.year}"))
+
+        # Verifica la presenza o no di utilizzi della fotografia 
+        # (prende il valore contrario poiché con blank si verifica con true l'assenza di utilizzi)
+
+        usedonwiki = !HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, prop: :globalusage, pageids:photo['pageid'], gunamespace: 0, format: :json}, uri_adapter: Addressable::URI).to_h["query"]["pages"][photo['pageid'].to_s]["globalusage"].blank?
+        
+        # Se non c'è l'utente, lo crea, altrimenti lo individua normalmente
+        if Creator.exists?(username: photoinfo['user']) || Creator.exists?(userid: photoinfo['userid'])
+          creator = Creator.where(username: photoinfo['user']).or(Creator.where(userid: photoinfo['userid'])).first
+        else
+          # Recupera le informazioni sull'utente da Commons
+          userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, meta: :globaluserinfo, guiuser: photoinfo['user'], format: :json}, uri_adapter: Addressable::URI).to_h["query"]["globaluserinfo"]
+
+          creator = Creator.create(username: photoinfo["user"], userid: photoinfo['userid'], creationdate: userinfo['registration'])
+
+          # Verifica se l'utente si è iscritto appositamente per il concorso
+          unless userinfo['registration'].nil?
+            creator.update_attribute(:proveniencecontest, contest.id) if userinfo['registration'].to_date == photoinfo['timestamp'].to_date || userinfo['registration'].to_date.between?(Date.parse('30 august'), Date.parse('30 september'))
           end
         end
-        photolist.reject! { |photo| Photo.where(name: photo['title']).count > 0 }
-        puts 'Inizio a processare le singole foto...'
-          photolist.each do |photo|
-            if photo['ns'].to_s == '6'
-              photoinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query,pageids: photo['pageid'], prop: :imageinfo, iiprop: 'user|timestamp|userid', format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['imageinfo'][0] # Looks for photoinfo
-              if photoinfo['timestamp'].to_date.between?(Date.parse('1 september'), Date.parse('30 september'))
-                globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php",query: {action: :query, prop: :globalusage, pageids:photo['pageid'], gunamespace: 0, format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['pages'][photo['pageid'].to_s]['globalusage'].try(:empty?)
-                puts "Foto: #{photo['title']} di #{photoinfo['user']}..."
-                @userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, meta: :globaluserinfo, guiuser: photoinfo['user'], format: :json}, uri_adapter: Addressable::URI).to_a[1][1]['globaluserinfo']
-                @registration = @userinfo['registration']
-                @creationdate = @registration
-                @name = photoinfo['user']
-                if Creator.where(username: @name).or(Creator.where(username: photoinfo['userid'])).count > 0
-                  @creator = Creator.where(username: photoinfo['user']).or(Creator.where(userid: photoinfo['userid'])).first
-                else
-                    puts "Creo l'utente #{photoinfo['user']}"
-                    @creator = Creator.create(username: @name, userid: photoinfo['userid'], creationdate: @creationdate)
-                    unless @creationdate.nil?
-                      @creator.update_attribute(:proveniencecontest, contest.id) if @creationdate.to_date == photoinfo['timestamp'].to_date || @creationdate.to_date.between?(Date.parse('30 august'), Date.parse('30 september'))  
-                    end
-                end
-                  @photo = Photo.create(pageid: photo['pageid'], name: photo['title'], creator: @creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: !globalusage)
-              end
-                end
-              end
+
+        @photo = Photo.create(pageid: photo['pageid'], name: photo['title'], creator: creator, contest: contest, photodate: photoinfo['timestamp'], usedonwiki: usedonwiki)
       end
     end
-    
-    puts 'Inizio salvataggio del conto dei creatori.'
-      Contest.all.each do |contest|
-        @creators = Creator.includes(:photos).select { |m| m.photos.where(contest: contest).any? }.count
 
-        contest.update_attribute(:creators, @creators)
-        creatorsapposta = Creator.where(proveniencecontest: contest.id).count
-        contest.update_attribute(:creatorsapposta, creatorsapposta) 
-      end
-      puts 'Tempo di esecuzione'
-      puts Time.now - start
+    puts 'Inizio salvataggio del conto dei creatori.'
+    Contest.all.each do |contest|
+      # Creatori con foto partecipanti
+      creators = Creator.includes(:photos).select { |m| m.photos.where(contest: contest).any? }.count
+      contest.update_attribute(:creators, creators)
+      
+      # Utenti iscritti appositamente per il concorso
+      creatorsapposta = Creator.where(proveniencecontest: contest.id).count
+      contest.update_attribute(:creatorsapposta, creatorsapposta) 
+    end
   end
 end

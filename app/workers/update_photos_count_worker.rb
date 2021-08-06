@@ -8,41 +8,26 @@ class UpdatePhotosCountWorker
 
   def perform(*args)
     Contest.all.each do |contest|
-      puts "Ottengo la categoria #{contest.name}..."
-      request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&format=json"
-      photolist = HTTParty.get(request_photolist, uri_adapter: Addressable::URI).to_a
-      if photolist[2].nil?
-        photolist = photolist[1][1]['categorymembers']
-      else
-        cmcontinue = photolist[1][1]['cmcontinue']
-        continue = photolist[1][1]['continue']
-        photolist = photolist[2][1]['categorymembers']
+      # Richiede le foto della categoria
+      commons_url = "https://commons.wikimedia.org/w/api.php"
+      request = HTTParty.get(commons_url, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_h
+
+      photolist = request["query"]["categorymembers"]
+      # Procede con la continuazione
+      while !request["continue"].nil?
+        request = HTTParty.get(commons_url, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, cmcontinue: request["continue"]["cmcontinue"], format: :json}, uri_adapter: Addressable::URI).to_h
+        
+        photolist += request["query"]["categorymembers"] # Somma i due array
       end
-      unless photolist.nil?
-          while continue == '-||'
-            puts 'Ottengo la continuazione della categoria...'
-            new_request_photolist = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle=#{contest.category}&cmlimit=500&cmdir=newer&cmcontinue=#{cmcontinue}&format=json"
-            new_photolist = HTTParty.get(new_request_photolist, uri_adapter: Addressable::URI).to_a
-            unless new_photolist.nil?
-              if new_photolist[2].nil?
-                new_photolist = new_photolist[1][1]['categorymembers']
-                continue = false
-                @noph = true
-              else
-                cmcontinue = new_photolist[1][1]['cmcontinue']
-                continue = new_photolist[1][1]['continue']
-                new_photolist = new_photolist[2][1]['categorymembers']
-              end      
-              unless new_photolist.nil?
-                puts 'Sommo le liste di foto...'
-                photolist += new_photolist
-              end
-            end
-          end
-        end
-        photolist.uniq!
-        photolist.reject! { |p| p['ns'] != 6}
-        contest.update_attribute(:count, photolist.count)
+
+      # Rimuove eventuali duplicati
+      photolist.uniq!
+      
+      # Rimuove le pagine che non sono fotografie 
+      photolist.reject! { |p| p['ns'] != 6}
+      
+      # Aggiorna il conto delle fotografie del concorso
+      contest.update_attribute(:count, photolist.count)
     end
   end
 end
