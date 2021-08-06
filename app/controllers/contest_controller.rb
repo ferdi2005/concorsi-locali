@@ -45,7 +45,7 @@ class ContestController < ApplicationController
 
   def uploadpost
     @contest = Contest.find_by(id: params[:contest][:id])
-    if @contest.update_attributes(params_ok)
+    if @contest.update!(params_ok)
       redirect_to root_path
       flash[:success] = 'OK'
     else

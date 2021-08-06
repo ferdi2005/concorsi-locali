@@ -27,7 +27,7 @@ class UpdatePhotosCountWorker
       photolist.reject! { |p| p['ns'] != 6}
       
       # Aggiorna il conto delle fotografie del concorso
-      contest.update_attribute(:count, photolist.count)
+      contest.update!(count: photolist.count)
     end
   end
 end
