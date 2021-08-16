@@ -26,7 +26,7 @@
 
 <footer class="footer">
     <div class="content has-text-centered">
-        Statstiche sui concorsi locali di <strong>Wiki Loves Monuments Italia</strong> - <a href="https://github.com/ferdi2005/concorsi-locali">Codice sorgente</a> - Licenza MIT.
+        Statistiche sui concorsi locali di <strong>Wiki Loves Monuments Italia</strong> - <a href="https://github.com/ferdi2005/concorsi-locali">Codice sorgente</a> - Licenza MIT.
         <br />
         I dati vengono aggiornati ogni 5-15 (solo numero foto-tutti i dati) minuti nel mese di settembre - ultimo aggiornamento: <%= Sidekiq::Cron::Job.find('update_data_job').last_enqueue_time unless Sidekiq::Cron::Job.find('update_data_job').nil? %><%= Sidekiq::Cron::Job.find('Update Data Job').last_enqueue_time unless Sidekiq::Cron::Job.find('Update Data Job').nil? %>
 
