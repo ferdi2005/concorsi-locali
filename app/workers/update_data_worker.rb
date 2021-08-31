@@ -15,8 +15,10 @@ class UpdateDataWorker
       commons_api = "https://commons.wikimedia.org/w/api.php"
       request = HTTParty.get(commons_api, query: {action: :query, prop: :imageinfo, iiprop: 'user|timestamp|userid', generator: :categorymembers, gcmtitle: contest.category, gcmdir: :newer, gcmlimit: 500, format: :json}, uri_adapter: Addressable::URI).to_h
 
-      photolist = request["query"]["pages"]
+      photolist = request.try(:[], "query").try(:[], ["pages"])
 
+      next if photolist.nil?
+      
       # Procede con la continuazione
       while !request["continue"].nil?
         request = HTTParty.get(commons_api, query: {action: :query, prop: :imageinfo, iiprop: 'user|timestamp|userid', generator: :categorymembers, gcmtitle: contest.category, gcmdir: :newer, gcmcontinue: request["continue"]["gcmcontinue"], gcmlimit: 500, format: :json}, uri_adapter: Addressable::URI).to_h
