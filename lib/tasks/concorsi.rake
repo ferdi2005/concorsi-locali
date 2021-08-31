@@ -5,20 +5,20 @@ namespace :db do
     # Contest(id: integer, category: string, name: string, created_at: datetime, updated_at: datetime, url: string)
 
     # Lakes como da creare manualmente in un'altra istanza
-    #  Contest.create(region: "Lake Como", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Lake Como", name: "Wiki Loves Monuments - Lago di Como", url: "https://www.wikimedia.it/como-lago/", year: Date.today.year)
-    # Valle del Primo presepe da creare manualmente in un'altra istanza
-    #  Contest.create(region: "Valle del Primo Presepe", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Valle del Primo Presepe", name: "Wiki Loves Valle del Primo Presepe", url: "https://www.wikimedia.it/wiki-loves-valle-del-primo-presepe/", year: Date.today.year)
+    #  Contest.create(region: "Lake Como", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Lake Como", name: "Wiki Loves Monuments - Lago di Como", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/lago-di-como", year: Date.today.year)
+    # Valle del Primo presepe da creare manualmente in un'altra istanza ove necessario
+    #  Contest.create(region: "Valle del Primo Presepe", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Valle del Primo Presepe", name: "Wiki Loves Valle del Primo Presepe", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/valle-del-primo-presepe", year: Date.today.year)
 
     # Concorsi locali 2021
 
     # Puglia
-    Contest.create(region: "Puglia", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Apulia", name: "Wiki Loves Puglia", url: "https://www.wikimedia.it/puglia", year: Date.today.year)
+    Contest.create(region: "Puglia", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Apulia", name: "Wiki Loves Puglia", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/puglia", year: Date.today.year)
     puts "Creating Puglia..."
     # Toscana
-    Contest.create(region: "Toscana", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Tuscany", name: "Wiki Loves Toscana", url: "https://www.wikimedia.it/wiki-loves-monuments-toscana/", year: Date.today.year)
+    Contest.create(region: "Toscana", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Tuscany", name: "Wiki Loves Toscana", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/toscana", year: Date.today.year)
     puts "Creating Toscana..."
     # Abruzzo
-    Contest.create(region: "Abruzzo", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Abruzzo", name: "Wiki Loves Abruzzo", url: "https://www.wikimedia.it/abruzzo/", year: Date.today.year)
+    Contest.create(region: "Abruzzo", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Abruzzo", name: "Wiki Loves Abruzzo", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/abruzzo/", year: Date.today.year)
     puts "Creating Abruzzo..."
     # Basilicata
     Contest.create(region: "Basilicata", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Basilicata", name: "Wiki Loves Basilicata", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
@@ -33,7 +33,7 @@ namespace :db do
     Contest.create(region: "Umbria", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Umbria", name: "Umbria", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
     puts "Creating Umbria..."
     # Marche
-    Contest.create(region: "Lombardia", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Lombardy", name: "Lombardia", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
+    Contest.create(region: "Lombardia", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Lombardy", name: "Lombardia", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/marche", year: Date.today.year)
     puts "Creating Marche..."
     # Lazio
     Contest.create(region: "Lazio", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Lazio", name: "Lazio", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
