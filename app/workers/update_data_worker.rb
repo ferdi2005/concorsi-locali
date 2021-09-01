@@ -48,7 +48,7 @@ class UpdateDataWorker
 
           # Verifica se l'utente si è iscritto appositamente per il concorso
           unless userinfo['registration'].nil?
-            creator.update!(proveniencecontest: contest.id) if userinfo['registration'].to_date == photoinfo['timestamp'].to_date || userinfo['registration'].to_date.between?(Date.parse('30 august'), Date.parse('30 september'))
+            creator.update!(proveniencecontest: contest.id) if userinfo['registration'].to_date.between?(Date.parse('30 august'), Date.parse('30 september'))
           end
         end
 
