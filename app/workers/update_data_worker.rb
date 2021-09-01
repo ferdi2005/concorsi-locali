@@ -41,7 +41,7 @@ class UpdateDataWorker
           creator = Creator.where(username: username).or(Creator.where(userid: userid)).first
         else
           # Recupera le informazioni sull'utente da Commons
-          userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, meta: :globaluserinfo, guiuser: userid, format: :json}, uri_adapter: Addressable::URI).to_h["query"]["globaluserinfo"]
+          userinfo = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {action: :query, meta: :globaluserinfo, guiuser: username, format: :json}, uri_adapter: Addressable::URI).to_h["query"]["globaluserinfo"]
 
         
           creator = Creator.create(username: username, userid: userid, creationdate: userinfo['registration'])
