@@ -32,9 +32,9 @@ namespace :db do
     # Umbria
     Contest.create(region: "Umbria", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Umbria", name: "Umbria", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
     puts "Creating Umbria..."
-    # Marche
+    # Lombardia
     Contest.create(region: "Lombardia", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Lombardy", name: "Lombardia", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/marche", year: Date.today.year)
-    puts "Creating Marche..."
+    puts "Creating Lombardia..."
     # Lazio
     Contest.create(region: "Lazio", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Lazio", name: "Lazio", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
     puts "Creating Lazio..."
@@ -54,7 +54,7 @@ namespace :db do
     Contest.create(region: "Friuli-Venezia Giulia", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Friuli-Venezia Giulia", name: "Friuli-Venezia Giulia", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
     puts "Creating Friuli-Venezia Giulia..."
     # Marche
-    Contest.create(region: "Marche", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Marche", name: "Marche", url: "https://www.wikimedia.it/marche/", year: Date.today.year)
+    Contest.create(region: "Marche", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Marche", name: "Wiki Loves Marche", url: "https://www.wikimedia.it/marche/", year: Date.today.year)
     puts "Creating Marche..."
     # Molise
     Contest.create(region: "Molise", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Molise", name: "Molise", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
