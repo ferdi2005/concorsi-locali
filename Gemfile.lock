@@ -202,7 +202,7 @@ GEM
       rubyzip (>= 1.2.2)
     sentry-raven (2.13.0)
       faraday (>= 0.7.6, < 1.0)
-    sidekiq (6.2.2)
+    sidekiq (6.4.0)
       connection_pool (>= 2.2.2)
       rack (~> 2.0)
       redis (>= 4.2.0)
@@ -270,7 +270,7 @@ DEPENDENCIES
   sass-rails (~> 5)
   selenium-webdriver
   sentry-raven (~> 2.11)
-  sidekiq (~> 6.0)
+  sidekiq (~> 6.4)
   sidekiq-cron (~> 1.1)
   sidekiq-middleware (~> 0.3.0)
   skylight (~> 4.1)
