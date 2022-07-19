@@ -34,7 +34,6 @@ install_plugin Capistrano::Puma::Nginx
 # mkdir apps/mysite/shared/tmp/sockets
 
 require 'capistrano/yarn'
-require 'capistrano/lets-encrypt'
 
 require 'capistrano/sidekiq'
 install_plugin Capistrano::Sidekiq  # Default sidekiq tasks

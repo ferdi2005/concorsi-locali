@@ -10,7 +10,6 @@ set :sidekiq_service_unit_name, "#{fetch(:application)}-sidekiq"
 set :user, 'deploy'
 set :puma_threads,    [4, 16]
 set :puma_workers,    0
-set :branch, "main"
 
 set :pty,             true
 set :use_sudo,        false
