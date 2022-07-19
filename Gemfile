@@ -1,14 +1,15 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.7.1'
+ruby '3.1.2'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.1'
 # Use pg as the database for Active Record
 gem 'pg', '>= 0.18', '< 2.0'
 # Use Puma as the app server
-gem 'puma', '~> 4.3'
+gem 'puma'
+gem 'dotenv-rails'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 5'
 # Transpile app-like JavaScript. Read more: https://github.com/rails/webpacker
@@ -41,7 +42,14 @@ group :development do
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
 
-  gem 'dotenv-rails'
+  gem 'capistrano',         require: false
+  gem 'capistrano-yarn',     require: false
+  gem 'capistrano-rvm',     require: false
+  gem 'capistrano-rails',   require: false
+  gem 'capistrano-bundler', require: false
+  gem 'capistrano3-puma',   require: false
+  gem 'capistrano-sidekiq', require: false
+  gem 'capistrano-lets-encrypt', require: false
 end
 
 group :production do
@@ -74,3 +82,7 @@ gem "sidekiq-cron", "~> 1.1"
 gem "skylight", "~> 4.1"
 
 gem "sidekiq-middleware", "~> 0.3.0"
+
+gem "net-smtp", require: false
+gem 'net-imap', require: false
+gem 'net-pop', require: false
