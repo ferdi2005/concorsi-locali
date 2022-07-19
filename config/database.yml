@@ -81,6 +81,6 @@ test:
 production:
   <<: *default
   host: localhost
-  database: concorsi-locali_production
+  database: concorsilocali_production
   username: concorsilocali
   password: <%= ENV['CONCORSILOCALI_DATABASE_PASSWORD'] %>
