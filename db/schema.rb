@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_09_27_095811) do
+ActiveRecord::Schema.define(version: 2022_08_27_204917) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -59,6 +59,7 @@ ActiveRecord::Schema.define(version: 2021_09_27_095811) do
     t.integer "nowlm"
     t.string "region"
     t.integer "year"
+    t.integer "fortifications"
   end
 
   create_table "creators", force: :cascade do |t|
