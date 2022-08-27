@@ -7,6 +7,8 @@
         <th>Logo del concorso</th>
         <th>Nome del concorso</th>
         <th>Foto caricate</th>
+        <th>Castelli</th>
+        <th>%</th>
         <th>Foto usate (ns0)</th>
         <th>%</th>
         <th>Utenti partecipanti</th>
@@ -31,6 +33,8 @@
                 <% end %></td>
             <td><%= link_to contest.name, contest %></td>
             <td><%= contest.count %></td>
+            <td><%= contest.fortifications %></td>
+            <td><%= (contest.fortifications.to_f / contest.fortifications.to_f * 100.0).truncate(1) unless (contest.fortifications.to_f / contest.count.to_f * 100.0).nan? %></td>
             <td><%= contest.photos.select{|p| p.usedonwiki == true }.count %></td>
             <td><%= (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).nan? %></td>
             <!-- Conto degli utenti partecipanti -->

@@ -22,8 +22,6 @@ class UpdateDataWorker
         request = HTTParty.get(commons_api, query: {action: :query, prop: :imageinfo, iiprop: 'user|timestamp|userid', generator: :categorymembers, gcmtitle: contest.category, gcmdir: :newer, gcmcontinue: request["continue"]["gcmcontinue"], gcmlimit: 500, format: :json}, uri_adapter: Addressable::URI).to_h
         photolist.merge!(request["query"]["pages"]) # Unisce i due hash
       end
-
-      next if photolist.nil?
       
       # Procede anche per le fortificazioni 
       commons_api = "https://commons.wikimedia.org/w/api.php"
@@ -38,6 +36,8 @@ class UpdateDataWorker
       end
       # Rimuove le fotografie che già esistono in memoria o che non sono foto (namespace 6)
       photolist.reject! { |_, photo| Photo.exists?(name: photo['title']) || photo['ns'] != 6 }
+      
+      next if photolist.nil?
 
       @photos_to_be_inserted = []
 

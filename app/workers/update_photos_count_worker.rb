@@ -24,13 +24,15 @@ class UpdatePhotosCountWorker
       commons_url = "https://commons.wikimedia.org/w/api.php"
       request = HTTParty.get(commons_url, query: {action: :query, list: :categorymembers, cmtitle: contest.category + " - fortifications", cmlimit: 500, cmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_h
 
-      photolist += request["query"]["categorymembers"]
+      fortifications = request["query"]["categorymembers"]
       # Procede con la continuazione
       while !request["continue"].nil?
         request = HTTParty.get(commons_url, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, cmcontinue: request["continue"]["cmcontinue"], format: :json}, uri_adapter: Addressable::URI).to_h
         
-        photolist += request["query"]["categorymembers"] # Somma i due array
+        fortifications += request["query"]["categorymembers"] # Somma i due array
       end
+      
+      photolist += fortifications # somma finale
 
       # Rimuove eventuali duplicati
       photolist.uniq!
@@ -39,7 +41,7 @@ class UpdatePhotosCountWorker
       photolist.reject! { |p| p['ns'] != 6}
       
       # Aggiorna il conto delle fotografie del concorso
-      contest.update!(count: photolist.count)
+      contest.update!(count: photolist.count, fortifications: fortifications.count)
     end
   end
 end
