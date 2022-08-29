@@ -1,11 +1,8 @@
 # config valid for current version and patch releases of Capistrano
 lock "~> 3.17.0"
 
-set :application, "concorsi-locali"
-
 server 'c.ferdi.cc', port: 22, roles: [:web, :app, :db], primary: true
 set :repo_url, "git@github.com:ferdi2005/concorsi-locali.git"
-set :sidekiq_service_unit_name, "#{fetch(:application)}-sidekiq"
 
 set :user, 'deploy'
 set :puma_threads,    [4, 16]
@@ -15,8 +12,6 @@ set :pty,             true
 set :use_sudo,        false
 set :stage,           :production
 set :deploy_via,      :remote_cache
-set :deploy_to,       "/home/#{fetch(:user)}/apps/#{fetch(:application)}"
-set :puma_bind,       "unix://#{shared_path}/tmp/sockets/#{fetch(:application)}-puma.sock"
 set :puma_state,      "#{shared_path}/tmp/pids/puma.state"
 set :puma_pid,        "#{shared_path}/tmp/pids/puma.pid"
 set :puma_access_log, "#{release_path}/log/puma.access.log"
@@ -46,19 +41,7 @@ namespace :rails do
   
       exec cmd
     end
-end
-
-namespace :deploy do
-    namespace :check do
-      before :linked_files, :upload_env do
-        on roles(:app), in: :sequence, wait: 10 do
-            puts "Uploading .env file..."
-            upload! '.env', "#{shared_path}/.env"
-        end
-      end
-    end
-end
-  
+end  
   
 # Default branch is :master
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
