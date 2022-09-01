@@ -1,5 +1,5 @@
 update_data_job:
-  cron: "*/15 * * 9-10 *"
+  cron: "*/5 * * 9-10 *"
   class: "UpdateDataWorker"
 update_global_usage_job:
   cron: "*/30 * * 9-10 *"
