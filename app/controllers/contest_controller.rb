@@ -3,7 +3,7 @@ class ContestController < ApplicationController
   http_basic_authenticate_with name: "wikilovesmonuments", password: ENV["SECRET_PASSWORD"], only: [:upload, :uploadpost]
   
   def index
-    @contests = Contest.with_attached_logo.includes(:photos).sort_by{ |contest| contest.photos.count }
+    @contests = Contest.with_attached_logo.includes(:photos).sort_by{ |contest| contest.count }
     @nophotograph = {}
     Nophoto.where(regione: nil).each do |nop|
       @nophotograph[nop.created_at] = nop.count
