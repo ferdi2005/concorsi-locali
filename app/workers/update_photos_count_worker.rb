@@ -10,38 +10,19 @@ class UpdatePhotosCountWorker
     Contest.all.each do |contest|
       # Richiede le foto della categoria
       commons_url = "https://commons.wikimedia.org/w/api.php"
-      request = HTTParty.get(commons_url, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_h
+      request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category, format: :json}, uri_adapter: Addressable::URI).to_h
 
-      photolist = request["query"]["categorymembers"]
-      # Procede con la continuazione
-      while !request["continue"].nil?
-        request = HTTParty.get(commons_url, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, cmcontinue: request["continue"]["cmcontinue"], format: :json}, uri_adapter: Addressable::URI).to_h
-        
-        photolist += request["query"]["categorymembers"] # Somma i due array
-      end
+      photos_count = request["query"]["pages"].first[1]["categoryinfo"]["files"]
 
       # Procede con le fortificazioni
       commons_url = "https://commons.wikimedia.org/w/api.php"
-      request = HTTParty.get(commons_url, query: {action: :query, list: :categorymembers, cmtitle: contest.category + " - fortifications", cmlimit: 500, cmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_h
+      request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category + " - fortifications", format: :json}, uri_adapter: Addressable::URI).to_h
 
-      fortifications = request["query"]["categorymembers"]
-      # Procede con la continuazione
-      while !request["continue"].nil?
-        request = HTTParty.get(commons_url, query: {action: :query, list: :categorymembers, cmtitle: contest.category, cmlimit: 500, cmdir: :newer, cmcontinue: request["continue"]["cmcontinue"], format: :json}, uri_adapter: Addressable::URI).to_h
-        
-        fortifications += request["query"]["categorymembers"] # Somma i due array
-      end
+      fortifications_count = request["query"]["pages"].first[1]["categoryinfo"]["files"]
       
-      photolist += fortifications # somma finale
-
-      # Rimuove eventuali duplicati
-      photolist.uniq!
-      
-      # Rimuove le pagine che non sono fotografie 
-      photolist.reject! { |p| p['ns'] != 6}
-      
+      total_count = photos_count + fortifications_count
       # Aggiorna il conto delle fotografie del concorso
-      contest.update!(count: photolist.count, fortifications: fortifications.count)
+      contest.update!(count: total_count, fortifications: fortifications_count)
     end
   end
 end
