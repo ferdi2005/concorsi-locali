@@ -69,7 +69,7 @@ class UpdateDataWorker
           photoinfo = photo['imageinfo'][0]
 
           # Procede solo se la fotografia è stata scattata nel periodo di Settembre
-          next unless photoinfo['timestamp'].to_time.between?(DateTime.parse("1 september #{contest.year} 00:00+2"), DateTime.parse("30 september #{contest.year} 00:00+2"))
+          next unless photoinfo['timestamp'].to_time.between?(DateTime.parse("1 september #{contest.year} 00:00+2"), DateTime.parse("30 september #{contest.year} 23:59+2"))
 
           @photos_to_be_inserted.push({pageid: photo['pageid'], name: photo['title'], creator_id: creator.id, contest_id: contest.id, photodate: photoinfo['timestamp'], created_at: DateTime.now, updated_at: DateTime.now})
         end
