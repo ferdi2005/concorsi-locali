@@ -20,9 +20,8 @@ class UpdatePhotosCountWorker
 
       fortifications_count = request["query"]["pages"].first[1]["categoryinfo"]["files"]
       
-      total_count = photos_count + fortifications_count
       # Aggiorna il conto delle fotografie del concorso
-      contest.update!(count: total_count, fortifications: fortifications_count)
+      contest.update!(count: photos_count, fortifications: fortifications_count)
     end
   end
 end
