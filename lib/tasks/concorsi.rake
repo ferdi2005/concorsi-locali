@@ -10,7 +10,7 @@ namespace :db do
     #  Contest.create(region: "Valle del Primo Presepe", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Valle del Primo Presepe", name: "Wiki Loves Valle del Primo Presepe", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/valle-del-primo-presepe", year: Date.today.year)
 
     # Concorsi locali 2021
-
+    
     # Puglia
     Contest.create(region: "Puglia", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Apulia", name: "Wiki Loves Puglia", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/puglia", year: Date.today.year)
     puts "Creating Puglia..."
@@ -39,7 +39,7 @@ namespace :db do
     Contest.create(region: "Lazio", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Lazio", name: "Wiki Loves Lazio", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
     puts "Creating Lazio..."
     # Valle d'Aosta
-    Contest.create(region: "Valle d'Aosta", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Aosta Valley", name: "Valle d'Aosta", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
+    Contest.create(region: "Valle d'Aosta", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Aosta Valley", name: "Valle d'Aosta", url: "https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Monuments_in_Italy/Piedmont_and_Aosta_Valley", year: Date.today.year)
     puts "Creating Valle d'Aosta..."
     # Calabria
     Contest.create(region: "Calabria", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Calabria", name: "Wiki Loves Calabria", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
@@ -60,7 +60,7 @@ namespace :db do
     Contest.create(region: "Molise", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Molise", name: "Molise", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
     puts "Creating Molise..."
     # Piemonte
-    Contest.create(region: "Piemonte", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Piedmont", name: "Wiki Loves Piemonte", url: "https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Monuments_in_Italy/Piedmont", year: Date.today.year)
+    Contest.create(region: "Piemonte", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Piedmont", name: "Piemonte", url: "https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Monuments_in_Italy/Piedmont_and_Aosta_Valley", year: Date.today.year)
     puts "Creating Piemonte..."
     # Sardegna
     Contest.create(region: "Sardegna", category: "Category:Images from Wiki Loves Monuments #{Date.today.year} in Italy - Sardinia", name: "Sardegna", url: "https://www.wikimedia.it/wiki-loves-monuments/concorsi-locali/", year: Date.today.year)
