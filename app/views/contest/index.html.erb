@@ -63,8 +63,7 @@
 <% end %>
 <% end %>
 <br />
-<%= link_to 'Trova i monumenti WLM vicino a te', 'https://cerca.wikilovesmonuments.it', class: 'button is-danger' %>
-<%= link_to "Scarica subito l'app per android!", 'https://play.google.com/store/apps/details?id=it.wikimedia.wikilovesmonuments', class: 'button is-small' %>
+<%= link_to 'Trova i monumenti WLM vicino a te', 'https://app.wikilovesmonuments.it', class: 'button is-danger' %>
 
 <br />
 <h1 class="subtitle">Pagina personale di un utente</h1>
@@ -94,23 +93,18 @@
 <br />
 
 <% if Nophoto.where(regione: nil).count > 0 %>
-<h2 class="subtitle">Grafico monumenti senza foto</h2>
-<%= line_chart @nophotograph, xmin:  "#{DateTime.now.strftime('%Y')}-08-31", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
-<h2 class="title is-5">Grafico percentuale</h2>
-<%= line_chart @nophotographpercent, xmin:  "#{DateTime.now.strftime('%Y')}-08-31", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
+    <h2 class="subtitle">Grafico monumenti senza foto</h2>
+    <%= line_chart @nophotograph, xmin:  "#{DateTime.now.strftime('%Y')}-08-31", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
+    <h2 class="title is-5">Grafico percentuale</h2>
+    <%= line_chart @nophotographpercent, xmin:  "#{DateTime.now.strftime('%Y')}-08-31", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
 
-<% a = Nophoto.where(regione: nil).last.monuments %>
-<% b = Nophoto.where(regione: nil).last.count %>
-<p><b>Monumenti totali partecipanti</b>: <%= Nophoto.where(regione: nil).last.monuments %>
-<p><b>Monumenti senza foto oggi</b>: <%= Nophoto.where(regione: nil).last.count %> (<%= (b.to_f / a.to_f * 100.0).truncate(1) unless (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0 %> <%= '0.0' if (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0%>%)
-<p><b>Monumenti CON foto oggi</b>: <%= Nophoto.where(regione: nil).last.monuments - Nophoto.where(regione: nil).last.count %>
-<p><b>Monumenti senza foto prima dell'inizio di WLM</b>: <%= Nophoto.where(regione: nil).first.count %>  (<%= Nophoto.where(regione: nil).first.percent %> %)
-<p><b>Monumenti con una categoria su Commons</b>: <%= Nophoto.where(regione: nil).last.with_commons %>
-<p><b>Monumenti con un'immagine su Wikidata</b>: <%= Nophoto.where(regione: nil).last.with_image %>
-<p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= Nophoto.where(regione: nil).last.nowlm %>
-    <% end %>
-
-<div class="buttons">
-    <%= link_to "Aiuta a creare le categorie per i monumenti con un'immagine su Wikidata ma sprovvisti di categoria", "https://it.wikipedia.org/wiki/Progetto:Wiki_Loves_Monuments_2019/Manutenzione/Monumenti_con_immagine_senza_categoria", class: 'button is-warning' %>
-    <%= link_to "Aiuta a creare le categorie per i monumenti con delle immagini partecipanti a WLM ma sprovvisti di categoria", "https://it.wikipedia.org/wiki/Progetto:Wiki_Loves_Monuments_2019/Manutenzione/Monumenti_senza_categoria_con_foto_caricate", class: 'button is-danger' %>
-</div>
+    <% a = Nophoto.where(regione: nil).last.monuments %>
+    <% b = Nophoto.where(regione: nil).last.count %>
+    <p><b>Monumenti totali partecipanti</b>: <%= Nophoto.where(regione: nil).last.monuments %>
+    <p><b>Monumenti senza foto oggi</b>: <%= Nophoto.where(regione: nil).last.count %> (<%= (b.to_f / a.to_f * 100.0).truncate(1) unless (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0 %> <%= '0.0' if (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0%>%)
+    <p><b>Monumenti CON foto oggi</b>: <%= Nophoto.where(regione: nil).last.monuments - Nophoto.where(regione: nil).last.count %>
+    <p><b>Monumenti senza foto prima dell'inizio di WLM</b>: <%= Nophoto.where(regione: nil).first.count %>  (<%= Nophoto.where(regione: nil).first.percent %> %)
+    <p><b>Monumenti con una categoria su Commons</b>: <%= Nophoto.where(regione: nil).last.with_commons %>
+    <p><b>Monumenti con un'immagine su Wikidata</b>: <%= Nophoto.where(regione: nil).last.with_image %>
+    <p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= Nophoto.where(regione: nil).last.nowlm %>
+<% end %>
