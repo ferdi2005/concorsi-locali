@@ -52,7 +52,7 @@ group :development do
 end
 
 group :production do
-  gem "sentry-raven", "~> 2.11"
+  gem "sentry-raven"
 end
 
 

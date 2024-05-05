@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_27_204917) do
+ActiveRecord::Schema.define(version: 2024_05_04_214312) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -71,6 +71,13 @@ ActiveRecord::Schema.define(version: 2022_08_27_204917) do
     t.integer "proveniencecontest"
   end
 
+  create_table "no_photo_monuments", force: :cascade do |t|
+    t.string "item"
+    t.string "wlmid"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
   create_table "nophotos", force: :cascade do |t|
     t.integer "count"
     t.integer "monuments"
@@ -92,6 +99,8 @@ ActiveRecord::Schema.define(version: 2022_08_27_204917) do
     t.bigint "creator_id", null: false
     t.datetime "photodate"
     t.boolean "usedonwiki"
+    t.boolean "new_monument", default: false
+    t.string "wlmid"
     t.index ["contest_id"], name: "index_photos_on_contest_id"
     t.index ["creator_id"], name: "index_photos_on_creator_id"
   end

@@ -16,3 +16,6 @@ update_nophoto_data_worker:
 delete_nonwlm_photos_worker:
   cron: "00 23 * 9-10 *"
   class: "DeleteNonwlmPhotosWorker"
+download_no_photo_monuments:
+  cron: "0 0 31 8 *"
+  class: "DownloadNoPhotoMonuments"

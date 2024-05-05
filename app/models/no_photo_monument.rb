@@ -1,0 +1,2 @@
+class NoPhotoMonument < ApplicationRecord
+end
