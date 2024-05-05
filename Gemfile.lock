@@ -121,8 +121,10 @@ GEM
     erubi (1.12.0)
     et-orbi (1.2.7)
       tzinfo
-    faraday (0.17.6)
-      multipart-post (>= 1.2, < 3)
+    faraday (2.9.0)
+      faraday-net_http (>= 2.0, < 3.2)
+    faraday-net_http (3.1.0)
+      net-http
     ffi (1.15.5)
     fugit (1.8.1)
       et-orbi (~> 1, >= 1.2.7)
@@ -158,7 +160,8 @@ GEM
     minitest (5.19.0)
     msgpack (1.7.2)
     multi_xml (0.6.0)
-    multipart-post (2.3.0)
+    net-http (0.4.1)
+      uri
     net-imap (0.3.7)
       date
       net-protocol
@@ -173,6 +176,8 @@ GEM
     net-ssh (7.2.0)
     nio4r (2.5.9)
     nokogiri (1.15.4-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.15.4-x86_64-darwin)
       racc (~> 1.4)
     nokogiri (1.15.4-x86_64-linux)
       racc (~> 1.4)
@@ -238,8 +243,8 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
-    sentry-raven (2.13.0)
-      faraday (>= 0.7.6, < 1.0)
+    sentry-raven (3.1.2)
+      faraday (>= 1.0)
     sidekiq (6.5.9)
       connection_pool (>= 2.2.5, < 3)
       rack (~> 2.0)
@@ -274,6 +279,7 @@ GEM
     turbolinks-source (5.2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
+    uri (0.13.0)
     web-console (4.2.0)
       actionview (>= 6.0.0)
       activemodel (>= 6.0.0)
@@ -293,6 +299,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-21
+  x86_64-darwin-21
   x86_64-linux
 
 DEPENDENCIES
@@ -322,7 +329,7 @@ DEPENDENCIES
   rails (~> 6.1)
   sass-rails (~> 5)
   selenium-webdriver
-  sentry-raven (~> 2.11)
+  sentry-raven
   sidekiq (~> 6.0)
   sidekiq-cron (~> 1.1)
   sidekiq-middleware (~> 0.3.0)
