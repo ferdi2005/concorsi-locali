@@ -28,8 +28,6 @@ class UpdateDataWorker
       # Rimuove le fotografie che già esistono in memoria o che non sono foto (namespace 6)
       photolist.reject! { |_, photo| Photo.exists?(name: photo['title']) || photo['ns'] != 6 }
 
-      commons = MediawikiApi::Client.new "https://commons.wikimedia.org/w/api.php"
-
       # Facendo uso del generator categorymembers, ottiene i contenuti delle pagine
       revisions_request = HTTParty.get(commons_api, query: {action: :query, prop: :revisions, rvslots: "main", rvprop: :content, generator: :categorymembers, gcmlimit: 50, gcmnamespace: 6, gcmtitle: contest.category, gcmdir: :newer, format: :json}, uri_adapter: Addressable::URI).to_h
 
