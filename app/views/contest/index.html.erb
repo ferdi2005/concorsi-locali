@@ -1,5 +1,5 @@
 <%= provide(:title, "Statistiche #{Date.today.strftime('%d-%m-%Y')}") %>
-<h1 class="title">Wiki Loves Monuments Italia <%=DateTime.now.strftime('%Y') %></h1>
+<h1 class="title"><%= ENV["TITLE"] %> <%=DateTime.now.strftime('%Y') %></h1>
 <h2 class="subtitle">Le statistiche dei concorsi regionali</h2>
 <table id="elenco-concorsi" class="table is-striped">
     <thead>
