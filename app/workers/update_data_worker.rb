@@ -58,7 +58,7 @@ class UpdateDataWorker
 
           # Verifica se l'utente si è iscritto appositamente per il concorso
           unless userinfo['registration'].nil?
-            creator.update!(proveniencecontest: contest.id) if userinfo['registration'].to_date.between?(Date.parse('30 august'), Date.parse('30 september'))
+            creator.update!(proveniencecontest: contest.id) if userinfo['registration'].to_date.between?(Date.parse(ENV["PERIOD_START"]) - 1, Date.parse(ENV["PERIOD_END"]))
           end
         end
 
@@ -67,7 +67,7 @@ class UpdateDataWorker
           photoinfo = photo['imageinfo'][0]
 
           # Procede solo se la fotografia è stata scattata nel periodo di Settembre
-          next unless photoinfo['timestamp'].to_time.between?(DateTime.parse("1 september #{contest.year} 00:00+2"), DateTime.parse("30 september #{contest.year} 23:59+2"))
+          next unless photoinfo['timestamp'].to_time.between?(DateTime.parse("#{ENV["PERIOD_START"]} #{contest.year} 00:00+2"), DateTime.parse("#{ENV["PERIOD_END"]} #{contest.year} 23:59+2"))
 
           page_content = revisions_list[photo['pageid'].to_s]["revisions"][0]["slots"]["main"]["*"]
 
