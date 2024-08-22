@@ -224,7 +224,8 @@ GEM
       ffi (~> 1.0)
     redis (4.8.1)
     regexp_parser (2.8.1)
-    rexml (3.2.6)
+    rexml (3.3.6)
+      strscan
     ruby-vips (2.1.4)
       ffi (~> 1.12)
     rubyzip (2.3.2)
@@ -271,6 +272,7 @@ GEM
     sshkit (1.21.5)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
+    strscan (3.1.0)
     thor (1.2.2)
     tilt (2.2.0)
     timeout (0.4.0)
