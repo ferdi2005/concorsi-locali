@@ -17,6 +17,8 @@
         <th>Monumenti partecipanti</th>
         <th>Monumenti senza foto</th>
         <th>%</th>
+        <th>Foto di nuovi</th>
+        <th>%</th>
         <th>Links</th>
     </thead>
     <tbody>
@@ -44,6 +46,8 @@
             <td><%= contest.monuments %></td>
             <td><%= contest.nophoto %></td>
             <td><%= (contest.nophoto.to_f / contest.monuments.to_f * 100.0).truncate(1) unless (contest.nophoto.to_f / contest.monuments.to_f * 100.0).nan? || contest.nophoto == 0 || contest.monuments == 0 %> <%= '0.0' if (contest.nophoto.to_f / contest.monuments.to_f * 100.0).nan? || contest.nophoto == 0 || contest.monuments == 0%></td>
+            <td><%= contest.photos.select { |p| p.new_monument == true }.count %></td>
+            <td><%= (contest.photos.select{|p|  p.new_monument == true }.count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.photos.select{|p|  p.new_monument == true }.count.to_f / contest.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.select{|p| p.new_monument == true }.count.to_f / contest.count.to_f * 100.0).nan? %></td>            
             <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
 
         </tr>

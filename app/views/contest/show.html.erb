@@ -22,6 +22,7 @@
         <th>Nome utente</th>
         <th>Foto caricate</th>
         <th>Foto usate su wiki</th>
+        <th>Foto di nuovi monumenti</th>
         <th>Data di iscrizione (iscritto per WLM)</th>
     </thead>
     <tbody>
@@ -30,6 +31,7 @@
             <td><%= link_to creator.username, creator %></td>
             <td><%= creator.photos.select{|c| c.contest == @contest}.count %></td>
             <td><%= creator.photos.select{|c| c.contest == @contest && c.usedonwiki == true }.count %> (<%= (creator.photos.select{|c| c.contest == @contest && c.usedonwiki == true }.count.to_f / creator.photos.select{|c| c.contest == @contest }.count.to_f * 100.0).round(1) %> %)</td>
+            <td><%= creator.photos.select{|c| c.contest == @contest && c.new_monument == true }.count %> (<%= (creator.photos.select{|c| c.contest == @contest && c.new_monument == true }.count.to_f / creator.photos.select{|c| c.contest == @contest }.count.to_f * 100.0).round(1) %> %)</td>
             <td><%= creator.creationdate.strftime('%d/%m/%Y') unless creator.creationdate.nil? %> (<%= creator.proveniencecontest == @contest.id ? 'Sì' : 'No' %>)</td>
         </tr>
         <% end %>
