@@ -16,7 +16,7 @@ class UpdatePhotosCountWorker
 
       # Procede con le fortificazioni
       commons_url = "https://commons.wikimedia.org/w/api.php"
-      request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category + " - religious buildings", format: :json}, uri_adapter: Addressable::URI).to_h
+      request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category + ENV["SPECIAL_CATEGORY"], format: :json}, uri_adapter: Addressable::URI).to_h
 
       fortifications_count = request["query"]["pages"].first[1]["categoryinfo"].try(:[], "files")
       
