@@ -9,7 +9,7 @@ update_photos_count_job:
   cron: "<%= "*/5 * * #{ENV["MONTHS"]} *" %>"
   class: "UpdatePhotosCountWorker"
 first_wlm_data_population_worker:
-  cron: "<%= "30 7 31 #{ENV["MONTH_BEFORE"]} *" %>"
+  cron: "<%= "30 7 31 #{ENV["MONTH"].to_i - 1} *" %>"
   class: "FirstWlmDataPopulationWorker"
 update_nophoto_data_worker:
   cron: "<%= "0 10 * #{ENV["MONTH"]} *" %>"
@@ -18,5 +18,5 @@ delete_nonwlm_photos_worker:
   cron: "<%= "00 23 * #{ENV["MONTHS"]} *" %>"
   class: "DeleteNonwlmPhotosWorker"
 download_no_photo_monuments:
-  cron: "<%= "0 0 31 #{ENV["MONTH_BEFORE"]} *" %>"
+  cron: "<%= "0 0 31 #{ENV["MONTH"].to_i - 1} *" %>"
   class: "DownloadNoPhotoMonuments"
