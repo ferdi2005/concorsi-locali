@@ -25,6 +25,10 @@ Rails.application.routes.draw do
     get 'iscrittiappostapercentage', to: 'numerics#iscrittiappostapercentage'
     get 'miglioriutenti', to: 'numerics#miglioriutenti'
     get 'iscrittiappostagraph', to: "numerics#iscrittiappostagraph"
+    get 'photos_relativetogeneral', to: "numerics#photos_relativetogeneral"
+    get 'participants_relativetogeneral', to: "numerics#participants_relativetogeneral"
+    get 'special_photos', to: "numerics#special_photos"
+    get 'new_monuments', to: "numerics#new_monuments"
   end
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
 end

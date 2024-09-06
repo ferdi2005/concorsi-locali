@@ -192,6 +192,79 @@ class NumericsController < ApplicationController
         end
     end
 
+
+    def photos_relativetogeneral
+        unless @contest == false
+            value = (@contest.count.to_f / Photo.count.to_f).truncate(1) * 100 unless (@contest.count.to_f / Photo.count.to_f * 100.0).nan?
+            value = "0" if (@contest.count.to_f / Photo.count.to_f * 100.0).nan?
+        else 
+            value = "100"
+        end
+        json = { 
+            'postfix': 'Fotografie in relazione al nazionale',
+            'data': { 
+                "value": value.to_s + "%"
+             }
+         }
+        respond_to do |format|
+            format.json { render json: json }
+        end
+    end
+
+    def participants_relativetogeneral
+        unless @contest == false
+            value = (@contest.creators.to_f / Creator.count.to_f).truncate(1) * 100 unless (@contest.creators.to_f / Creator.count.to_f * 100.0).nan?
+            value = "0" if (@contest.creators.to_f / Creator.count.to_f * 100.0).nan?
+        else 
+            value = "100"
+        end
+        json = { 
+            'postfix': 'Partecipanti in relazione al nazionale',
+            'data': { 
+                "value": value.to_s + "%"
+             }
+         }
+        respond_to do |format|
+            format.json { render json: json }
+        end
+    end
+
+    def special_photos
+        unless @contest == false
+            photocount = @contest.fortifications
+        else 
+            photocount = "0"
+        end
+        json = { 
+            'postfix': "#{ENV["SPECIAL_CATEGORY"]}",
+            'data': { 
+                "value": photocount
+             }
+         }
+        respond_to do |format|
+            format.json { render json: json }
+        end
+
+    end
+    
+    def new_monuments
+        unless @contest == false
+            photocount = @contest.photos.select { |p| p.new_monument == true }.count
+        else 
+            photocount = Photo.select { |p| p.new_monument == true }.count
+        end
+        json = { 
+            'postfix': "Nuovi monumenti",
+            'data': { 
+                "value": photocount
+             }
+         }
+        respond_to do |format|
+            format.json { render json: json }
+        end
+
+    end
+
     def iscrittiappostapercentage
         unless @contest == false
             photocount = (@contest.creatorsapposta.to_f / @contest.creators.to_f * 100.0).truncate(1) unless (@contest.creatorsapposta.to_f / @contest.creators.to_f * 100.0).nan? || @contest.creatorsapposta == 0 || @contest.creators == 0
