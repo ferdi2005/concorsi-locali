@@ -236,7 +236,7 @@ class NumericsController < ApplicationController
             photocount = "0"
         end
         json = { 
-            'postfix': "#{ENV["SPECIAL_CATEGORY"]}",
+            'postfix': "#{ENV["SPECIAL_CATEGORY_LABEL"]}",
             'data': { 
                 "value": photocount
              }
