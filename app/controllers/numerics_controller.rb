@@ -195,7 +195,7 @@ class NumericsController < ApplicationController
 
     def photos_relativetogeneral
         unless @contest == false
-            value = (@contest.count.to_f / Photo.count.to_f).truncate(1) * 100 unless (@contest.count.to_f / Photo.count.to_f * 100.0).nan?
+            value = (@contest.count.to_f / Photo.count.to_f * 100).truncate(1) unless (@contest.count.to_f / Photo.count.to_f * 100.0).nan?
             value = "0" if (@contest.count.to_f / Photo.count.to_f * 100.0).nan?
         else 
             value = "100"
@@ -213,7 +213,7 @@ class NumericsController < ApplicationController
 
     def participants_relativetogeneral
         unless @contest == false
-            value = (@contest.creators.to_f / Creator.count.to_f).truncate(1) * 100 unless (@contest.creators.to_f / Creator.count.to_f * 100.0).nan?
+            value = (@contest.creators.to_f / Creator.count.to_f * 100).truncate(1) unless (@contest.creators.to_f / Creator.count.to_f * 100.0).nan?
             value = "0" if (@contest.creators.to_f / Creator.count.to_f * 100.0).nan?
         else 
             value = "100"
