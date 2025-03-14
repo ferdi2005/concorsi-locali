@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_14_183012) do
+ActiveRecord::Schema.define(version: 2025_03_14_183608) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -88,6 +88,8 @@ ActiveRecord::Schema.define(version: 2025_03_14_183012) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.float "percent"
+    t.bigint "year_id", null: false
+    t.index ["year_id"], name: "index_nophotos_on_year_id"
   end
 
   create_table "photos", force: :cascade do |t|
@@ -117,6 +119,7 @@ ActiveRecord::Schema.define(version: 2025_03_14_183012) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "nophotos", "years"
   add_foreign_key "photos", "contests"
   add_foreign_key "photos", "creators"
 end

@@ -7,21 +7,23 @@ class UpdatePhotosCountWorker
   })
 
   def perform(*args)
-    Contest.all.each do |contest|
-      # Richiede le foto della categoria
-      commons_url = "https://commons.wikimedia.org/w/api.php"
-      request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category, format: :json}, uri_adapter: Addressable::URI).to_h
+    Year.where(storicized: false).each do |year|
+      Contest.all.each do |contest|
+        # Richiede le foto della categoria
+        commons_url = "https://commons.wikimedia.org/w/api.php"
+        request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category, format: :json}, uri_adapter: Addressable::URI).to_h
 
-      photos_count = request["query"]["pages"].first[1]["categoryinfo"]["files"]
+        photos_count = request["query"]["pages"].first[1]["categoryinfo"]["files"]
 
-      # Procede con le fortificazioni
-      commons_url = "https://commons.wikimedia.org/w/api.php"
-      request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category + ENV["SPECIAL_CATEGORY"], format: :json}, uri_adapter: Addressable::URI).to_h
+        # Procede con le fortificazioni
+        commons_url = "https://commons.wikimedia.org/w/api.php"
+        request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category + ENV["SPECIAL_CATEGORY"], format: :json}, uri_adapter: Addressable::URI).to_h
 
-      fortifications_count = request["query"]["pages"].first[1]["categoryinfo"].try(:[], "files")
-      
-      # Aggiorna il conto delle fotografie del concorso
-      contest.update!(count: photos_count, fortifications: fortifications_count)
+        fortifications_count = request["query"]["pages"].first[1]["categoryinfo"].try(:[], "files")
+
+        # Aggiorna il conto delle fotografie del concorso
+        contest.update!(count: photos_count, fortifications: fortifications_count)
+      end
     end
   end
 end
