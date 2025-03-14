@@ -2,7 +2,8 @@ class DeleteNonwlmPhotosWorker
   include Sidekiq::Worker
 
   def perform(*args)
-    Photo.find_each do |photo|
+    @year = Year.find_by_year(Date.today.year)
+    Photo.where(year: @year).find_each do |photo|
       # Verifica che la fotografia sia ancora parte del concorso cercandone i template e trovando quello che identifica una foto partecipante al concorso
 
       templates = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: {:action=>:query, :prop=>:templates, :pageids=> photo.pageid, :tllimit => :max, :format=>:json}).to_h.try(:[], "query").try(:[], "pages").try(:[], photo.pageid.to_s).try(:[], "templates")

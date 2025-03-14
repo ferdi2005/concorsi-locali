@@ -11,18 +11,18 @@ class UpdatePhotosCountWorker
       Contest.all.each do |contest|
         # Richiede le foto della categoria
         commons_url = "https://commons.wikimedia.org/w/api.php"
-        request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category, format: :json}, uri_adapter: Addressable::URI).to_h
+        request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.cat_name(year), format: :json}, uri_adapter: Addressable::URI).to_h
 
         photos_count = request["query"]["pages"].first[1]["categoryinfo"]["files"]
 
         # Procede con le fortificazioni
         commons_url = "https://commons.wikimedia.org/w/api.php"
-        request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.category + ENV["SPECIAL_CATEGORY"], format: :json}, uri_adapter: Addressable::URI).to_h
+        request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.cat_name(year) + year.special_category, format: :json}, uri_adapter: Addressable::URI).to_h
 
-        fortifications_count = request["query"]["pages"].first[1]["categoryinfo"].try(:[], "files")
+        special_category_count_count = request["query"]["pages"].first[1]["categoryinfo"].try(:[], "files")
 
         # Aggiorna il conto delle fotografie del concorso
-        contest.update!(count: photos_count, fortifications: fortifications_count)
+        contest.update!(count: photos_count, special_category_count: special_category_count_count)
       end
     end
   end

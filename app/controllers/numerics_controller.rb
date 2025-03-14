@@ -4,12 +4,12 @@ class NumericsController < ApplicationController
     def totalphotos
         unless @contest == false
             photocount = @contest.count
-        else 
+        else
             photocount = Photo.count
         end
-        json = { 
+        json = {
             'postfix': 'Fotografie totali',
-            'data': { 
+            'data': {
                 "value": photocount
              }
          }
@@ -25,13 +25,13 @@ class NumericsController < ApplicationController
             photowithdate.each do |ph|
                 data.push({'value': ph[1]})
             end
-        else 
+        else
             photowithdate = Photo.all.group_by_day(:photodate).count.to_a.last(2).reverse
             photowithdate.each do |ph|
                 data.push({'value': ph[1]})
             end
         end
-        json = { 
+        json = {
             'postfix': 'Fotografie di oggi',
             'data': data
          }
@@ -43,12 +43,12 @@ class NumericsController < ApplicationController
     def totalcreators
         unless @contest == false
             creatorcount = @contest.creators
-        else 
+        else
             creatorcount = Creator.count
         end
-        json = { 
+        json = {
             'postfix': 'Partecipanti',
-            'data': { 
+            'data': {
                 "value": creatorcount
              }
          }
@@ -62,10 +62,10 @@ class NumericsController < ApplicationController
             creatorcount = @contest.creatorsapposta.to_i
         else
             creatorcount = Creator.where.not(proveniencecontest: nil).count
-        end 
-            json = { 
+        end
+            json = {
                 'postfix': 'Partecipanti iscritti per il concorso',
-                'data': { 
+                'data': {
                     "value": creatorcount
                 }
             }
@@ -81,13 +81,13 @@ class NumericsController < ApplicationController
             photowithdate.each do |ph|
                 data.push({'value': ph[1]})
             end
-        else 
+        else
             photowithdate = Creator.all.group_by_day(:creationdate).count.to_a.last(2).reverse
             photowithdate.each do |ph|
                 data.push({'value': ph[1]})
             end
         end
-        json = { 
+        json = {
             'postfix': 'Partecipanti iscritti per il concorso',
             'data': data
          }
@@ -127,7 +127,7 @@ class NumericsController < ApplicationController
                 hashdata.push({"value": pl[1]})
             end
         end
-        nophoto = { 
+        nophoto = {
             "postfix": "Grafico delle foto caricate",
             "data": hashdata
          }
@@ -147,7 +147,7 @@ class NumericsController < ApplicationController
                 hashdata.push({"date": pl[0].strftime("%Y-%m-%d"), "value": pl[1]})
             end
         end
-        nophoto = { 
+        nophoto = {
             "postfix": "Densità giornaliera delle foto caricate",
             "data": hashdata
          }
@@ -159,12 +159,12 @@ class NumericsController < ApplicationController
     def usedonwiki
         unless @contest == false
             photocount = @contest.photos.where(usedonwiki: true).count
-        else 
+        else
             photocount = Photo.where(usedonwiki: true).count
         end
-        json = { 
+        json = {
             'postfix': 'Fotografie usate sui progetti',
-            'data': { 
+            'data': {
                 "value": photocount
              }
          }
@@ -177,13 +177,13 @@ class NumericsController < ApplicationController
         unless @contest == false
             photocount = (@contest.photos.where(usedonwiki: true).count.to_f / @contest.count.to_f * 100.0).truncate(1) unless (@contest.photos.where(usedonwiki: true).count.to_f / @contest.count.to_f * 100.0).nan?
             photocount = '0.0' if (@contest.photos.where(usedonwiki: true).count.to_f / @contest.count.to_f * 100.0).nan?
-        else 
+        else
             photocount = (Photo.where(usedonwiki: true).count.to_f / Photo.all.count.to_f * 100.0).truncate(1) unless (Photo.where(usedonwiki: true).count.to_f / Photo.all.count.to_f * 100.0).nan?
             photocount = '0.0' if (Photo.where(usedonwiki: true).count.to_f / Photo.all.count.to_f * 100.0).nan?
         end
-        json = { 
+        json = {
             'postfix': 'Fotografie usate sui progetti',
-            'data': { 
+            'data': {
                 "value": photocount.to_s + "%"
              }
          }
@@ -197,12 +197,12 @@ class NumericsController < ApplicationController
         unless @contest == false
             value = (@contest.count.to_f / Photo.count.to_f * 100).truncate(1) unless (@contest.count.to_f / Photo.count.to_f * 100.0).nan?
             value = "0" if (@contest.count.to_f / Photo.count.to_f * 100.0).nan?
-        else 
+        else
             value = "100"
         end
-        json = { 
+        json = {
             'postfix': 'Fotografie in relazione al nazionale',
-            'data': { 
+            'data': {
                 "value": value.to_s + "%"
              }
          }
@@ -215,12 +215,12 @@ class NumericsController < ApplicationController
         unless @contest == false
             value = (@contest.creators.to_f / Creator.count.to_f * 100).truncate(1) unless (@contest.creators.to_f / Creator.count.to_f * 100.0).nan?
             value = "0" if (@contest.creators.to_f / Creator.count.to_f * 100.0).nan?
-        else 
+        else
             value = "100"
         end
-        json = { 
+        json = {
             'postfix': 'Partecipanti in relazione al nazionale',
-            'data': { 
+            'data': {
                 "value": value.to_s + "%"
              }
          }
@@ -231,13 +231,13 @@ class NumericsController < ApplicationController
 
     def special_photos
         unless @contest == false
-            photocount = @contest.fortifications
-        else 
+            photocount = @contest.special_category_count
+        else
             photocount = "0"
         end
-        json = { 
+        json = {
             'postfix': "#{ENV["SPECIAL_CATEGORY_LABEL"]}",
-            'data': { 
+            'data': {
                 "value": photocount
              }
          }
@@ -246,16 +246,16 @@ class NumericsController < ApplicationController
         end
 
     end
-    
+
     def new_monuments
         unless @contest == false
             photocount = @contest.photos.select { |p| p.new_monument == true }.count
-        else 
+        else
             photocount = Photo.select { |p| p.new_monument == true }.count
         end
-        json = { 
+        json = {
             'postfix': "Nuovi monumenti",
-            'data': { 
+            'data': {
                 "value": photocount
              }
          }
@@ -269,13 +269,13 @@ class NumericsController < ApplicationController
         unless @contest == false
             photocount = (@contest.creatorsapposta.to_f / @contest.creators.to_f * 100.0).truncate(1) unless (@contest.creatorsapposta.to_f / @contest.creators.to_f * 100.0).nan? || @contest.creatorsapposta == 0 || @contest.creators == 0
             photocount = '0.0' if (@contest.creatorsapposta.to_f / @contest.creators.to_f * 100.0).nan? || @contest.creatorsapposta == 0 || @contest.creators == 0
-        else 
+        else
             photocount = (Creator.where.not(proveniencecontest: nil).count.to_f / Creator.count.to_f * 100.0).truncate(1) unless (Creator.where.not(proveniencecontest: nil).count.to_f / Creator.count.to_f * 100.0).nan? || Creator.where.not(proveniencecontest: nil).count == 0 || Creator.count == 0
             photocount = '0.0' if (Creator.where.not(proveniencecontest: nil).count.to_f / Creator.count.to_f * 100.0).nan? || Creator.where.not(proveniencecontest: nil).count == 0 || Creator.count == 0
         end
-        json = { 
+        json = {
             'postfix': 'Percentuale',
-            'data': { 
+            'data': {
                 "value": photocount.to_s + "%"
              }
          }
@@ -304,7 +304,7 @@ class NumericsController < ApplicationController
                 list.push({'name': creator.username, 'value': creator.photos.count})
             end
         end
-        json =  { 
+        json =  {
             "valueNameHeader": "Partecipanti più prolifici",
             "valueHeader": "Foto",
             "data": list
@@ -313,7 +313,7 @@ class NumericsController < ApplicationController
             format.json { render json: json }
         end
     end
-        
+
     def iscrittiappostagraph
         hashdata = []
         unless @contest == false
@@ -325,7 +325,7 @@ class NumericsController < ApplicationController
                 hashdata.push({"value": pl[1]})
             end
         end
-        nophoto = { 
+        nophoto = {
             "postfix": "Grafico degli utenti iscritti per il concorso",
             "data": hashdata
          }
@@ -340,5 +340,5 @@ def set_contest
         @contest = Contest.find(params[:id])
     else
         @contest = false
-    end 
+    end
 end

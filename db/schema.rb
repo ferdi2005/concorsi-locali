@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_14_183608) do
+ActiveRecord::Schema.define(version: 2025_03_14_213712) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -59,7 +59,7 @@ ActiveRecord::Schema.define(version: 2025_03_14_183608) do
     t.integer "nowlm"
     t.string "region"
     t.integer "year"
-    t.integer "fortifications"
+    t.integer "special_category_count"
   end
 
   create_table "creators", force: :cascade do |t|
@@ -103,8 +103,11 @@ ActiveRecord::Schema.define(version: 2025_03_14_183608) do
     t.boolean "usedonwiki"
     t.boolean "new_monument", default: false
     t.string "wlmid"
+    t.bigint "year_id", null: false
+    t.boolean "special", default: false
     t.index ["contest_id"], name: "index_photos_on_contest_id"
     t.index ["creator_id"], name: "index_photos_on_creator_id"
+    t.index ["year_id"], name: "index_photos_on_year_id"
   end
 
   create_table "years", force: :cascade do |t|
@@ -122,4 +125,5 @@ ActiveRecord::Schema.define(version: 2025_03_14_183608) do
   add_foreign_key "nophotos", "years"
   add_foreign_key "photos", "contests"
   add_foreign_key "photos", "creators"
+  add_foreign_key "photos", "years"
 end
