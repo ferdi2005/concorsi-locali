@@ -1,6 +1,7 @@
 require 'sidekiq/web'
 require 'sidekiq/cron/web'
 Rails.application.routes.draw do
+  resources :years
   root 'contest#index'
   resources :contest, only: [:show]
   resources :creators, only: [:show]
