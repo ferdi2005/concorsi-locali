@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_14_180132) do
+ActiveRecord::Schema.define(version: 2025_03_14_183012) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -100,12 +100,17 @@ ActiveRecord::Schema.define(version: 2025_03_14_180132) do
     t.datetime "photodate"
     t.boolean "usedonwiki"
     t.boolean "new_monument", default: false
+    t.string "wlmid"
     t.index ["contest_id"], name: "index_photos_on_contest_id"
     t.index ["creator_id"], name: "index_photos_on_creator_id"
   end
 
   create_table "years", force: :cascade do |t|
     t.string "year"
+    t.boolean "storicized", default: false
+    t.boolean "special", default: false
+    t.string "special_category"
+    t.string "special_category_label"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end

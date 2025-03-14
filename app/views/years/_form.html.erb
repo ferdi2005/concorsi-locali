@@ -16,6 +16,26 @@
     <%= form.text_field :year %>
   </div>
 
+  <div class="field">
+    <%= form.label :storicized %>
+    <%= form.check_box :storicized %>
+  </div>
+
+  <div class="field">
+    <%= form.label :special %>
+    <%= form.check_box :special %>
+  </div>
+
+  <div class="field">
+    <%= form.label :special_category %>
+    <%= form.text_field :special_category %>
+  </div>
+
+  <div class="field">
+    <%= form.label :special_category_label %>
+    <%= form.text_field :special_category_label %>
+  </div>
+
   <div class="actions">
     <%= form.submit %>
   </div>

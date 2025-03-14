@@ -14,6 +14,10 @@ class YearsTest < ApplicationSystemTestCase
     visit years_url
     click_on "New Year"
 
+    check "Special" if @year.special
+    fill_in "Special category", with: @year.special_category
+    fill_in "Special category label", with: @year.special_category_label
+    check "Storicized" if @year.storicized
     fill_in "Year", with: @year.year
     click_on "Create Year"
 
@@ -25,6 +29,10 @@ class YearsTest < ApplicationSystemTestCase
     visit years_url
     click_on "Edit", match: :first
 
+    check "Special" if @year.special
+    fill_in "Special category", with: @year.special_category
+    fill_in "Special category label", with: @year.special_category_label
+    check "Storicized" if @year.storicized
     fill_in "Year", with: @year.year
     click_on "Update Year"
 

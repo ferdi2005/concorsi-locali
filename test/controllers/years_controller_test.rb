@@ -17,7 +17,7 @@ class YearsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create year" do
     assert_difference('Year.count') do
-      post years_url, params: { year: { year: @year.year } }
+      post years_url, params: { year: { special: @year.special, special_category: @year.special_category, special_category_label: @year.special_category_label, storicized: @year.storicized, year: @year.year } }
     end
 
     assert_redirected_to year_url(Year.last)
@@ -34,7 +34,7 @@ class YearsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update year" do
-    patch year_url(@year), params: { year: { year: @year.year } }
+    patch year_url(@year), params: { year: { special: @year.special, special_category: @year.special_category, special_category_label: @year.special_category_label, storicized: @year.storicized, year: @year.year } }
     assert_redirected_to year_url(@year)
   end
 

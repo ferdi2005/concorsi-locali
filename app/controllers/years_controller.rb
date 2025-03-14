@@ -1,6 +1,6 @@
 class YearsController < ApplicationController
-  before_action :set_year, only: %i[ show edit update destroy ]
-  http_basic_authenticate_with name: "wikilovesmonuments", password: ENV["SECRET_PASSWORD"]
+  before_action :set_year, only: %i[ show edit update destroy ]  http_basic_authenticate_with name: "wikilovesmonuments", password: ENV["SECRET_PASSWORD"]
+
 
   # GET /years or /years.json
   def index
@@ -66,6 +66,6 @@ class YearsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def year_params
-      params.require(:year).permit(:year)
+      params.require(:year).permit(:year, :storicized, :special, :special_category, :special_category_label)
     end
 end

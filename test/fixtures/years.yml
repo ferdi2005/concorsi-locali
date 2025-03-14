@@ -2,6 +2,14 @@
 
 one:
   year: MyString
+  storicized: false
+  special: false
+  special_category: MyString
+  special_category_label: MyString
 
 two:
   year: MyString
+  storicized: false
+  special: false
+  special_category: MyString
+  special_category_label: MyString

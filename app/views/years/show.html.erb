@@ -5,5 +5,25 @@
   <%= @year.year %>
 </p>
 
+<p>
+  <strong>Storicized:</strong>
+  <%= @year.storicized %>
+</p>
+
+<p>
+  <strong>Special:</strong>
+  <%= @year.special %>
+</p>
+
+<p>
+  <strong>Special category:</strong>
+  <%= @year.special_category %>
+</p>
+
+<p>
+  <strong>Special category label:</strong>
+  <%= @year.special_category_label %>
+</p>
+
 <%= link_to 'Edit', edit_year_path(@year) %> |
 <%= link_to 'Back', years_path %>
