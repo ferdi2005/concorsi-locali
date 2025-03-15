@@ -48,7 +48,7 @@ class UpdateDataWorker
 
           # Procede con la continuazione
           while !specials["continue"].nil?
-            specials = HTTParty.get(commons_api, query: {action: :query, list: :categorymembers, cmtitle: contest.cat_name(year) + year.special_category, cmdir: :newer, cmlimit: 500, cmcontinue: request["continue"]["cmcontinue"], format: :json}).to_h
+            specials = HTTParty.get(commons_api, query: {action: :query, list: :categorymembers, cmtitle: contest.cat_name(year) + year.special_category, cmdir: :newer, cmlimit: 500, cmcontinue: specials["continue"]["cmcontinue"], format: :json}).to_h
             special_photolist += specials["query"]["categorymembers"] # Unisce i due hash
           end
           special_titles = special_photolist&.pluck("title")
@@ -123,7 +123,7 @@ class UpdateDataWorker
         photos = Photo.where(year: year, contest: contest)
         depicted_monuments = photos.pluck(:wlmid).uniq.count
         special_depicted_monuments = photos.where(special: true).pluck(:wlmid).uniq.count
-        contestyear.monuments != 0 ? depicted_monuments_percentage = depicated_monuments.to_f / contestyear.monuments.to_f * 100.0 : depicted_monuments_percentage = 0
+        contestyear.monuments != 0 ? depicted_monuments_percentage = depicted_monuments.to_f / contestyear.monuments.to_f * 100.0 : depicted_monuments_percentage = 0
 
         contestyear.update!(creators: creators, new_monuments: new_monuments, new_monuments_percentage: new_monuments_percentage, creatorsapposta: creatorsapposta, depicted_monuments: depicted_monuments, depicted_monuments_percentage: depicted_monuments_percentage, special_depicted_monuments: special_depicted_monuments)
       end
@@ -151,7 +151,7 @@ class UpdateDataWorker
 
 
       ## AGGIORNAMENTO DELL'ANNO COME STORICIZZATO SE TUTTO È CONCLUSO
-      if DateTime.now > (DateTime.parse("#{ENV["PERIOD_END"]} #{year.year}") + 1.months) && year.photos.count == year.count
+      if DateTime.now > (DateTime.parse("#{ENV["PERIOD_END"]} #{year.year}") + 1.months) && year.photos.count == year.total
         year.update!(storicized: true)
       end
     end

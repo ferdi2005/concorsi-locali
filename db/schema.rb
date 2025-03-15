@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_15_180936) do
+ActiveRecord::Schema.define(version: 2025_03_15_204436) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -95,9 +95,10 @@ ActiveRecord::Schema.define(version: 2025_03_15_180936) do
     t.string "wlmid"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.bigint "year_id", null: false
     t.boolean "archived", default: false
-    t.bigint "photo_id", null: false
+    t.bigint "year_id"
+    t.bigint "photo_id"
+    t.index ["item"], name: "index_no_photo_monuments_on_item", unique: true
     t.index ["photo_id"], name: "index_no_photo_monuments_on_photo_id"
     t.index ["year_id"], name: "index_no_photo_monuments_on_year_id"
   end
@@ -148,6 +149,7 @@ ActiveRecord::Schema.define(version: 2025_03_15_180936) do
     t.integer "depicted_monuments"
     t.integer "special_depicted_monuments"
     t.float "depicted_monuments_percentage"
+    t.integer "new_monuments"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
