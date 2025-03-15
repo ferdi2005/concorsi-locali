@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  contest: one
+  year: one
+  creators: 1
+  creatorsapposta: 1
+  count: 1
+  nophoto: 1
+  monuments: 1
+  with_commons: 1
+  with_image: 1
+  nowlm: 1
+  special_category_count: 1
+
+two:
+  contest: two
+  year: two
+  creators: 1
+  creatorsapposta: 1
+  count: 1
+  nophoto: 1
+  monuments: 1
+  with_commons: 1
+  with_image: 1
+  nowlm: 1
+  special_category_count: 1

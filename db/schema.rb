@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_14_213712) do
+ActiveRecord::Schema.define(version: 2025_03_15_180936) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -43,23 +43,42 @@ ActiveRecord::Schema.define(version: 2025_03_14_213712) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
-  create_table "contests", force: :cascade do |t|
-    t.string "category"
-    t.string "name"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.string "url"
+  create_table "contest_years", force: :cascade do |t|
+    t.bigint "contest_id", null: false
+    t.bigint "year_id", null: false
     t.integer "creators"
-    t.float "creatorsapposta"
+    t.integer "creatorsapposta"
     t.integer "count"
     t.integer "nophoto"
     t.integer "monuments"
     t.integer "with_commons"
     t.integer "with_image"
     t.integer "nowlm"
-    t.string "region"
-    t.integer "year"
     t.integer "special_category_count"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.integer "usedonwiki"
+    t.float "usedonwiki_percentage"
+    t.float "percent_of_total"
+    t.float "special_category_percent_of_total"
+    t.float "participants_percent_of_total"
+    t.integer "new_monuments"
+    t.float "new_monuments_percentage"
+    t.integer "depicted_monuments"
+    t.float "depicted_monuments_percentage"
+    t.integer "special_depicted_monuments"
+    t.index ["contest_id"], name: "index_contest_years_on_contest_id"
+    t.index ["year_id"], name: "index_contest_years_on_year_id"
+  end
+
+  create_table "contests", force: :cascade do |t|
+    t.string "category"
+    t.string "name"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "url"
+    t.integer "with_image"
+    t.string "region"
   end
 
   create_table "creators", force: :cascade do |t|
@@ -76,6 +95,11 @@ ActiveRecord::Schema.define(version: 2025_03_14_213712) do
     t.string "wlmid"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.bigint "year_id", null: false
+    t.boolean "archived", default: false
+    t.bigint "photo_id", null: false
+    t.index ["photo_id"], name: "index_no_photo_monuments_on_photo_id"
+    t.index ["year_id"], name: "index_no_photo_monuments_on_year_id"
   end
 
   create_table "nophotos", force: :cascade do |t|
@@ -118,10 +142,20 @@ ActiveRecord::Schema.define(version: 2025_03_14_213712) do
     t.string "special_category_label"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "total"
+    t.integer "special_category_total"
+    t.integer "creators"
+    t.integer "depicted_monuments"
+    t.integer "special_depicted_monuments"
+    t.float "depicted_monuments_percentage"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "contest_years", "contests"
+  add_foreign_key "contest_years", "years"
+  add_foreign_key "no_photo_monuments", "photos"
+  add_foreign_key "no_photo_monuments", "years"
   add_foreign_key "nophotos", "years"
   add_foreign_key "photos", "contests"
   add_foreign_key "photos", "creators"

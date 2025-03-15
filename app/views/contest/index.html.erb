@@ -1,14 +1,15 @@
 <%= provide(:title, "Statistiche concorso WLM") %>
 <h1 class="title"><%= ENV["TITLE"] %> <%= @year&.year %></h1>
 <h2 class="subtitle">Le statistiche dei concorsi regionali</h2>
-<table id="elenco-concorsi" class="table is-striped">
+<table id="elenco-concorsi">
     <thead>
         <th>Pos.</th>
-        <th>Logo del concorso</th>
         <th>Nome del concorso</th>
         <th>Foto caricate</th>
-        <th><%=ENV["SPECIAL_CATEGORY_LABEL"] %></th>
+        <% if @year.special %>
+        <th><%=@year.special_category_label %></th>
         <th>%</th>
+        <% end %>
         <th>Foto usate (ns0)</th>
         <th>%</th>
         <th>Utenti partecipanti</th>
@@ -25,31 +26,31 @@
     </thead>
     <tbody>
         <% @contests.reverse.each do |contest| %>
+        <% contestyear = ContestYear.find_by(year: @year, contest: contest) %>
+        <% next if contestyear.nil? # Significa che non è stato ancora processato per l'anno %>
         <tr>
-            <th><%= contest.position %></th>
-            <td><% if contest.logo.attached? %>
-
-                <%= link_to contest do %><%= image_tag contest.logo.variant(resize_to_limit: [200, 200]) %><% end %>
-                <% else %>
-
-                <%= link_to 'Aggiungi il logo', upload_path(id: contest.id) %>
-
-                <% end %></td>
+            <th><%= @rank.find_index(contestyear.id) + 1 %></th>
             <td><%= link_to contest.name, contest %></td>
-            <td><%= contest.count %></td>
-            <td><%= contest.special_category_count %></td>
-            <td><%= (contest.special_category_count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.special_category_count.to_f / contest.count.to_f * 100.0).nan? %></td>
-            <td><%= contest.photos.select{|p| p.usedonwiki == true }.count %></td>
-            <td><%= (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.select{|p| p.usedonwiki == true }.count.to_f / contest.count.to_f * 100.0).nan? %></td>
+            <td><%= contestyear.count %> (<%= contestyear.percent_of_total %> %)</td>
+            <!-- Sezione concorso speciale -->
+        <% if @year.special %>
+            <td><%= contestyear.special_category_count %> (<%= contestyear.special_category_percent_of_total %> %)</td>
+            <td><%= (contestyear.special_category_count.to_f / contestyear.count.to_f * 100.0).truncate(1) unless (contestyear.special_category_count.to_f / contestyear.count.to_f * 100.0).nan? %></td>
+        <% end %>
+            <!-- Fine sezione concorso speciale -->
+            <td><%= contestyear.usedonwiki %></td>
+            <td><%= contestyear.usedonwiki_percentage&.truncate(1) %></td>
             <!-- Conto degli utenti partecipanti -->
-            <td><%= contest.creators %></td>
-            <td><%= contest.creatorsapposta.to_i %> </td>
-            <td><%= (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).truncate(1) unless (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0 %> <%= '0.0' if (contest.creatorsapposta.to_f / contest.creators.to_f * 100.0).nan? || contest.creatorsapposta == 0 || contest.creators == 0%></td>
-            <td><%= contest.monuments %></td>
-            <td><%= contest.nophoto %></td>
-            <td><%= (contest.nophoto.to_f / contest.monuments.to_f * 100.0).truncate(1) unless (contest.nophoto.to_f / contest.monuments.to_f * 100.0).nan? || contest.nophoto == 0 || contest.monuments == 0 %> <%= '0.0' if (contest.nophoto.to_f / contest.monuments.to_f * 100.0).nan? || contest.nophoto == 0 || contest.monuments == 0%></td>
-            <td><%= contest.photos.select { |p| p.new_monument == true }.count %></td>
-            <td><%= (contest.photos.select{|p|  p.new_monument == true }.count.to_f / contest.count.to_f * 100.0).truncate(1) unless (contest.photos.select{|p|  p.new_monument == true }.count.to_f / contest.count.to_f * 100.0).nan?%> <%= '0.0' if (contest.photos.select{|p| p.new_monument == true }.count.to_f / contest.count.to_f * 100.0).nan? %></td>            
+            <td><%= contestyear.creators %> (<%= contestyear.participants_percent_of_total %> %)</td>
+            <td><%= contestyear.creatorsapposta.to_i %> </td>
+            <td><%= (contestyear.creatorsapposta.to_f / contestyear.creators.to_f * 100.0)&.truncate(1) unless contestyear.creators == 0 %> <%= '0.0' if contestyear.creators == 0%></td>
+            <td><%= contestyear.monuments %></td>
+            <td><%= contestyear.nophoto %></td>
+            <td><%= (contestyear.nophoto.to_f / contestyear.monuments.to_f * 100.0)&.truncate(1) unless contestyear.monuments == 0 %> <%= '0.0' if contestyear.monuments == 0%></td>
+            <td><%= contestyear.depicted_monuments %></td>
+            <td><%= contestyear.depicted_monuments_percentage&.truncate(1) %></td>
+            <td><%= contestyear.new_monuments %></td>
+            <td><%= contestyear.new_monuments_percentage&.truncate(1) %></td>   
             <td><%= link_to 'Grafico, statistiche e classifica', contest, class: 'button is-link', id: contest.id %>
 
         </tr>
@@ -57,8 +58,10 @@
     </tbody>
 </table>
 <% @contests.each do |contest| %>
-<% if contest.count == 0 %>
-<!-- Contest stats doesn't work for empty contests -->
+<% contestyear = ContestYear.find_by(year: @year, contest: contest) %>
+<% next if contestyear.nil? # Significa che non è stato ancora processato per l'anno %>
+<% if contestyear.count == 0 %>
+<!-- Contest stats don't work for empty contests -->
 <script>
     document.getElementById('<%= contest.id%>').setAttribute('disabled', 'wlm-zeroelements');
 
@@ -98,7 +101,7 @@
 
 <br />
 
-<% if Nophoto.where(regione: nil).count > 0 %>
+<% if Nophoto.where(regione: nil, year: @year).count > 0 %>
     <h2 class="subtitle">Grafico monumenti senza foto</h2>
     <%= line_chart @nophotograph, xmin:  "#{DateTime.now.strftime('%Y')}-08-31", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
     <h2 class="title is-5">Grafico percentuale</h2>
@@ -106,13 +109,19 @@
 
     <% a = Nophoto.where(regione: nil).last.monuments %>
     <% b = Nophoto.where(regione: nil).last.count %>
-    <p><b>Monumenti totali partecipanti</b>: <%= Nophoto.where(regione: nil).last.monuments %>
-    <p><b>Monumenti senza foto oggi</b>: <%= Nophoto.where(regione: nil).last.count %> (<%= (b.to_f / a.to_f * 100.0).truncate(1) unless (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0 %> <%= '0.0' if (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0%>%)
-    <p><b>Monumenti CON foto oggi</b>: <%= Nophoto.where(regione: nil).last.monuments - Nophoto.where(regione: nil).last.count %>
-    <p><b>Monumenti senza foto prima dell'inizio di WLM</b>: <%= Nophoto.find_by(regione: nil, created_at: Date.parse("01-#{ENV["MONTH"].to_i - 1}-#{ENV["YEAR"]}").end_of_month.midnight...Date.parse("01-#{ENV["MONTH"].to_i - 1}-#{ENV["YEAR"]}").end_of_month.end_of_day)&.count %>  (<%= Nophoto.find_by(regione: nil, created_at: Date.parse("01-#{ENV["MONTH"].to_i - 1}-#{ENV["YEAR"]}").end_of_month.midnight...Date.parse("01-#{ENV["MONTH"].to_i - 1}-#{ENV["YEAR"]}").end_of_month.end_of_day).percent %> %)
-    <p><b>Monumenti con una categoria su Commons</b>: <%= Nophoto.where(regione: nil).last.with_commons %>
-    <p><b>Monumenti con un'immagine su Wikidata</b>: <%= Nophoto.where(regione: nil).last.with_image %>
-    <p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= Nophoto.where(regione: nil).last.nowlm %>
+    <p><b>Monumenti totali partecipanti</b>: <%= Nophoto.where(regione: nil, year: @year).last.monuments %>
+    <p><b>Monumenti senza foto oggi</b>: <%= Nophoto.where(regione: nil, year: @year).last.count %> (<%= (b.to_f / a.to_f * 100.0).truncate(1) unless (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0 %> <%= '0.0' if (b.to_f / a.to_f * 100.0).nan? || b == 0 || a == 0%>%)
+    <p><b>Monumenti CON foto oggi</b>: <%= Nophoto.where(regione: nil, year: @year).last.monuments - Nophoto.where(regione: nil, year: @year).last.count %>
+    <p><b>Monumenti senza foto prima dell'inizio di WLM</b>: <%= Nophoto.find_by(regione: nil, created_at: Date.parse("01-#{ENV["MONTH"].to_i - 1}-#{@year.year}").end_of_month.midnight...Date.parse("01-#{ENV["MONTH"].to_i - 1}-#{@year.year}").end_of_month.end_of_day)&.count %>  (<%= Nophoto.find_by(regione: nil, created_at: Date.parse("01-#{ENV["MONTH"].to_i - 1}-#{@year.year}").end_of_month.midnight...Date.parse("01-#{ENV["MONTH"].to_i - 1}-#{@year.year}").end_of_month.end_of_day).percent %> %)
+    <p><b>Monumenti con una categoria su Commons</b>: <%= Nophoto.where(regione: nil, year: @year).last.with_commons %>
+    <p><b>Monumenti con un'immagine su Wikidata</b>: <%= Nophoto.where(regione: nil, year: @year).last.with_image %>
+    <p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= Nophoto.where(regione: nil, year: @year).last.nowlm %>
+    <p><b>Fotografie caricate</b>: <%= @year.total %></p>
+    <p><b>Fotografie <%= @year.special_category_label %></b>:<%= @year.special_category_total %></p>
+    <p><b>Partecipanti</b>: <%= @year.creators %></p>
+    <p><b>Monumenti rappresentati</b>: <%= @year.depicted_monuments %></p>
+    <%= if @year.special? %><p><b><%= @year.special_category_label %></b>: <%= @year.special_depcited_monuments %></p><% end %>
+    <p><b>Monumenti nuovi</b>: <%= @year.new_monuments %></p>
 <% end %>
 
 <div class="buttons">

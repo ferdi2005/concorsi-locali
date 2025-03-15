@@ -7,5 +7,8 @@ class CreatorsController < ApplicationController
     if @uploader.nil?
       raise ActionController::RoutingError.new('Not Found')
     end
+
+    @photos = @uploader.photos.select { |p| p.year == @year }
+    @line_chart = @photos.group_by_day(:photodate).count
   end
 end

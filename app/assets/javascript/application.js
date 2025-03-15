@@ -19,4 +19,5 @@
 //= require jquery.dataTables
 //= reauire datatables
 //= require dataTables.buttons
+//= require js.cookie.min
 //= require_tree .

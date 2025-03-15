@@ -44,15 +44,14 @@ class UpdateDataWorker
         if year.special
           specials = HTTParty.get(commons_api, query: {action: :query, list: :categorymembers, cmtitle: contest.cat_name(year) + year.special_category, cmdir: :newer, cmlimit: 500, format: :json}, uri_adapter: Addressable::URI).to_h
 
-          special_photolist = request.try(:[], "query").try(:[], "categorymembers")
+          special_photolist = specials.try(:[], "query").try(:[], "categorymembers")
 
           # Procede con la continuazione
           while !specials["continue"].nil?
             specials = HTTParty.get(commons_api, query: {action: :query, list: :categorymembers, cmtitle: contest.cat_name(year) + year.special_category, cmdir: :newer, cmlimit: 500, cmcontinue: request["continue"]["cmcontinue"], format: :json}).to_h
-            special_photolist += request["query"]["categorymembers"] # Unisce i due hash
+            special_photolist += specials["query"]["categorymembers"] # Unisce i due hash
           end
-
-          special_titles = special_photolist.pluck("titles")
+          special_titles = special_photolist&.pluck("title")
         end
 
         @photos_to_be_inserted = []
@@ -89,35 +88,72 @@ class UpdateDataWorker
 
             wlmid = page_content.match(/{{Monumento italiano\|(\d{2}\w\d*)\|anno=\d*}}/).try(:[], 1)
 
-            if !wlmid.nil? && (nophoto = NoPhotoMonument.find_by(wlmid: wlmid))
+            if !wlmid.nil? && (nophoto = NoPhotoMonument.find_by(wlmid: wlmid, archived: false))
               new_monument = true
-              nophoto.destroy
+              nophoto.update!(archived: true)
             else
               new_monument = false
             end
-            special_titles&.include?(photo['title']) ? special = true : special = false
 
-            @photos_to_be_inserted.push({pageid: photo['pageid'], name: photo['title'], creator_id: creator.id, contest_id: contest.id, photodate: photoinfo['timestamp'], wlmid: wlmid, new_monument: new_monument, created_at: DateTime.now, updated_at: DateTime.now, year_id: year.id, special: special})
+            @photos_to_be_inserted.push({pageid: photo['pageid'], name: photo['title'], creator_id: creator.id, contest_id: contest.id, photodate: photoinfo['timestamp'], wlmid: wlmid, new_monument: new_monument, created_at: DateTime.now, updated_at: DateTime.now, year_id: year.id, special: special_titles&.include?(photo['title'])})
           end
         end
 
         Photo.insert_all(@photos_to_be_inserted) unless @photos_to_be_inserted.empty?
       end
 
-      puts 'Inizio salvataggio del conto dei creatori.'
+      ### GESTIONE CONTO DEI CREATORI E NUOVI MONUMENTI
+      puts 'Inizio salvataggio del conto dei creatori e delle nuove foto.'
+      total_creators = 0
       Contest.all.each do |contest|
+        contestyear = ContestYear.find_by(contest: contest, year: year)
+        next if contestyear.nil?
+
         # Creatori con foto partecipanti
-        creators = Creator.includes(:photos).select { |m| m.photos.where(contest: contest).any? }.count
-        contest.update!(creators: creators)
+        creators = Creator.includes(:photos).select { |m| m.photos.where(contest: contest, year: year).any? }.count
 
         # Utenti iscritti appositamente per il concorso
         creatorsapposta = Creator.where(proveniencecontest: contest.id).count
-        contest.update!(creatorsapposta: creatorsapposta)
+
+        # Nuove foto
+        new_monuments = Photo.where(contest: contest, year: year, new_monument: true).count
+        contestyear.count != 0 ? new_monuments_percentage = new_monuments / contestyear.count.to_f * 100 : new_monuments_percentage = 0
+
+        # Monumenti ritratti
+        photos = Photo.where(year: year, contest: contest)
+        depicted_monuments = photos.pluck(:wlmid).uniq.count
+        special_depicted_monuments = photos.where(special: true).pluck(:wlmid).uniq.count
+        contestyear.monuments != 0 ? depicted_monuments_percentage = depicated_monuments.to_f / contestyear.monuments.to_f * 100.0 : depicted_monuments_percentage = 0
+
+        contestyear.update!(creators: creators, new_monuments: new_monuments, new_monuments_percentage: new_monuments_percentage, creatorsapposta: creatorsapposta, depicted_monuments: depicted_monuments, depicted_monuments_percentage: depicted_monuments_percentage, special_depicted_monuments: special_depicted_monuments)
       end
 
-    end
-    if DateTime.now > (DateTime.parse("#{ENV["PERIOD_END"]} #{year.year}") + 1.months)
-      year.update!(storicized: true)
+      # Creators dell'intero anno
+      global_photos = Photo.where(year: year)
+      total_creators = global_photos.pluck(:creator_id).uniq.count
+      global_depicted_monuments = global_photos.pluck(:wlmid).uniq.count
+      global_special_depicted_monuments = global_photos.where(special: true).pluck(:wlmid).uniq.count
+      new_monuments = global_photos.where(new_monument: true).count
+
+      if (nophoto = Nophoto.where(year: year).last) && nophoto.monuments != 0
+        global_depicted_monuments_percentage = global_special_depicted_monuments / nophoto.monuments.to_f * 100.0
+      else
+        global_depicted_monuments_percentage = 0
+      end
+      year.update!(creators: total_creators, depicted_monuments: global_depicted_monuments, depicted_monuments_percentage: global_depicted_monuments_percentage, special_depicted_monuments: global_special_depicted_monuments, new_monuments: new_monuments)
+
+      ## CONTEGGIO PERCENTUALE SUL TOTALE
+      Contest.all.each do |contest|
+        contestyear = ContestYear.find_by(contest: contest, year: year)
+        total_creators != 0 ? participants_percent_of_total = contestyear.creators.to_f / total_creators.to_f * 100 : participants_percent_of_total = 0
+        contestyear.update!(participants_percent_of_total: participants_percent_of_total)
+      end
+
+
+      ## AGGIORNAMENTO DELL'ANNO COME STORICIZZATO SE TUTTO È CONCLUSO
+      if DateTime.now > (DateTime.parse("#{ENV["PERIOD_END"]} #{year.year}") + 1.months) && year.photos.count == year.count
+        year.update!(storicized: true)
+      end
     end
   end
 end

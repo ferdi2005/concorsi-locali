@@ -1,10 +1,10 @@
 <%= provide(:title, "#{@uploader.username}") %>
 <a href="https://commons.wikimedia.org/wiki/User:<%= @uploader.username %>"><h1 class="title is-1"><%= @uploader.username %></a>
-<% if @uploader.photos.count > 0 %>
+<% if @photos.count > 0 %>
 <a href="#grafico" class="button is-big is-info" data-turbolinks="false">Vai subito al grafico</a>
 <h2 class="subtitle">Le foto caricate</h2>
 <div class="columns">
-<% @uploader.photos.each do |photo| %>
+<% @photos.each do |photo| %>
   <div class="column box">
     <%= image_tag "https://commons.wikimedia.org/w/thumb.php?f=#{photo.name.gsub('File:', '')}&w=200" %>
     <p><%= photo.name %> <br/> <%= link_to photo.contest.name, photo.contest %></p>
@@ -13,6 +13,6 @@
 <% end %>
 <div id="grafico">
   <h2 class="subtitle">Il grafico</h2>
-  <%= line_chart @uploader.photos.group_by_day(:photodate).count, xmin:  "#{DateTime.now.strftime('%Y')}-09-01", xmax:  "#{DateTime.now.strftime('%Y')}-09-30"%>
+  <%= line_chart @line_chart, xmin:  "#{@year.year}-09-01", xmax:  "#{@year.year}-09-30"%>
 </div>
 <% end %>

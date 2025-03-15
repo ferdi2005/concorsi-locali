@@ -11,7 +11,8 @@ class UpdateNophotoDataWorker
         Nophoto.create(count: nop["count"], monuments: nop["monuments"], with_commons: nop["with_commons"], with_image: nop["with_image"], nowlm: nop["nowlm"], regione: nop["regione"], percent: (nop["count"].to_f / nop["monuments"].to_f * 100).round(2), year: @year)
         # Aggiorno anche i dati nella regione
         regione = Contest.find_by(region: nop["regione"])
-        regione.update!(nophoto: nop["count"], monuments: nop["monuments"], with_commons: nop["with_commons"], with_image: nop["with_image"], nowlm: nop["nowlm"], year: @year) unless regione.nil?
+        contestyear = ContestYear.find_by(contest: regione, year: @year)
+        contestyear&.update!(nophoto: nop["count"], monuments: nop["monuments"], with_commons: nop["with_commons"], with_image: nop["with_image"], nowlm: nop["nowlm"])
       end
     end
   end
