@@ -18,8 +18,8 @@ class UpdatePhotosCountWorker
         commons_url = "https://commons.wikimedia.org/w/api.php"
         request = HTTParty.get(commons_url, query: {action: :query, prop: :categoryinfo, titles: contest.cat_name(year), format: :json}, uri_adapter: Addressable::URI).to_h
 
-        photos_count = request["query"]["pages"].first[1]["categoryinfo"]["files"]
-        global_photo_count += photos_count
+        photos_count = request["query"]["pages"].first[1]["categoryinfo"].try(:[], "files")
+        global_photo_count += photos_count.to_i
         # Procede con la categoria speciale
         if year.special
           commons_url = "https://commons.wikimedia.org/w/api.php"
