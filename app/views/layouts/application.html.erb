@@ -19,7 +19,7 @@
             <h1 class="title is-5">Anno di riferimento</h1>
             &nbsp;
             <div class="select">
-            <%= select_tag('year', options_from_collection_for_select(Year.all.sort, "id", "year"), "data-turbo": "false") %>
+            <%= select_tag('year', options_from_collection_for_select(Year.all.sort_by { |c| c.year }, "id", "year"), "data-turbo": "false") %>
             </div>
             &nbsp;
             <a id="setanno" class="button is-primary">Imposta anno</a>
