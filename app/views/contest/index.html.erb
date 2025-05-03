@@ -6,13 +6,16 @@
         <th>Pos.</th>
         <th>Nome del concorso</th>
         <th>Foto caricate</th>
+        <th>%/t</th>
         <% if @year.special %>
         <th><%=@year.special_category_label %></th>
+        <th>%/t</th>
         <th>%</th>
         <% end %>
         <th>Foto usate (ns0)</th>
         <th>%</th>
         <th>Utenti partecipanti</th>
+        <th>%/t</th>
         <th>Utenti iscritti <br />per WLM</th>
         <th>%</th>
         <th>Monumenti partecipanti</th>
@@ -31,17 +34,20 @@
         <tr>
             <th><%= @rank.find_index(contestyear.id) + 1 %></th>
             <td><%= link_to contest.name, contest %></td>
-            <td><%= contestyear.count %> (<%= contestyear.percent_of_total&.truncate(1) %> %)</td>
+            <td><%= contestyear.count %></td>
+            <td><%= contestyear.percent_of_total&.truncate(1) %></td>
             <!-- Sezione concorso speciale -->
         <% if @year.special %>
-            <td><%= contestyear.special_category_count %> (<%= contestyear.special_category_percent_of_total&.truncate(1) %> %)</td>
+            <td><%= contestyear.special_category_count %></td>
+            <td><%= contestyear.special_category_percent_of_total&.truncate(1) %></td>
             <td><%= (contestyear.special_category_count.to_f / contestyear.count.to_f * 100.0).truncate(1) unless (contestyear.special_category_count.to_f / contestyear.count.to_f * 100.0).nan? %></td>
         <% end %>
             <!-- Fine sezione concorso speciale -->
             <td><%= contestyear.usedonwiki %></td>
             <td><%= contestyear.usedonwiki_percentage&.truncate(1) %></td>
             <!-- Conto degli utenti partecipanti -->
-            <td><%= contestyear.creators %> (<%= contestyear.participants_percent_of_total %> %)</td>
+            <td><%= contestyear.creators %></td>
+            <td><%= contestyear.participants_percent_of_total&.truncate(1) %></td>
             <td><%= contestyear.creatorsapposta.to_i %> </td>
             <td><%= (contestyear.creatorsapposta.to_f / contestyear.creators.to_f * 100.0)&.truncate(1) unless contestyear.creators == 0 %> <%= '0.0' if contestyear.creators == 0%></td>
             <td><%= contestyear.monuments %></td>

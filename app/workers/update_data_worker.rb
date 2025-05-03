@@ -48,7 +48,7 @@ class UpdateDataWorker
 
           # Procede con la continuazione
           while !specials["continue"].nil?
-            specials = HTTParty.get(commons_api, query: {action: :query, list: :categorymembers, cmtitle: contest.cat_name(year) + year.special_category, cmdir: :newer, cmlimit: 500, cmcontinue: specials["continue"]["cmcontinue"], format: :json}).to_h
+            specials = HTTParty.get(commons_api, query: {action: :query, list: :categorymembers, cmtitle: contest.cat_name(year) + " " + year.special_category.strip, cmdir: :newer, cmlimit: 500, cmcontinue: specials["continue"]["cmcontinue"], format: :json}).to_h
             special_photolist += specials["query"]["categorymembers"] # Unisce i due hash
           end
           special_titles = special_photolist&.pluck("title")
@@ -117,13 +117,13 @@ class UpdateDataWorker
 
         # Nuove foto
         new_monuments = Photo.where(contest: contest, year: year, new_monument: true).count
-        contestyear.count != 0 ? new_monuments_percentage = new_monuments / contestyear.count.to_f * 100 : new_monuments_percentage = 0
+        (contestyear.count != 0 || contestyear.count != nil) ? new_monuments_percentage = new_monuments / contestyear.count.to_f * 100 : new_monuments_percentage = 0
 
         # Monumenti ritratti
         photos = Photo.where(year: year, contest: contest)
         depicted_monuments = photos.pluck(:wlmid).uniq.count
         special_depicted_monuments = photos.where(special: true).pluck(:wlmid).uniq.count
-        contestyear.monuments != 0 ? depicted_monuments_percentage = depicted_monuments.to_f / contestyear.monuments.to_f * 100.0 : depicted_monuments_percentage = 0
+        (contestyear.monuments != 0 && contestyear.monuments != nil) ? depicted_monuments_percentage = depicted_monuments.to_f / contestyear.monuments.to_f * 100.0 : depicted_monuments_percentage = 0
 
         contestyear.update!(creators: creators, new_monuments: new_monuments, new_monuments_percentage: new_monuments_percentage, creatorsapposta: creatorsapposta, depicted_monuments: depicted_monuments, depicted_monuments_percentage: depicted_monuments_percentage, special_depicted_monuments: special_depicted_monuments)
       end
@@ -145,6 +145,8 @@ class UpdateDataWorker
       ## CONTEGGIO PERCENTUALE SUL TOTALE
       Contest.all.each do |contest|
         contestyear = ContestYear.find_by(contest: contest, year: year)
+        next if contestyear.nil?
+
         total_creators != 0 ? participants_percent_of_total = contestyear.creators.to_f / total_creators.to_f * 100 : participants_percent_of_total = 0
         contestyear.update!(participants_percent_of_total: participants_percent_of_total)
       end

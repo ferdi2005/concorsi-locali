@@ -95,8 +95,8 @@ ActiveRecord::Schema.define(version: 2025_03_15_204436) do
     t.string "wlmid"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.boolean "archived", default: false
     t.bigint "year_id"
+    t.boolean "archived", default: false
     t.bigint "photo_id"
     t.index ["item"], name: "index_no_photo_monuments_on_item", unique: true
     t.index ["photo_id"], name: "index_no_photo_monuments_on_photo_id"
@@ -113,7 +113,7 @@ ActiveRecord::Schema.define(version: 2025_03_15_204436) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.float "percent"
-    t.bigint "year_id", null: false
+    t.bigint "year_id"
     t.index ["year_id"], name: "index_nophotos_on_year_id"
   end
 
