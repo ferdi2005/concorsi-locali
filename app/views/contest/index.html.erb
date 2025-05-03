@@ -126,7 +126,7 @@
     <p><b>Fotografie <%= @year.special_category_label %></b>:<%= @year.special_category_total %></p>
     <p><b>Partecipanti</b>: <%= @year.creators %></p>
     <p><b>Monumenti rappresentati</b>: <%= @year.depicted_monuments %></p>
-    <% if @year.special? %><p><b><%= @year.special_category_label %></b>: <%= @year.special_depcited_monuments %></p><% end %>
+    <% if @year.special? %><p><b><%= @year.special_category_label %></b>: <%= @year.special_depicted_monuments %></p><% end %>
     <p><b>Monumenti nuovi</b>: <%= @year.new_monuments %></p>
 <% end %>
 
