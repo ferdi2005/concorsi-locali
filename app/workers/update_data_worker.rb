@@ -73,7 +73,7 @@ class UpdateDataWorker
 
             # Verifica se l'utente si è iscritto appositamente per il concorso
             unless userinfo['registration'].nil?
-              creator.update!(proveniencecontest: contest.id) if userinfo['registration'].to_date.between?(Date.parse("#{ENV["PERIOD_START"]} #{year.year}") - 3.days, Date.parse("#{ENV["PERIOD_END"]} #{year.year}"))
+              creator.update!(proveniencecontest: contest.id, year: year) if userinfo['registration'].to_date.between?(Date.parse("#{ENV["PERIOD_START"]} #{year.year}") - 3.days, Date.parse("#{ENV["PERIOD_END"]} #{year.year}"))
             end
           end
 
@@ -113,7 +113,7 @@ class UpdateDataWorker
         creators = Creator.includes(:photos).select { |m| m.photos.where(contest: contest, year: year).any? }.count
 
         # Utenti iscritti appositamente per il concorso
-        creatorsapposta = Creator.where(proveniencecontest: contest.id).count
+        creatorsapposta = Creator.where(proveniencecontest: contest.id, year: year).count
 
         # Nuove foto
         new_monuments = Photo.where(contest: contest, year: year, new_monument: true).count
