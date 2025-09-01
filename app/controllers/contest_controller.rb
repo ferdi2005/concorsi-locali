@@ -20,7 +20,7 @@ class ContestController < ApplicationController
     @contest = Contest.includes(:photos => :creator).find(params[:id])
 
     @photos = @contest.photos.select { |photo| photo.year == @year }
-    @creators = @photos.each(&:creator).uniq
+    @creators = @photos.map(&:creator).uniq
     ## Ordinamento dei creatori
 
     @creators = @creators.sort_by{|gp| gp.photos.where(contest: @contest).count}.reverse
