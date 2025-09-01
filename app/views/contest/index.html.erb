@@ -124,7 +124,7 @@
     <p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= Nophoto.where(regione: nil, year: @year).last.nowlm %>
     <p><b>Fotografie caricate</b>: <%= @year.total %></p>
     <p><b>Fotografie <%= @year.special_category_label %></b>:<%= @year.special_category_total %></p>
-    <p><b>Partecipanti</b>: <%= @year.creators.count %></p>
+    <p><b>Partecipanti</b>: <%= @year.creators_count %></p>
     <p><b>Monumenti rappresentati</b>: <%= @year.depicted_monuments %></p>
     <% if @year.special? %><p><b><%= @year.special_category_label %></b>: <%= @year.special_depicted_monuments %></p><% end %>
     <p><b>Monumenti nuovi</b>: <%= @year.new_monuments %></p>

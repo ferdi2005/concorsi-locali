@@ -140,7 +140,8 @@ class UpdateDataWorker
       else
         global_depicted_monuments_percentage = 0
       end
-      year.update!(creators: total_creators, depicted_monuments: global_depicted_monuments, depicted_monuments_percentage: global_depicted_monuments_percentage, special_depicted_monuments: global_special_depicted_monuments, new_monuments: new_monuments)
+      
+      year.update!(creators_count: total_creators, depicted_monuments: global_depicted_monuments, depicted_monuments_percentage: global_depicted_monuments_percentage, special_depicted_monuments: global_special_depicted_monuments, new_monuments: new_monuments)
 
       ## CONTEGGIO PERCENTUALE SUL TOTALE
       Contest.all.each do |contest|

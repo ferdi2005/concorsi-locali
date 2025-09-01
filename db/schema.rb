@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_05_03_210912) do
+ActiveRecord::Schema.define(version: 2025_09_01_142133) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -147,7 +147,7 @@ ActiveRecord::Schema.define(version: 2025_05_03_210912) do
     t.datetime "updated_at", precision: 6, null: false
     t.integer "total"
     t.integer "special_category_total"
-    t.integer "creators"
+    t.integer "creators_count"
     t.integer "depicted_monuments"
     t.integer "special_depicted_monuments"
     t.float "depicted_monuments_percentage"
