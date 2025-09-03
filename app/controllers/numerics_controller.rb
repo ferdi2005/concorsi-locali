@@ -202,9 +202,9 @@ class NumericsController < ApplicationController
     def photos_relativetogeneral
         unless @contest == false
             @contestyear = ContestYear.find_by(contest: @contest, year: @year)
-            contest_count = @contestyear&.count || 0
-            total_count = @year.total || 1
-            value = contest_count > 0 && total_count > 0 ? (contest_count.to_f / total_count.to_f * 100).truncate(1) : "0"
+            contest_count = @contestyear.count
+            total_count = @year.total
+            value = contest_count.try(:>, 0) && total_count.try(:>, 0) ? (contest_count.to_f / total_count.to_f * 100).truncate(1) : "0"
         else
             value = "100"
         end
@@ -222,9 +222,9 @@ class NumericsController < ApplicationController
     def participants_relativetogeneral
         unless @contest == false
             @contestyear = ContestYear.find_by(contest: @contest, year: @year)
-            contest_creators = @contestyear&.creators || 0
-            total_creators = @year.creators || 1
-            value = contest_creators > 0 && total_creators > 0 ? (contest_creators.to_f / total_creators.to_f * 100).truncate(1) : "0"
+            contest_creators = @contestyear.creators
+            total_creators = @year.creators_count
+            value = contest_creators.try(:>, 0) && total_creators.try(:>, 0) ? (contest_creators.to_f / total_creators.to_f * 100).truncate(1) : "0"
         else
             value = "100"
         end
