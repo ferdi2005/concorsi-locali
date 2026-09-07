@@ -1,2 +1,3 @@
-worker: bundle exec sidekiq -e $RAILS_ENV -i 
-
+web: bundle exec puma -C config/puma.rb
+migrate: bundle exec rake db:migrate
+worker: bundle exec sidekiq -e ${RAILS_ENV:-production}

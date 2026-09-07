@@ -18,9 +18,11 @@ Rails.application.configure do
   # or in config/master.key. This key is used to decrypt credentials (and other encrypted files).
   # config.require_master_key = true
 
+  toolforge_mode = ENV["TOOLFORGE"] == "true"
+
   # Disable serving static files from the `/public` folder by default since
-  # Apache or NGINX already handles this.
-  config.public_file_server.enabled = ENV['RAILS_SERVE_STATIC_FILES'].present?
+  # Apache or NGINX already handles this (enabled on Toolforge containers).
+  config.public_file_server.enabled = ENV['RAILS_SERVE_STATIC_FILES'].present? || toolforge_mode
 
   # Compress CSS using a preprocessor.
   # config.assets.css_compressor = :sass
@@ -44,7 +46,7 @@ Rails.application.configure do
   # config.action_cable.allowed_request_origins = [ 'http://example.com', /http:\/\/example.*/ ]
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = ENV['FORCE_SSL'].present? ? (ENV['FORCE_SSL'] == 'true') : toolforge_mode
 
   # Use the lowest log level to ensure availability of diagnostic information
   # when problems arise.
@@ -80,7 +82,7 @@ Rails.application.configure do
   # require 'syslog/logger'
   # config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new 'app-name')
 
-  if ENV["RAILS_LOG_TO_STDOUT"].present?
+  if ENV["RAILS_LOG_TO_STDOUT"].present? || toolforge_mode
     logger           = ActiveSupport::Logger.new(STDOUT)
     logger.formatter = config.log_formatter
     config.logger    = ActiveSupport::TaggedLogging.new(logger)

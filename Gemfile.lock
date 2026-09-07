@@ -72,6 +72,7 @@ GEM
       public_suffix (>= 2.0.2, < 6.0)
     airbrussh (1.4.2)
       sshkit (>= 1.6.1, != 1.7.0)
+    bigdecimal (4.1.2)
     bindex (0.8.1)
     bootsnap (1.16.0)
       msgpack (~> 1.2)
@@ -160,6 +161,8 @@ GEM
     minitest (5.19.0)
     msgpack (1.7.2)
     multi_xml (0.6.0)
+    mysql2 (0.5.7)
+      bigdecimal
     net-http (0.4.1)
       uri
     net-imap (0.3.7)
@@ -223,6 +226,8 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     redis (4.8.1)
+    redis-namespace (1.11.0)
+      redis (>= 4)
     regexp_parser (2.8.1)
     rexml (3.2.6)
     ruby-vips (2.1.4)
@@ -322,12 +327,14 @@ DEPENDENCIES
   image_processing (~> 1.2)
   jbuilder (~> 2.7)
   listen (>= 3.0.5, < 3.2)
+  mysql2 (~> 0.5.6)
   net-imap
   net-pop
   net-smtp
   pg (>= 0.18, < 2.0)
   puma
   rails (~> 6.1)
+  redis-namespace (~> 1.11)
   sass-rails (~> 5)
   selenium-webdriver
   sentry-raven

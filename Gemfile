@@ -5,8 +5,9 @@ ruby '3.1.2'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.1'
-# Use pg as the database for Active Record
+# Use pg or mysql2 as database for Active Record
 gem 'pg', '>= 0.18', '< 2.0'
+gem 'mysql2', '~> 0.5.6'
 # Use Puma as the app server
 gem 'puma'
 gem 'dotenv-rails'
@@ -68,6 +69,7 @@ end
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem "sidekiq", "~> 6.0"
+gem "redis-namespace", "~> 1.11"
 
 gem "httparty", github: 'jnunemaker/httparty'
 gem "chartkick", "~> 3.4"

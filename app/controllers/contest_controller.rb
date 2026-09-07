@@ -3,7 +3,9 @@ class ContestController < ApplicationController
   http_basic_authenticate_with name: "wikilovesmonuments", password: ENV["SECRET_PASSWORD"], only: [:upload, :uploadpost]
 
   def index
-    @contests = Contest.with_attached_logo.includes(:photos, :contest_years).sort_by{ |contest| contest.contest_years.where(year: @year).first&.count }.reverse
+    @contests = Contest.with_attached_logo.includes(:photos, :contest_years).sort_by { |contest|
+      contest.contest_years.find { |cy| cy.year_id == @year&.id }&.count.to_i
+    }.reverse
     @nophotograph = {}
     Nophoto.where(regione: nil).each do |nop|
       @nophotograph[nop.created_at] = nop.count
@@ -13,7 +15,7 @@ class ContestController < ApplicationController
     Nophoto.where(regione: nil).each do |nop|
       @nophotographpercent[nop.created_at] = nop.percent
     end
-    @rank = ContestYear.where(year: @year).sort_by{|c| c.count}.pluck(:id).reverse
+    @rank = ContestYear.where(year: @year).order(count: :desc).pluck(:id)
   end
 
   def show

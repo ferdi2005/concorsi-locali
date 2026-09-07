@@ -78,9 +78,23 @@ test:
 #   production:
 #     url: <%= ENV['DATABASE_URL'] %>
 #
+<% toolforge_mode = (ENV["TOOLFORGE"] == "true") %>
+
 production:
+<% if ENV['DATABASE_URL'].present? %>
+  url: <%= ENV['DATABASE_URL'] %>
+<% elsif toolforge_mode %>
+  adapter: mysql2
+  encoding: utf8mb4
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("TOOL_TOOLSDB_HOST") { "tools.db.svc.wikimedia.cloud" } %>
+  username: <%= ENV["TOOL_TOOLSDB_USER"] || ENV["DBUSERNAME"] || ENV["USER"] %>
+  password: <%= ENV["TOOL_TOOLSDB_PASSWORD"] || ENV["CONCORSILOCALI_DATABASE_PASSWORD"] %>
+  database: <%= ENV["TOOL_TOOLSDB_DATABASE"] || ENV["DBNAME"] || "#{(ENV['TOOL_TOOLSDB_USER'] || ENV['USER'])}__concorsi" %>
+<% else %>
   <<: *default
   host: localhost
   database: <%= ENV["DBNAME"] %>
   username: <%= ENV["DBUSERNAME"] %>
   password: <%= ENV['CONCORSILOCALI_DATABASE_PASSWORD'] %>
+<% end %>
