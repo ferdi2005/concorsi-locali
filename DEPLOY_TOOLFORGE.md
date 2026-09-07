@@ -244,3 +244,39 @@ toolforge jobs logs -f worker-job
   toolforge webservice restart
   toolforge jobs restart worker-job
   ```
+
+---
+
+## 11. Migrazione dei Dati dalla Vecchia Webapp (PostgreSQL -> ToolsDB MariaDB)
+
+Poiché il vecchio database usa **PostgreSQL** e Toolforge usa **MariaDB**, un dump SQL diretto (`pg_dump`) è incompatibile per via della differente sintassi SQL (tipi booleani, offset di timestamp, escaping e foreign key).
+
+Per risolvere questo, è stato predisposto un task agnostico Rails ad alte prestazioni (`db:export_data` e `db:import_data`) basato su JSON compresso con Gzip:
+
+### Metodo Rapido Automatizzato:
+Dal tuo computer locale, esegui lo script dedicato:
+```bash
+./bin/transfer_to_toolforge.sh
+```
+Questo script:
+1. Si collega via SSH al vecchio server (`deploy@c.ferdi.cc`) ed esporta tutte le tabelle applicative e ActiveStorage in `/tmp/concorsi_data_*.json.gz`.
+2. Scarica il dump compresso in locale e lo invia direttamente al bastion di Toolforge in `/data/project/statistiche-wlm/`.
+3. Mostra i comandi pronti per avviare il job di importazione su Toolforge.
+
+### Esecuzione dell'importazione su Toolforge:
+Sul bastion di Toolforge (`become statistiche-wlm`):
+```bash
+# Esegui il job di importazione (disabilita temporaneamente i vincoli di foreign key ed esegue insert_all a blocchi)
+toolforge jobs run import-data-job \
+  --image tool-statistiche-wlm/tool-statistiche-wlm:latest \
+  --command "bundle exec rake 'db:import_data[/data/project/statistiche-wlm/concorsi_data_NOMEFILE.json.gz]'" \
+  --mount all \
+  --wait
+
+# Controlla l'esito
+toolforge jobs logs import-data-job
+
+# Cancella il job completato e il file di dump
+toolforge jobs delete import-data-job
+rm -f /data/project/statistiche-wlm/concorsi_data_*.json.gz
+```
