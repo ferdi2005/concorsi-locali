@@ -32,7 +32,7 @@ Accedi al bastion di Toolforge e assumi l'identità del tool account:
 ssh login.toolforge.org
 become <nome_tool>
 ```
-*(Sostituisci `<nome_tool>` con il nome del tuo tool, ad esempio `concorsi-locali`)*
+*(Sostituisci `<nome_tool>` con il nome del tuo tool, ad esempio `statistiche-wlm`)*
 
 ---
 
@@ -152,11 +152,11 @@ Attendi che lo stato del build diventi `SUCCEEDED`.
 Una volta completato il build, esegui il job di migrazione database:
 
 ```bash
-toolforge jobs run \
-  --image tool-<nome_tool>/tool-<nome_tool>:latest \
+toolforge jobs run migrate-job \
+  --image tool-statistiche-wlm/tool-statistiche-wlm:latest \
   --command "migrate" \
-  --wait \
-  migrate-job
+  --mount all \
+  --wait
 ```
 
 Verifica l'esito della migrazione:
@@ -170,10 +170,10 @@ toolforge jobs delete migrate-job
 
 ## 8. Avvio del Servizio Web (Puma)
 
-Avvia il webservice HTTP utilizzando l'immagine appena compilata:
+Avvia il webservice HTTP specificando `--mount all` per montare lo storage persistente NFS:
 
 ```bash
-toolforge webservice buildservice start --cpu 1 --mem 1Gi
+toolforge webservice buildservice start --mount all --cpu 1 --mem 1Gi
 ```
 
 Verifica lo stato del webservice:
@@ -182,7 +182,7 @@ toolforge webservice status
 ```
 
 L'applicazione sarà raggiungibile all'indirizzo:
-`https://<nome_tool>.toolforge.org/`
+`https://statistiche-wlm.toolforge.org/`
 
 ---
 
@@ -191,14 +191,14 @@ L'applicazione sarà raggiungibile all'indirizzo:
 Per gestire l'aggiornamento dei dati e i cron job pianificati in `config/schedule.yml`, avvia il worker Sidekiq come **continuous job**:
 
 ```bash
-toolforge jobs run \
-  --image tool-<nome_tool>/tool-<nome_tool>:latest \
+toolforge jobs run worker-job \
+  --image tool-statistiche-wlm/tool-statistiche-wlm:latest \
   --command "worker" \
   --continuous \
   --cpu 1 \
   --mem 1Gi \
   --emails none \
-  worker-job
+  --mount all
 ```
 
 Controlla lo stato del worker:
@@ -237,7 +237,7 @@ toolforge jobs logs -f worker-job
   toolforge build start https://github.com/ferdi2005/concorsi-locali
 
   # 2. Esegui eventuali nuove migrazioni
-  toolforge jobs run --image tool-<nome_tool>/tool-<nome_tool>:latest --command "migrate" --wait migrate-job
+  toolforge jobs run migrate-job --image tool-statistiche-wlm/tool-statistiche-wlm:latest --command "migrate" --wait
   toolforge jobs delete migrate-job
 
   # 3. Riavvia webservice e worker
