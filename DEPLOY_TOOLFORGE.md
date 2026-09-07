@@ -191,7 +191,7 @@ toolforge jobs delete migrate-job
 Avvia il webservice HTTP specificando `--mount all` per montare lo storage persistente NFS:
 
 ```bash
-toolforge webservice buildservice start --mount all --cpu 1 --mem 1Gi
+toolforge webservice buildservice start --mount all --cpu 2 --mem 2Gi
 ```
 
 Verifica lo stato del webservice:
@@ -243,6 +243,18 @@ toolforge jobs logs -f worker-job
   ```bash
   toolforge webservice restart
   ```
+
+- **Accedere alla console Rails interattiva:**
+  ```bash
+  toolforge webservice buildservice shell
+  ```
+  Una volta avviata la shell nel container pod:
+  ```bash
+  launcher console
+  # oppure
+  launcher bundle exec rails console
+  ```
+  Al termine digitare `exit` per uscire dalla console Rails e nuovamente `exit` per chiudere la sessione del container.
 
 - **Riavviare il worker:**
   ```bash

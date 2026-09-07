@@ -3,7 +3,7 @@ class ContestController < ApplicationController
   http_basic_authenticate_with name: "wikilovesmonuments", password: ENV["SECRET_PASSWORD"], only: [:upload, :uploadpost]
 
   def index
-    @contests = Contest.with_attached_logo.includes(:photos, :contest_years).sort_by { |contest|
+    @contests = Contest.with_attached_logo.includes(:contest_years).sort_by { |contest|
       contest.contest_years.find { |cy| cy.year_id == @year&.id }&.count.to_i
     }.reverse
     @nophotograph = {}
