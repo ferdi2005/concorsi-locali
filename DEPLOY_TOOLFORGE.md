@@ -55,6 +55,24 @@ Su Toolforge ogni tool ha accesso a MariaDB ToolsDB.
    Nel prompt MySQL, crea il database (il nome **deve** iniziare con `<user>__`, es. `s54321__concorsi`):
    ```sql
    CREATE DATABASE s<tool>__concorsi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   ```
+
+3. **Verifica il supporto ai fusi orari (Time zone support per Groupdate):**
+   La gemma `groupdate` (utilizzata per i grafici temporali delle foto e dei partecipanti) richiede che MariaDB supporti la conversione dei fusi orari con `CONVERT_TZ`.
+
+   Sempre all'interno del client `sql local`, verifica se le tabelle dei fusi orari sono attive:
+   ```sql
+   SELECT CONVERT_TZ(NOW(), '+00:00', 'Europe/Rome');
+   ```
+   - **Se restituisce la data/ora:** il supporto fusi orari è già attivo e funzionante.
+   - **Se restituisce `NULL`:** significa che le tabelle dei fusi orari non sono caricate nel server MariaDB.
+
+   > [!NOTE]
+   > Su ToolsDB `CONVERT_TZ(..., 'Europe/Rome')` restituisce `NULL` perché le tabelle dei fusi orari non sono caricate nel database di sistema e i tool account non hanno i permessi di root per caricarle.
+   > L'applicazione gestisce automaticamente questo scenario: quando `TOOLFORGE=true`, converte la timezone nel rispettivo offset numerico (es. `+02:00` durante l'ora legale e `+01:00` durante l'ora solare). MariaDB supporta nativamente gli offset numerici tramite calcolo aritmetico senza richiedere alcuna tabella dei fusi orari nel database.
+
+   Esci dal client MySQL:
+   ```sql
    EXIT;
    ```
 

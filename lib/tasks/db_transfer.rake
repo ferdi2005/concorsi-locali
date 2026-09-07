@@ -37,7 +37,11 @@ namespace :db do
         puts "Esportazione #{model.name} (#{count} record)..."
 
         model.unscoped.find_in_batches(batch_size: 1000) do |batch|
-          batch_data = batch.map(&:attributes)
+          batch_data = batch.map do |record|
+            record.attributes.transform_values do |val|
+              (val.is_a?(Float) && (val.infinite? || val.nan?)) ? nil : val
+            end
+          end
           payload = JSON.generate({ model: model.name, table: model.table_name, records: batch_data })
           gz.puts(payload)
           total_records += batch.size

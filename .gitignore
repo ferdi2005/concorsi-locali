@@ -39,3 +39,4 @@ yarn-debug.log*
 .env
 .env2
 .wle
+*.json.gz
