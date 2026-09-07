@@ -22,8 +22,10 @@ class UpdateGlobalUsageWorker
     Year.where(storicized: false).each do |year|
       Contest.all.each do |contest|
         contestyear = ContestYear.find_by(contest: contest, year: year)
+        next if contestyear.nil?
+
         usedonwiki_count = Photo.where(contest: contest, year: year, usedonwiki: true).count
-        (usedonwiki_count != 0 && usedonwiki_count != nil) ? usedonwiki_percentage = usedonwiki_count / contestyear.count.to_f * 100 : usedonwiki_percentage = 0
+        usedonwiki_percentage = contestyear.count.to_i > 0 ? (usedonwiki_count.to_f / contestyear.count.to_f * 100) : 0
         contestyear.update!(usedonwiki: usedonwiki_count, usedonwiki_percentage: usedonwiki_percentage)
       end
     end

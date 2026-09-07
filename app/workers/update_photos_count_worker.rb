@@ -40,10 +40,11 @@ class UpdatePhotosCountWorker
       # Aggiornamento delle percentuali
       Contest.all.each do |contest|
         contestyear = ContestYear.find_by(contest: contest, year: year)
+        next if contestyear.nil?
 
-        global_photo_count != 0 ? percent_of_total = contestyear.count.to_f / global_photo_count.to_f * 100 : percent_of_total = 0
+        percent_of_total = global_photo_count.to_i > 0 ? (contestyear.count.to_f / global_photo_count.to_f * 100) : 0
 
-        global_special_category_count != 0 ? special_category_percent_of_total = contestyear.special_category_count.to_f / global_special_category_count.to_f * 100 : special_category_percent_of_total = 0
+        special_category_percent_of_total = global_special_category_count.to_i > 0 ? (contestyear.special_category_count.to_f / global_special_category_count.to_f * 100) : 0
 
         contestyear.update!(percent_of_total: percent_of_total, special_category_percent_of_total: special_category_percent_of_total)
       end

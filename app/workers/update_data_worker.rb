@@ -117,13 +117,13 @@ class UpdateDataWorker
 
         # Nuove foto
         new_monuments = Photo.where(contest: contest, year: year, new_monument: true).count
-        (contestyear.count != 0 || contestyear.count != nil) ? new_monuments_percentage = new_monuments / contestyear.count.to_f * 100 : new_monuments_percentage = 0
+        new_monuments_percentage = contestyear.count.to_i > 0 ? (new_monuments.to_f / contestyear.count.to_f * 100) : 0
 
         # Monumenti ritratti
         photos = Photo.where(year: year, contest: contest)
         depicted_monuments = photos.pluck(:wlmid).uniq.count
         special_depicted_monuments = photos.where(special: true).pluck(:wlmid).uniq.count
-        (contestyear.monuments != 0 && contestyear.monuments != nil) ? depicted_monuments_percentage = depicted_monuments.to_f / contestyear.monuments.to_f * 100.0 : depicted_monuments_percentage = 0
+        depicted_monuments_percentage = contestyear.monuments.to_i > 0 ? (depicted_monuments.to_f / contestyear.monuments.to_f * 100.0) : 0
 
         contestyear.update!(creators: creators, new_monuments: new_monuments, new_monuments_percentage: new_monuments_percentage, creatorsapposta: creatorsapposta, depicted_monuments: depicted_monuments, depicted_monuments_percentage: depicted_monuments_percentage, special_depicted_monuments: special_depicted_monuments)
       end
@@ -135,8 +135,8 @@ class UpdateDataWorker
       global_special_depicted_monuments = global_photos.where(special: true).pluck(:wlmid).uniq.count
       new_monuments = global_photos.where(new_monument: true).count
 
-      if (nophoto = Nophoto.where(year: year).last) && nophoto.monuments != 0
-        global_depicted_monuments_percentage = global_special_depicted_monuments / nophoto.monuments.to_f * 100.0
+      if (nophoto = Nophoto.where(year: year).last) && nophoto.monuments.to_i > 0
+        global_depicted_monuments_percentage = global_special_depicted_monuments.to_f / nophoto.monuments.to_f * 100.0
       else
         global_depicted_monuments_percentage = 0
       end
@@ -148,7 +148,7 @@ class UpdateDataWorker
         contestyear = ContestYear.find_by(contest: contest, year: year)
         next if contestyear.nil?
 
-        total_creators != 0 ? participants_percent_of_total = contestyear.creators.to_f / total_creators.to_f * 100 : participants_percent_of_total = 0
+        participants_percent_of_total = total_creators.to_i > 0 ? (contestyear.creators.to_f / total_creators.to_f * 100) : 0
         contestyear.update!(participants_percent_of_total: participants_percent_of_total)
       end
 
