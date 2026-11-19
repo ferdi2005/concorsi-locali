@@ -1,3 +1,5 @@
+require "addressable/uri"
+
 class UpdateGlobalUsageWorker
   include Sidekiq::Worker
   sidekiq_options({
@@ -6,28 +8,92 @@ class UpdateGlobalUsageWorker
     unique: :all
   })
 
-  def perform(*args)
-    array_update = {}
-    Photo.in_batches(of: 50) do |batch|
-      # Cerco le foto usate sui progetti Wikimedia in gruppi di 50
-      globalusage = HTTParty.get("https://commons.wikimedia.org/w/api.php", query: { :action => :query, :prop => :globalusage, :pageids => batch.pluck(:pageid).join("|"), :gunamespace => 0, gulimit: 50, :format => :json}, uri_adapter: Addressable::URI).to_h["query"]["pages"]
+  COMMONS_API_URL = "https://commons.wikimedia.org/w/api.php".freeze
 
-      batch.each do |photo|
-        # Aggiorna la singola foto sulla base di quanto verificato (invertendo poiché blank a true significa foto non usata)
-        array_update[photo.id] = {"usedonwiki": !globalusage[photo.pageid.to_s]["globalusage"].blank?}
+  def perform(*args)
+    Photo.in_batches(of: 50) do |batch|
+      update_batch(batch)
+    end
+
+    contests = Contest.all.to_a
+    Year.all.each do |year|
+      update_contest_years(year, contests)
+    end
+  end
+
+  private
+
+  def update_batch(batch)
+    photos = batch.pluck(:id, :pageid, :usedonwiki)
+    pageids = photos.filter_map { |_, pageid, _| pageid }.uniq
+    return if pageids.empty?
+
+    used_pageids = fetch_used_pageids(pageids)
+    used_ids = []
+    unused_ids = []
+
+    photos.each do |id, pageid, current_usedonwiki|
+      next if pageid.nil?
+
+      # Aggiorna la singola foto solo se lo stato usedonwiki è cambiato
+      is_used = used_pageids.key?(pageid.to_s)
+      if is_used && current_usedonwiki != true
+        used_ids << id
+      elsif !is_used && current_usedonwiki != false
+        unused_ids << id
       end
     end
-    Photo.update(array_update.keys, array_update.values)
 
-    Year.where(storicized: false).each do |year|
-      Contest.all.each do |contest|
-        contestyear = ContestYear.find_by(contest: contest, year: year)
-        next if contestyear.nil?
+    now = Time.current
+    Photo.where(id: used_ids).update_all(usedonwiki: true, updated_at: now) if used_ids.any?
+    Photo.where(id: unused_ids).update_all(usedonwiki: false, updated_at: now) if unused_ids.any?
+  end
 
-        usedonwiki_count = Photo.where(contest: contest, year: year, usedonwiki: true).count
-        usedonwiki_percentage = contestyear.count.to_i > 0 ? (usedonwiki_count.to_f / contestyear.count.to_f * 100) : 0
-        contestyear.update!(usedonwiki: usedonwiki_count, usedonwiki_percentage: usedonwiki_percentage)
+  def fetch_used_pageids(pageids)
+    used_pageids = {}
+    gucontinue = nil
+
+    loop do
+      query = {
+        action: :query,
+        prop: :globalusage,
+        pageids: pageids.join("|"),
+        gunamespace: 0,
+        gulimit: :max,
+        format: :json
+      }
+      query[:gucontinue] = gucontinue if gucontinue
+
+      request = HTTParty.get(COMMONS_API_URL, query: query, uri_adapter: Addressable::URI)
+      unless request.parsed_response.is_a?(Hash)
+        raise "Risposta non valida da Wikimedia Commons (HTTP #{request.code})"
       end
+
+      data = request.parsed_response
+      raise "Errore API Wikimedia Commons: #{data['error']}" if data["error"]
+
+      pages = data.dig("query", "pages")
+      raise "Risposta inattesa da Wikimedia Commons: campo query.pages mancante" unless pages.is_a?(Hash)
+
+      pages.each do |pageid, page_data|
+        used_pageids[pageid.to_s] = true if page_data.is_a?(Hash) && !page_data["globalusage"].blank?
+      end
+
+      gucontinue = data.dig("continue", "gucontinue")
+      break if gucontinue.blank?
+    end
+
+    used_pageids
+  end
+
+  def update_contest_years(year, contests)
+    contests.each do |contest|
+      contestyear = ContestYear.find_by(contest: contest, year: year)
+      next if contestyear.nil?
+
+      usedonwiki_count = Photo.where(contest: contest, year: year, usedonwiki: true).count
+      usedonwiki_percentage = contestyear.count.to_i > 0 ? (usedonwiki_count.to_f / contestyear.count.to_f * 100) : 0
+      contestyear.update!(usedonwiki: usedonwiki_count, usedonwiki_percentage: usedonwiki_percentage)
     end
   end
 end
