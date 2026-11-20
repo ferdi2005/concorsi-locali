@@ -276,6 +276,28 @@ toolforge jobs logs -f worker-job
   toolforge jobs restart worker-job
   ```
 
+- **Deploy automatico dopo `git push` con GitHub Actions (`toolforge components`):**
+  Il repository include `toolforge.yaml` e il workflow `.github/workflows/deploy-toolforge.yml`, che avvia build e aggiornamento di `web` e `worker-job` tramite l'API `toolforge components`.
+
+  Configurazione iniziale su Toolforge (`become statistiche-wlm`):
+  ```bash
+  # 1. Registra la configurazione dei componenti dal repository
+  curl -s https://raw.githubusercontent.com/ferdi2005/concorsi-locali/master/toolforge.yaml | toolforge components config create
+
+  # 2. Genera il token di deploy per la CI
+  toolforge components deploy-token create
+
+  # 3. Se erano attivi webservice o job avviati manualmente, fermali prima del primo deployment gestito da components
+  toolforge webservice stop
+  toolforge jobs delete worker-job
+
+  # 4. Avvia il primo deployment
+  toolforge components deployment create
+  ```
+
+  Su GitHub, in `Settings -> Secrets and variables -> Actions -> New repository secret`, aggiungi il secret `TOOLS_DEPLOY_TOKEN` con il token generato al punto 2. Ad ogni push su `master` il workflow avvierà automaticamente il deployment e ne attenderà il completamento.
+  Eventuali nuove migrazioni database vanno comunque eseguite manualmente tramite `migrate-job`.
+
 ---
 
 ## 11. Migrazione dei Dati dalla Vecchia Webapp (PostgreSQL -> ToolsDB MariaDB)
