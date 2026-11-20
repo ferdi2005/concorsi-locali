@@ -22,6 +22,7 @@ Quando `TOOLFORGE=true` è impostato:
 - **SSL:** `force_ssl = true` per sfruttare la terminazione TLS dell'ingress di Toolforge.
 - **ActiveStorage:** I file caricati (es. logo dei concorsi) vengono archiviati su filesystem persistente NFS in `$HOME/storage` (`/data/project/<tool>/storage`), evitando che vadano persi al riavvio dei pod.
 - **Sidekiq / Redis:** Si connette al cluster Redis di Toolforge e applica automaticamente il **namespacing delle chiavi** (es. `s<tool>_sidekiq:`), isolando completamente i dati da tutti gli altri tool Wikimedia.
+- **Worker e database replica:** I job in background eseguono le implementazioni in `app/workers/toolforge/` interrogando in sola lettura le database replica `commonswiki_p` (`commonswiki.analytics.db.svc.wikimedia.cloud`) e `centralauth_p` (`centralauth.analytics.db.svc.wikimedia.cloud`) tramite le credenziali di `~/replica.my.cnf` (`TOOL_TOOLSDB_USER` e `TOOL_TOOLSDB_PASSWORD`, oppure `TOOL_REPLICA_USER` e `TOOL_REPLICA_PASSWORD`). Quando `TOOLFORGE` non è attivo, i job utilizzano il fallback tramite API HTTP in `app/workers/api/`; in locale è comunque possibile abilitare le replica impostando `USE_TOOLFORGE_REPLICAS=true` e gli host/porte dei tunnel (`TOOL_COMMONS_REPLICA_HOST`, `TOOL_COMMONS_REPLICA_PORT`, `TOOL_CENTRALAUTH_REPLICA_HOST`, `TOOL_CENTRALAUTH_REPLICA_PORT`).
 
 ---
 
