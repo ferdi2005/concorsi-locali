@@ -109,6 +109,12 @@ commons_replica: &replica_default
   password: <%= ENV["TOOL_REPLICA_PASSWORD"] || ENV["TOOL_TOOLSDB_PASSWORD"] || ENV["CONCORSILOCALI_DATABASE_PASSWORD"] %>
   database: <%= ENV.fetch("TOOL_COMMONS_REPLICA_DB") { "commonswiki_p" } %>
 
+commons_links_replica:
+  <<: *replica_default
+  host: <%= ENV.fetch("TOOL_COMMONS_LINKS_REPLICA_HOST") { "links.commonswiki.analytics.db.svc.wikimedia.cloud" } %>
+  port: <%= ENV.fetch("TOOL_COMMONS_LINKS_REPLICA_PORT") { 3306 } %>
+  database: <%= ENV.fetch("TOOL_COMMONS_LINKS_REPLICA_DB") { "commonswiki_p" } %>
+
 centralauth_replica:
   <<: *replica_default
   host: <%= ENV.fetch("TOOL_CENTRALAUTH_REPLICA_HOST") { "centralauth.analytics.db.svc.wikimedia.cloud" } %>

@@ -1,7 +1,8 @@
 require "set"
 
 # Client in sola lettura per interrogare le database replica di Wikimedia Toolforge
-# (commonswiki_p e centralauth_p) senza effettuare richieste HTTP alle API MediaWiki.
+# (commonswiki_p su cluster s4 e links x4, e centralauth_p su s7) senza effettuare
+# richieste HTTP alle API MediaWiki.
 class WikimediaReplicaClient
   KNOWN_IDS_CATEGORY = "Cultural_heritage_monuments_in_Italy_with_known_IDs".freeze
   DEFAULT_WLM_TEMPLATE = "Monumento_italiano".freeze
@@ -63,7 +64,7 @@ class WikimediaReplicaClient
       return @categorylinks_uses_linktarget unless @categorylinks_uses_linktarget.nil?
 
       @categorylinks_uses_linktarget =
-        commons_connection.column_exists?("categorylinks", "cl_target_id")
+        commons_links_connection.column_exists?("categorylinks", "cl_target_id")
     end
 
     def fetch_category_files_counts(category_titles)
@@ -96,9 +97,23 @@ class WikimediaReplicaClient
       norm_cat = normalize_category_title(category_title)
       return [] if norm_cat.empty?
 
-      conn = commons_connection
-      cat_join, cat_where = category_filter_sql(conn, "cl", norm_cat)
+      links_conn = commons_links_connection
+      cat_join, cat_where = category_filter_sql(links_conn, "cl", norm_cat)
 
+      pageids_sql = <<~SQL
+        SELECT p.page_id AS pageid
+        FROM categorylinks cl
+        #{cat_join}
+        JOIN page p
+          ON p.page_id = cl.cl_from
+         AND p.page_namespace = 6
+        #{cat_where.empty? ? "" : "WHERE #{cat_where}"}
+      SQL
+
+      pageids = links_conn.select_all(pageids_sql).map { |row| row["pageid"].to_i }.uniq
+      return [] if pageids.empty?
+
+      core_conn = commons_connection
       if uses_file_revision_tables?
         timestamp_expr = "fr.fr_timestamp"
         file_actor_join = <<~SQL
@@ -119,38 +134,40 @@ class WikimediaReplicaClient
         SQL
       end
 
-      sql = <<~SQL
-        SELECT
-          p.page_id AS pageid,
-          p.page_title AS page_title,
-          #{timestamp_expr} AS img_timestamp,
-          a.actor_name AS username,
-          a.actor_user AS userid
-        FROM categorylinks cl
-        #{cat_join}
-        JOIN page p
-          ON p.page_id = cl.cl_from
-         AND p.page_namespace = 6
-        #{file_actor_join}
-        #{cat_where.empty? ? "" : "WHERE #{cat_where}"}
-      SQL
+      photos = []
+      pageids.each_slice(BATCH_SIZE) do |slice|
+        sql = <<~SQL
+          SELECT
+            p.page_id AS pageid,
+            p.page_title AS page_title,
+            #{timestamp_expr} AS img_timestamp,
+            a.actor_name AS username,
+            a.actor_user AS userid
+          FROM page p
+          #{file_actor_join}
+          WHERE p.page_id IN (#{slice.join(', ')})
+            AND p.page_namespace = 6
+        SQL
 
-      conn.select_all(sql).map do |row|
-        {
-          "pageid" => row["pageid"].to_i,
-          "title" => denormalize_file_title(row["page_title"]),
-          "user" => decode(row["username"]),
-          "userid" => row["userid"]&.to_i,
-          "timestamp" => parse_mediawiki_timestamp(row["img_timestamp"])
-        }
+        core_conn.select_all(sql).each do |row|
+          photos << {
+            "pageid" => row["pageid"].to_i,
+            "title" => denormalize_file_title(row["page_title"]),
+            "user" => decode(row["username"]),
+            "userid" => row["userid"]&.to_i,
+            "timestamp" => parse_mediawiki_timestamp(row["img_timestamp"])
+          }
+        end
       end
+
+      photos
     end
 
     def fetch_category_member_titles(category_title, namespace: 6)
       norm_cat = normalize_category_title(category_title)
       return Set.new if norm_cat.empty?
 
-      conn = commons_connection
+      conn = commons_links_connection
       cat_join, cat_where = category_filter_sql(conn, "cl", norm_cat)
       ns = namespace.to_i
 
@@ -176,7 +193,7 @@ class WikimediaReplicaClient
       ids = normalize_pageids(pageids)
       return {} if ids.empty?
 
-      conn = commons_connection
+      conn = commons_links_connection
       cat_join, cat_where = category_filter_sql(conn, "cl", KNOWN_IDS_CATEGORY)
       wlmids = {}
 
@@ -253,7 +270,7 @@ class WikimediaReplicaClient
       ids = normalize_pageids(pageids)
       return {} if ids.empty?
 
-      conn = commons_connection
+      conn = commons_links_connection
       used = {}
 
       ids.each_slice(BATCH_SIZE) do |slice|
@@ -278,7 +295,7 @@ class WikimediaReplicaClient
       return Set.new if ids.empty?
 
       norm_tpl = template_title.to_s.strip.sub(/\ATemplate:/i, "").tr(" ", "_")
-      conn = commons_connection
+      conn = commons_links_connection
       quoted_tpl = conn.quote(norm_tpl)
       valid = Set.new
 
@@ -304,6 +321,10 @@ class WikimediaReplicaClient
 
     def commons_connection
       CommonsReplicaRecord.connection
+    end
+
+    def commons_links_connection
+      CommonsLinksReplicaRecord.connection
     end
 
     def centralauth_connection
