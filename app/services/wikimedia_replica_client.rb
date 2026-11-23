@@ -290,6 +290,72 @@ class WikimediaReplicaClient
       used
     end
 
+    def fetch_global_usages_for_pageids(pageids)
+      ids = normalize_pageids(pageids)
+      return {} if ids.empty?
+
+      conn = commons_links_connection
+      usages = Hash.new { |h, k| h[k] = [] }
+
+      ids.each_slice(BATCH_SIZE) do |slice|
+        sql = <<~SQL
+          SELECT DISTINCT
+            p.page_id AS pageid,
+            gil.gil_wiki AS wiki,
+            gil.gil_page_title AS page_title
+          FROM page p
+          JOIN globalimagelinks gil ON gil.gil_to = p.page_title
+          WHERE p.page_id IN (#{slice.join(', ')})
+            AND gil.gil_page_namespace_id = 0
+        SQL
+
+        conn.select_all(sql).each do |row|
+          wiki = decode(row["wiki"])
+          title = decode(row["page_title"])
+          next if wiki.blank? || title.blank?
+
+          usages[row["pageid"].to_i] << { wiki: wiki, page_title: title }
+        end
+      end
+
+      usages
+    end
+
+    def fetch_file_metadata_for_pageids(pageids)
+      ids = normalize_pageids(pageids)
+      return {} if ids.empty?
+
+      conn = commons_connection
+      metadata = {}
+
+      ids.each_slice(200) do |slice|
+        sql = if uses_file_revision_tables?
+                <<~SQL
+                  SELECT p.page_id AS pageid, fr.fr_metadata AS raw_metadata
+                  FROM page p
+                  JOIN file f ON f.file_name = p.page_title
+                  JOIN filerevision fr ON fr.fr_id = f.file_latest
+                  WHERE p.page_id IN (#{slice.join(', ')})
+                    AND p.page_namespace = 6
+                SQL
+              else
+                <<~SQL
+                  SELECT p.page_id AS pageid, i.img_metadata AS raw_metadata
+                  FROM page p
+                  JOIN image i ON i.img_name = p.page_title
+                  WHERE p.page_id IN (#{slice.join(', ')})
+                    AND p.page_namespace = 6
+                SQL
+              end
+
+        conn.select_all(sql).each do |row|
+          metadata[row["pageid"].to_i] = decode(row["raw_metadata"])
+        end
+      end
+
+      metadata
+    end
+
     def fetch_pageids_with_template(pageids, template_title = DEFAULT_WLM_TEMPLATE)
       ids = normalize_pageids(pageids)
       return Set.new if ids.empty?
@@ -315,6 +381,114 @@ class WikimediaReplicaClient
       end
 
       valid
+    end
+
+    def fetch_pageids_in_category(pageids, category_title)
+      ids = normalize_pageids(pageids)
+      norm_cat = normalize_category_title(category_title)
+      return Set.new if ids.empty? || norm_cat.empty?
+
+      conn = commons_links_connection
+      cat_join, cat_where = category_filter_sql(conn, "cl", norm_cat)
+      matched = Set.new
+
+      ids.each_slice(BATCH_SIZE) do |slice|
+        conditions = ["cl.cl_from IN (#{slice.join(', ')})"]
+        conditions << cat_where unless cat_where.empty?
+
+        sql = <<~SQL
+          SELECT DISTINCT cl.cl_from AS pageid
+          FROM categorylinks cl
+          #{cat_join}
+          WHERE #{conditions.join(' AND ')}
+        SQL
+
+        conn.select_all(sql).each do |row|
+          matched.add(row["pageid"].to_i)
+        end
+      end
+
+      matched
+    end
+
+    def fetch_user_uploads_in_period(usernames, start_time, end_time)
+      names = usernames.filter_map { |u| u.to_s unless u.to_s.strip.empty? }.uniq
+      return {} if names.empty?
+
+      conn = commons_connection
+      start_ts = conn.quote(format_mediawiki_timestamp(start_time))
+      end_ts = conn.quote(format_mediawiki_timestamp(end_time))
+      counts = Hash.new(0)
+
+      names.each_slice(BATCH_SIZE) do |slice|
+        quoted = slice.map { |u| conn.quote(u) }.join(", ")
+
+        sql = if uses_file_revision_tables?
+                <<~SQL
+                  SELECT a.actor_name AS username, COUNT(*) AS uploads_count
+                  FROM actor a
+                  JOIN filerevision fr ON fr.fr_actor = a.actor_id
+                  WHERE a.actor_name IN (#{quoted})
+                    AND fr.fr_timestamp >= #{start_ts}
+                    AND fr.fr_timestamp <= #{end_ts}
+                  GROUP BY a.actor_name
+                SQL
+              else
+                <<~SQL
+                  SELECT a.actor_name AS username, COUNT(*) AS uploads_count
+                  FROM actor a
+                  JOIN image i ON i.img_actor = a.actor_id
+                  WHERE a.actor_name IN (#{quoted})
+                    AND i.img_timestamp >= #{start_ts}
+                    AND i.img_timestamp <= #{end_ts}
+                  GROUP BY a.actor_name
+                SQL
+              end
+
+        conn.select_all(sql).each do |row|
+          counts[decode(row["username"])] = row["uploads_count"].to_i
+        end
+      end
+
+      counts
+    end
+
+    def fetch_user_monthly_activity(usernames, start_time, end_time)
+      names = usernames.filter_map { |u| u.to_s unless u.to_s.strip.empty? }.uniq
+      return {} if names.empty?
+
+      conn = commons_connection
+      start_ts = conn.quote(format_mediawiki_timestamp(start_time))
+      end_ts = conn.quote(format_mediawiki_timestamp(end_time))
+      activity = Hash.new { |h, k| h[k] = {} }
+
+      names.each_slice(BATCH_SIZE) do |slice|
+        quoted = slice.map { |u| conn.quote(u) }.join(", ")
+        sql = <<~SQL
+          SELECT
+            a.actor_name AS username,
+            SUBSTR(r.rev_timestamp, 1, 6) AS ym,
+            COUNT(*) AS edits_count
+          FROM actor a
+          JOIN revision_userindex r ON r.rev_actor = a.actor_id
+          WHERE a.actor_name IN (#{quoted})
+            AND r.rev_timestamp >= #{start_ts}
+            AND r.rev_timestamp <= #{end_ts}
+          GROUP BY a.actor_name, SUBSTR(r.rev_timestamp, 1, 6)
+        SQL
+
+        conn.select_all(sql).each do |row|
+          username = decode(row["username"])
+          ym = decode(row["ym"])
+          activity[username][ym] = row["edits_count"].to_i
+        end
+      end
+
+      activity
+    end
+
+    def format_mediawiki_timestamp(time)
+      time.utc.strftime("%Y%m%d%H%M%S")
     end
 
     private

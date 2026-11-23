@@ -46,6 +46,7 @@ module Toolforge
 
       new_pageids = new_photos.map { |p| p["pageid"] }
       wlmids_by_pageid = WikimediaReplicaClient.fetch_wlmids_for_pageids(new_pageids)
+      upload_sources_by_pageid = detect_upload_sources(new_pageids)
 
       special_titles = if year.special
                          WikimediaReplicaClient.fetch_category_member_titles(
@@ -95,6 +96,7 @@ module Toolforge
             photodate: photo["timestamp"],
             wlmid: wlmid,
             new_monument: new_monument,
+            upload_source: upload_sources_by_pageid[photo["pageid"].to_i] || "other",
             created_at: now,
             updated_at: now,
             year_id: year.id,
@@ -192,7 +194,7 @@ module Toolforge
         creators = photos_scope.distinct.count(:creator_id)
 
         # Utenti iscritti appositamente per il concorso
-        creatorsapposta = Creator.where(proveniencecontest: contest.id, year: year).count
+        creatorsapposta = year.new_creators(contest: contest).count
 
         # Nuove foto
         new_monuments = photos_scope.where(new_monument: true).count
@@ -221,8 +223,8 @@ module Toolforge
       global_special_depicted_monuments = global_photos.where(special: true).pluck(:wlmid).uniq.count
       new_monuments = global_photos.where(new_monument: true).count
 
-      if (nophoto = Nophoto.where(year: year).last) && nophoto.monuments.to_i > 0
-        global_depicted_monuments_percentage = global_special_depicted_monuments.to_f / nophoto.monuments.to_f * 100.0
+      if (nophoto = Nophoto.where(year: year, regione: nil).last) && nophoto.monuments.to_i > 0
+        global_depicted_monuments_percentage = global_depicted_monuments.to_f / nophoto.monuments.to_f * 100.0
       else
         global_depicted_monuments_percentage = 0
       end
@@ -248,6 +250,19 @@ module Toolforge
       if DateTime.now > (DateTime.parse("#{ENV["PERIOD_END"]} #{year.year}") + 1.months) && year.photos.count == year.total
         year.update!(storicized: true)
       end
+    end
+
+    def detect_upload_sources(pageids)
+      return {} if pageids.empty?
+
+      sources = {}
+      Toolforge::UpdateUploadSourceWorker::SOURCE_CATEGORIES.each do |source_key, categories|
+        categories.each do |cat|
+          matched = WikimediaReplicaClient.fetch_pageids_in_category(pageids, cat)
+          matched.each { |pid| sources[pid] ||= source_key }
+        end
+      end
+      sources
     end
   end
 end

@@ -5,9 +5,9 @@ module Toolforge
       unique: :all
     })
 
-    def perform(*args)
+    def perform(sync_usages = true)
       Photo.in_batches(of: 1000) do |batch|
-        update_batch(batch)
+        update_batch(batch, sync_usages: sync_usages)
       end
 
       contests = Contest.all.to_a
@@ -18,30 +18,60 @@ module Toolforge
 
     private
 
-    def update_batch(batch)
+    def update_batch(batch, sync_usages: true)
       photos = batch.pluck(:id, :pageid, :usedonwiki)
       pageids = photos.filter_map { |_, pageid, _| pageid }.uniq
       return if pageids.empty?
 
-      used_pageids = WikimediaReplicaClient.fetch_globally_used_pageids(pageids)
+      usages_by_pageid = WikimediaReplicaClient.fetch_global_usages_for_pageids(pageids)
       used_ids = []
       unused_ids = []
+      now = Time.current
+      usage_records = []
+      photo_ids_in_batch = []
 
       photos.each do |id, pageid, current_usedonwiki|
         next if pageid.nil?
 
-        # Aggiorna la singola foto solo se lo stato usedonwiki è cambiato
-        is_used = used_pageids.key?(pageid.to_s)
+        photo_ids_in_batch << id
+        page_usages = usages_by_pageid[pageid.to_i] || []
+        is_used = page_usages.any?
+
         if is_used && current_usedonwiki != true
           used_ids << id
         elsif !is_used && current_usedonwiki != false
           unused_ids << id
         end
+
+        next unless sync_usages && is_used
+
+        page_usages.each do |u|
+          usage_records << {
+            photo_id: id,
+            wiki: u[:wiki],
+            page_title: u[:page_title],
+            active: true,
+            created_at: now,
+            updated_at: now
+          }
+        end
       end
 
-      now = Time.current
       Photo.where(id: used_ids).update_all(usedonwiki: true, updated_at: now) if used_ids.any?
       Photo.where(id: unused_ids).update_all(usedonwiki: false, updated_at: now) if unused_ids.any?
+
+      return unless sync_usages && photo_ids_in_batch.any?
+
+      PhotoUsage.where(photo_id: photo_ids_in_batch, active: true).update_all(active: false, updated_at: now)
+      return if usage_records.empty?
+
+      usage_records.each_slice(1000) do |slice|
+        if PhotoUsage.connection.supports_insert_conflict_target?
+          PhotoUsage.upsert_all(slice, unique_by: :index_photo_usages_uniqueness)
+        else
+          PhotoUsage.upsert_all(slice)
+        end
+      end
     end
 
     def update_contest_years(year, contests)

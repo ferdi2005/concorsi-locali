@@ -1,0 +1,94 @@
+<%= provide(:title, "Segnalazione foto di monumenti recenti") %>
+
+<div class="buttons">
+  <%= link_to "Torna allo storico", storico_path, class: "button is-small is-info" %>
+  <%= link_to "Home", root_path, class: "button is-small is-light" %>
+</div>
+
+<h1 class="title">Segnalazione foto di monumenti recenti</h1>
+<p class="subtitle is-6">Elenco delle fotografie caricate per monumenti con data di costruzione o inaugurazione su Wikidata uguale o successiva alla soglia scelta, utile per le verifiche sul diritto d'autore.</p>
+
+<%= form_with url: recent_monuments_maintenance_path, method: :get, local: true, class: "box" do %>
+  <div class="columns">
+    <div class="column">
+      <label class="label">Anno minimo Wikidata (P571)</label>
+      <%= number_field_tag :threshold, @threshold, min: 1800, max: Date.today.year, class: "input" %>
+    </div>
+    <div class="column">
+      <label class="label">Edizione WLM</label>
+      <div class="select is-fullwidth">
+        <%= select_tag :year_id,
+              options_for_select([["Tutte le edizioni", ""]] + @years.map { |y| [y.year, y.id] }, @selected_year_id) %>
+      </div>
+    </div>
+    <div class="column is-narrow" style="display:flex;align-items:flex-end;">
+      <%= submit_tag "Filtra", class: "button is-primary" %>
+    </div>
+  </div>
+<% end %>
+
+<div class="columns mb-4">
+  <div class="column is-4">
+    <div class="box">
+      <p class="heading">Monumenti con P571 >= <%= @threshold %></p>
+      <p class="title is-4"><%= @total_recent_monuments %></p>
+    </div>
+  </div>
+  <div class="column is-4">
+    <div class="box">
+      <p class="heading">Foto WLM su monumenti recenti</p>
+      <p class="title is-4"><%= @total_flagged_photos %></p>
+    </div>
+  </div>
+</div>
+
+<% if @flagged_photos.any? %>
+  <table id="recent-monuments-table" class="table is-striped is-fullwidth">
+    <thead>
+      <tr>
+        <th>Foto su Commons</th>
+        <th>Monumento</th>
+        <th>Anno Wikidata</th>
+        <th>Regione</th>
+        <th>Edizione</th>
+        <th>Autore</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @flagged_photos.each do |entry| %>
+        <% photo = entry[:photo] %>
+        <% mon = entry[:monument] %>
+        <tr>
+          <td>
+            <%= link_to photo.name, "https://commons.wikimedia.org/wiki/#{ERB::Util.url_encode(photo.name)}", target: "_blank", rel: "noopener" %>
+          </td>
+          <td>
+            <% if mon %>
+              <%= link_to(mon.label.presence || mon.item, "https://www.wikidata.org/wiki/#{mon.item}", target: "_blank", rel: "noopener") %>
+              (<%= mon.wlmid %>)
+            <% else %>
+              <%= photo.wlmid %>
+            <% end %>
+          </td>
+          <td><%= mon&.inception_year || "-" %></td>
+          <td><%= mon&.regione || photo.contest&.name %></td>
+          <td><%= photo.year&.year %></td>
+          <td><%= link_to photo.creator.username, creator_path(photo.creator) if photo.creator %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <p class="is-size-7 has-text-grey">Mostrate fino a 500 fotografie più recenti. La copertura della data di costruzione su Wikidata è parziale.</p>
+
+  <script>
+    $('#recent-monuments-table').DataTable({
+      pageLength: 50,
+      dom: 'Bfrtip',
+      buttons: ['copy', 'csv', 'excel']
+    });
+  </script>
+<% else %>
+  <div class="notification is-light">
+    Nessuna fotografia trovata per i filtri selezionati (verifica che la sincronizzazione dei monumenti da cerca sia stata eseguita).
+  </div>
+<% end %>

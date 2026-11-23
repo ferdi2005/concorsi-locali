@@ -115,7 +115,7 @@ module Api
           creators = Creator.includes(:photos).select { |m| m.photos.where(contest: contest, year: year).any? }.count
 
           # Utenti iscritti appositamente per il concorso
-          creatorsapposta = Creator.where(proveniencecontest: contest.id, year: year).count
+          creatorsapposta = year.new_creators(contest: contest).count
 
           # Nuove foto
           new_monuments = Photo.where(contest: contest, year: year, new_monument: true).count
@@ -137,8 +137,8 @@ module Api
         global_special_depicted_monuments = global_photos.where(special: true).pluck(:wlmid).uniq.count
         new_monuments = global_photos.where(new_monument: true).count
 
-        if (nophoto = Nophoto.where(year: year).last) && nophoto.monuments.to_i > 0
-          global_depicted_monuments_percentage = global_special_depicted_monuments.to_f / nophoto.monuments.to_f * 100.0
+        if (nophoto = Nophoto.where(year: year, regione: nil).last) && nophoto.monuments.to_i > 0
+          global_depicted_monuments_percentage = global_depicted_monuments.to_f / nophoto.monuments.to_f * 100.0
         else
           global_depicted_monuments_percentage = 0
         end

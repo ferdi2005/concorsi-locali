@@ -47,7 +47,7 @@ class NumericsController < ApplicationController
             @contestyear = ContestYear.find_by(contest: @contest, year: @year)
             creatorcount = @contestyear&.creators || 0
         else
-            creatorcount = @year.creators || 0
+            creatorcount = @year.creators_count || Photo.where(year: @year).distinct.count(:creator_id)
         end
         json = {
             'postfix': 'Partecipanti',
@@ -63,9 +63,9 @@ class NumericsController < ApplicationController
     def totalcreatorsapposta
         unless @contest == false
             @contestyear = ContestYear.find_by(contest: @contest, year: @year)
-            creatorcount = @contestyear&.creatorsapposta&.to_i || 0
+            creatorcount = @contestyear&.creatorsapposta&.to_i || @year.new_creators(contest: @contest).count
         else
-            creatorcount = Creator.where.not(proveniencecontest: nil).where(year: @year).count
+            creatorcount = @year.year_analytic&.new_creators_count || @year.new_creators.count
         end
             json = {
                 'postfix': 'Partecipanti iscritti per il concorso',
@@ -80,16 +80,10 @@ class NumericsController < ApplicationController
 
     def todaycreatorsapposta
         data = []
-        unless @contest == false
-            photowithdate = Creator.where(proveniencecontest: @contest.id, year: @year).group_by_day(:creationdate).count.to_a.last(2).reverse
-            photowithdate.each do |ph|
-                data.push({'value': ph[1]})
-            end
-        else
-            photowithdate = Creator.where(year: @year).group_by_day(:creationdate).count.to_a.last(2).reverse
-            photowithdate.each do |ph|
-                data.push({'value': ph[1]})
-            end
+        scope = @contest == false ? @year.new_creators : @year.new_creators(contest: @contest)
+        photowithdate = scope.group_by_day(:creationdate).count.to_a.last(2).reverse
+        photowithdate.each do |ph|
+            data.push({'value': ph[1]})
         end
         json = {
             'postfix': 'Partecipanti iscritti per il concorso',
@@ -280,12 +274,12 @@ class NumericsController < ApplicationController
     def iscrittiappostapercentage
         unless @contest == false
             @contestyear = ContestYear.find_by(contest: @contest, year: @year)
-            creatorsapposta = @contestyear&.creatorsapposta&.to_f || 0
-            creators = @contestyear&.creators&.to_f || 0
+            creatorsapposta = (@contestyear&.creatorsapposta || @year.new_creators(contest: @contest).count).to_f
+            creators = (@contestyear&.creators || Photo.where(year: @year, contest: @contest).distinct.count(:creator_id)).to_f
             photocount = creators > 0 ? (creatorsapposta / creators * 100.0).truncate(1) : '0.0'
         else
-            total_creators = Creator.where(year: @year).count.to_f
-            creatorsapposta = Creator.where.not(proveniencecontest: nil).where(year: @year).count.to_f
+            total_creators = (@year.creators_count || Photo.where(year: @year).distinct.count(:creator_id)).to_f
+            creatorsapposta = (@year.year_analytic&.new_creators_count || @year.new_creators.count).to_f
             photocount = total_creators > 0 ? (creatorsapposta / total_creators * 100.0).truncate(1) : '0.0'
         end
         json = {
@@ -300,25 +294,16 @@ class NumericsController < ApplicationController
     end
 
     def miglioriutenti
-        unless @contest == false
-            list = []
-            @creators = []
-            Creator.where(year: @year).each do |creator|
-              if creator.photos.where(contest: @contest, year: @year).any?
-                @creators.push(creator)
-              end
-            end
-            @creators = @creators.sort_by{|gp| gp.photos.where(contest: @contest, year: @year).count}.reverse
-            @creators.each do |creator|
-                list.push({'name': creator.username, 'value': creator.photos.where(contest: @contest, year: @year).count})
-            end
-        else
-            list = []
-            @creators = Creator.where(year: @year).sort_by{|creator| creator.photos.where(year: @year).count}.reverse
-            @creators.each do |creator|
-                list.push({'name': creator.username, 'value': creator.photos.where(year: @year).count})
-            end
-        end
+        photo_scope = Photo.where(year: @year)
+        photo_scope = photo_scope.where(contest: @contest) unless @contest == false
+
+        rows = photo_scope
+          .joins(:creator)
+          .group("creators.id", "creators.username")
+          .order(Arel.sql("COUNT(photos.id) DESC"))
+          .pluck("creators.username", Arel.sql("COUNT(photos.id)"))
+
+        list = rows.map { |username, count| { 'name': username, 'value': count } }
         json =  {
             "valueNameHeader": "Partecipanti più prolifici",
             "valueHeader": "Foto",
@@ -331,14 +316,9 @@ class NumericsController < ApplicationController
 
     def iscrittiappostagraph
         hashdata = []
-        unless @contest == false
-            Creator.where(proveniencecontest: @contest.id, year: @year).group_by_day(:creationdate).count.to_a.last(31).each do |pl|
-                hashdata.push({"value": pl[1]})
-            end
-        else
-            Creator.where.not(proveniencecontest: nil).where(year: @year).group_by_day(:creationdate).count.to_a.last(31).each do |pl|
-                hashdata.push({"value": pl[1]})
-            end
+        scope = @contest == false ? @year.new_creators : @year.new_creators(contest: @contest)
+        scope.group_by_day(:creationdate).count.to_a.last(31).each do |pl|
+            hashdata.push({"value": pl[1]})
         end
         nophoto = {
             "postfix": "Grafico degli utenti iscritti per il concorso",

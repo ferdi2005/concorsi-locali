@@ -3,6 +3,8 @@ require 'sidekiq/cron/web'
 Rails.application.routes.draw do
   resources :years
   root 'contest#index'
+  get 'storico', to: 'history#index'
+  get 'manutenzione/monumenti-recenti', to: 'maintenance#recent_monuments', as: :recent_monuments_maintenance
   resources :contest, only: [:show]
   resources :creators, only: [:show]
   get 'upload', to: 'contest#upload'

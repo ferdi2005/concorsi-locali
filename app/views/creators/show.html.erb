@@ -1,18 +1,54 @@
 <%= provide(:title, "#{@uploader.username}") %>
-<a href="https://commons.wikimedia.org/wiki/User:<%= @uploader.username %>"><h1 class="title is-1"><%= @uploader.username %></a>
-<% if @photos.count > 0 %>
-<a href="#grafico" class="button is-big is-info" data-turbolinks="false">Vai subito al grafico</a>
-<h2 class="subtitle">Le foto caricate</h2>
-<div class="columns">
-<% @photos.each do |photo| %>
-  <div class="column box">
-    <%= image_tag "https://commons.wikimedia.org/w/thumb.php?f=#{photo.name.gsub('File:', '')}&w=200" %>
-    <p><%= photo.name %> <br/> <%= link_to photo.contest.name, photo.contest %></p>
-  </div>
-</div>
+<h1 class="title is-1">
+  <a href="https://commons.wikimedia.org/wiki/User:<%= @uploader.username %>"><%= @uploader.username %></a>
+</h1>
+<% if @uploader.creationdate %>
+  <p class="subtitle is-6">Registrato su Wikimedia il <%= @uploader.creationdate.strftime('%d/%m/%Y') %></p>
 <% end %>
-<div id="grafico">
-  <h2 class="subtitle">Il grafico</h2>
-  <%= line_chart @line_chart, xmin:  "#{@year.year}-09-01", xmax:  "#{@year.year}-09-30"%>
-</div>
+
+<% if @yearly_stats.any? %>
+  <h2 class="title is-4">Riepilogo pluriennale</h2>
+  <table class="table is-striped is-fullwidth">
+    <thead>
+      <tr>
+        <th>Anno</th>
+        <th>Foto caricate</th>
+        <th>Foto usate su wiki</th>
+        <th>Nuovi monumenti</th>
+        <th>Monumenti distinti</th>
+        <th>Caricamenti fuori settembre</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @yearly_stats.each do |row| %>
+        <tr class="<%= 'is-selected' if @selected_year && row[:year_id] == @selected_year.id %>">
+          <th><%= link_to row[:year], creator_path(@uploader, year: row[:year]) %></th>
+          <td><%= row[:photos_count] %></td>
+          <td><%= row[:used_count] %> (<%= row[:used_pct] %>%)</td>
+          <td><%= row[:new_monuments_count] %></td>
+          <td><%= row[:monuments_count] %></td>
+          <td><%= row[:activity]&.non_wlm_uploads_year.nil? ? "-" : row[:activity].non_wlm_uploads_year %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<% if @selected_year && @photos.any? %>
+  <a href="#grafico" class="button is-info mb-4" data-turbolinks="false">Vai subito al grafico</a>
+  <h2 class="subtitle">Foto caricate nel <%= @selected_year.year %> (<%= @photos.size %>)</h2>
+  <div class="columns is-multiline">
+    <% @photos.each do |photo| %>
+      <div class="column is-3">
+        <div class="box">
+          <%= image_tag "https://commons.wikimedia.org/w/thumb.php?f=#{ERB::Util.url_encode(photo.name.gsub('File:', ''))}&w=200" %>
+          <p class="is-size-7 mt-2"><%= photo.name %><br /><%= link_to photo.contest.name, contest_path(photo.contest, year: @selected_year.year) %></p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <div id="grafico" class="mt-5">
+    <h2 class="subtitle">Andamento giornaliero (<%= @selected_year.year %>)</h2>
+    <%= line_chart @line_chart, xmin: "#{@selected_year.year}-09-01", xmax: "#{@selected_year.year}-09-30" %>
+  </div>
 <% end %>
