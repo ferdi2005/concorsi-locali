@@ -423,17 +423,7 @@ class WikimediaReplicaClient
       names.each_slice(BATCH_SIZE) do |slice|
         quoted = slice.map { |u| conn.quote(u) }.join(", ")
 
-        sql = if uses_file_revision_tables?
-                <<~SQL
-                  SELECT a.actor_name AS username, COUNT(*) AS uploads_count
-                  FROM actor a
-                  JOIN filerevision fr ON fr.fr_actor = a.actor_id
-                  WHERE a.actor_name IN (#{quoted})
-                    AND fr.fr_timestamp >= #{start_ts}
-                    AND fr.fr_timestamp <= #{end_ts}
-                  GROUP BY a.actor_name
-                SQL
-              else
+        sql = if conn.data_source_exists?("image")
                 <<~SQL
                   SELECT a.actor_name AS username, COUNT(*) AS uploads_count
                   FROM actor a
@@ -441,6 +431,16 @@ class WikimediaReplicaClient
                   WHERE a.actor_name IN (#{quoted})
                     AND i.img_timestamp >= #{start_ts}
                     AND i.img_timestamp <= #{end_ts}
+                  GROUP BY a.actor_name
+                SQL
+              else
+                <<~SQL
+                  SELECT a.actor_name AS username, COUNT(*) AS uploads_count
+                  FROM actor a
+                  JOIN filerevision fr ON fr.fr_actor = a.actor_id
+                  WHERE a.actor_name IN (#{quoted})
+                    AND fr.fr_timestamp >= #{start_ts}
+                    AND fr.fr_timestamp <= #{end_ts}
                   GROUP BY a.actor_name
                 SQL
               end
