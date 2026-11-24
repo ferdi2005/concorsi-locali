@@ -3,6 +3,7 @@ class HistoryController < ApplicationController
     @years = Year.includes(:year_analytic).order(:year).to_a
     @years_by_id = @years.index_by(&:id)
     @analytics_by_year_id = @years.each_with_object({}) { |y, h| h[y.id] = y.year_analytic }
+    @latest_year = @years.last
 
     # Serie partecipanti nuovi e già registrati
     @participants_series = [
@@ -44,13 +45,30 @@ class HistoryController < ApplicationController
       }
     ]
 
+    # Grafico riuso per fascia di foto per monumento (ultima edizione con analytics)
+    latest_with_reuse = @years.reverse.find { |y| y.year_analytic&.reuse_by_monument_bucket&.dig("buckets").present? }
+    @reuse_chart_year = latest_with_reuse&.year
+    @reuse_bucket_chart = if latest_with_reuse
+                            buckets = latest_with_reuse.year_analytic.reuse_by_monument_bucket["buckets"]
+                            AnalyticsCalculator::BUCKET_LABELS.each_with_object({}) do |(key, label), h|
+                              h[label] = buckets.dig(key, "rate") || 0.0
+                            end
+                          else
+                            {}
+                          end
+
+    # Top monumenti più fotografati dell'ultima edizione
+    @top_monuments = DashboardInsights.top_monuments(year: @latest_year, limit: 15)
+
     # Temi
     @special_years = @years.select(&:special?)
 
-    # Top uploader pluriennali
-    @top_uploaders = AnalyticsCalculator.top_uploaders_across_years(limit: 50)
+    # Top uploader pluriennali (in cache)
+    @top_uploaders = Rails.cache.fetch("dashboard_insights:v#{DashboardInsights.cache_version}:top_uploaders", expires_in: DashboardInsights::CACHE_TTL) do
+      AnalyticsCalculator.top_uploaders_across_years(limit: 50)
+    end
 
-    # Territorio: concorsi regionali per l'anno più recente con dati e serie storica
+    # Territorio: matrice anni x regioni
     @contests = Contest.order(:name).to_a
     @contest_years_matrix = ContestYear
       .includes(:year, :contest, contest_year_analytic: :top1_creator)
@@ -70,166 +88,141 @@ class HistoryController < ApplicationController
       )
     end
 
-    # Fase 2: attività fuori settembre e retention (se popolati)
+    # Fase 2: attività fuori settembre, canale e qualità
     load_phase2_data
 
-    # Fase 3: anagrafica monumenti (cerca), EXIF e pageviews (se popolati)
+    # Fase 3: anagrafica monumenti (cerca), EXIF e pageviews (in cache via DashboardInsights)
     load_phase3_data
   end
 
   private
 
   def load_phase3_data
-    @has_monuments_data = Monument.exists?
+    @monuments_coverage = DashboardInsights.monuments_coverage
+    @has_monuments_data = @monuments_coverage.present?
     if @has_monuments_data
-      total_m = Monument.count
-      no_photo_m = Monument.where(photos_count: 0).count
-      with_photo_m = total_m - no_photo_m
-
-      @monument_sentinels = {
-        total: total_m,
-        without_photo: no_photo_m,
-        without_wikipedia: Monument.where(has_wikipedia: false).count,
-        without_commons: Monument.where(has_commons_category: false).count,
-        with_wlm_without_commons: Monument.where("photos_count > 0").where(has_commons_category: false).count,
-        with_wlm_without_p18: Monument.where("photos_count > 0").where(has_p18: false).count,
-        with_mic_catalog: Monument.where.not(mic_catalog_id: [nil, ""]).count,
-        recent_since_1950: Monument.where("inception_year >= ?", 1950).count,
-        with_photo_total: with_photo_m
-      }
-
-      # Copertura per fascia comuni (sotto 5.000 abitanti) e comuni mai toccati
-      small_scope = Monument.small_municipality(5000)
-      @small_municipalities = {
-        total_monuments: small_scope.count,
-        no_photo_monuments: small_scope.where(photos_count: 0).count,
-        untouched_municipalities: Monument.where.not(city_item: [nil, ""]).group(:city_item).having("SUM(photos_count) = 0").count.size,
-        total_municipalities: Monument.where.not(city_item: [nil, ""]).distinct.count(:city_item)
-      }
-
-      # Copertura per tipologia P31
-      type_rows = Monument.group(:monument_type).pluck(
-        :monument_type,
-        Arel.sql("COUNT(*)"),
-        Arel.sql("SUM(CASE WHEN photos_count = 0 THEN 1 ELSE 0 END)")
-      )
-      @monument_types_stats = type_rows.map do |mtype, tot, noph|
-        tot_i = tot.to_i
-        noph_i = noph.to_i
-        {
-          type: mtype.presence || "altro / non classificato",
-          total: tot_i,
-          no_photo: noph_i,
-          no_photo_pct: tot_i > 0 ? (noph_i.to_f / tot_i * 100.0).round(1) : 0.0
-        }
-      end.sort_by { |r| -r[:total] }
+      @monument_sentinels = @monuments_coverage[:sentinels]
+      @small_municipalities = @monuments_coverage[:small_municipalities]
+      @monument_types_stats = @monuments_coverage[:types_stats]
+      @monument_types_chart = @monument_types_stats.first(12).each_with_object({}) do |row, h|
+        h[row[:type]] = row[:no_photo_pct]
+      end
     end
 
-    @has_exif_data = Photo.where.not(exif_checked_at: nil).exists?
+    @exif_summary = DashboardInsights.exif_summary(years: @years)
+    @has_exif_data = @exif_summary.present?
     if @has_exif_data
-      @exif_by_year = @years.each_with_object({}) do |year, acc|
-        scope = Photo.where(year_id: year.id).where.not(exif_checked_at: nil)
-        checked = scope.count
-        next if checked == 0
-
-        year_start = Time.utc(year.year.to_i, 1, 1)
-        prev_year_start = Time.utc(year.year.to_i - 1, 1, 1)
-        archive_before_year = scope.where("taken_at IS NOT NULL AND taken_at < ?", year_start).count
-        archive_before_prev = scope.where("taken_at IS NOT NULL AND taken_at < ?", prev_year_start).count
-        smartphone = scope.where(device_category: "smartphone").count
-        camera = scope.where(device_category: "camera").count
-        no_exif = scope.where(has_exif: false).count
-
-        acc[year.id] = {
-          checked: checked,
-          archive_pct: (archive_before_year.to_f / checked * 100.0).round(1),
-          archive_prev_pct: (archive_before_prev.to_f / checked * 100.0).round(1),
-          smartphone_pct: (smartphone.to_f / checked * 100.0).round(1),
-          camera_pct: (camera.to_f / checked * 100.0).round(1),
-          no_exif_pct: (no_exif.to_f / checked * 100.0).round(1)
+      @exif_by_year = @exif_summary[:by_year]
+      @exif_no_exif_by_source = @exif_summary[:no_exif_by_source]
+      @exif_top_models = @exif_summary[:top_models]
+      @exif_top_models_year = @exif_summary[:top_models_year]
+      @exif_device_chart = [
+        {
+          name: "Smartphone (% foto)",
+          data: @years.each_with_object({}) { |y, h| h[y.year] = @exif_by_year.dig(y.id, :smartphone_pct) if @exif_by_year[y.id] }
+        },
+        {
+          name: "Smartphone (% utenti)",
+          data: @years.each_with_object({}) { |y, h| h[y.year] = @exif_by_year.dig(y.id, :smartphone_users_pct) if @exif_by_year[y.id] }
+        },
+        {
+          name: "Fotocamera (% foto)",
+          data: @years.each_with_object({}) { |y, h| h[y.year] = @exif_by_year.dig(y.id, :camera_pct) if @exif_by_year[y.id] }
         }
-      end
+      ]
     end
 
-    @has_pageviews_data = PhotoUsage.active.exists?
+    @pageviews_summary = DashboardInsights.pageviews_summary(years: @years)
+    @has_pageviews_data = @pageviews_summary.present?
     if @has_pageviews_data
-      views_by_page = WikiPageMonthlyView.group(:wiki, :page_title).sum(:views)
-      @pageviews_by_year = @years.each_with_object({}) do |year, acc|
-        usages = PhotoUsage.active.joins(:photo).where(photos: { year_id: year.id }).distinct.pluck(:wiki, :page_title)
-        next if usages.empty?
-
-        langs = usages.map(&:first).uniq.size
-        page_views = usages.map { |pair| views_by_page[pair].to_i }.sort.reverse
-        total_views = page_views.sum
-        top12_views = page_views.first(12).sum
-
-        acc[year.id] = {
-          pages_count: usages.size,
-          wikis_count: langs,
-          total_views: total_views,
-          top12_share: total_views > 0 ? (top12_views.to_f / total_views * 100.0).round(1) : 0.0
-        }
-      end
+      @pageviews_by_year = @pageviews_summary[:by_year]
+      @top_viewed_pages = @pageviews_summary[:top_pages]
     end
   end
 
   def load_phase2_data
-    @has_activity_data = CreatorYearlyActivity.exists?
-    if @has_activity_data
-      @activity_by_year = CreatorYearlyActivity.group(:year_id, :uploader_segment).pluck(
-        :year_id,
-        :uploader_segment,
-        Arel.sql("COUNT(*)"),
-        Arel.sql("SUM(wlm_uploads_count)")
-      ).each_with_object(Hash.new { |h, k| h[k] = {} }) do |(yid, seg, cnt, photos_sum), acc|
-        acc[yid][seg] = { creators: cnt.to_i, photos: photos_sum.to_i }
+    cached = Rails.cache.fetch("dashboard_insights:v#{DashboardInsights.cache_version}:phase2:#{@years.map(&:id).join('-')}", expires_in: DashboardInsights::CACHE_TTL) do
+      has_activity = CreatorYearlyActivity.exists?
+      activity_by_year = {}
+      retention_by_year = {}
+
+      if has_activity
+        activity_by_year = CreatorYearlyActivity.group(:year_id, :uploader_segment).pluck(
+          :year_id,
+          :uploader_segment,
+          Arel.sql("COUNT(*)"),
+          Arel.sql("SUM(wlm_uploads_count)")
+        ).each_with_object(Hash.new { |h, k| h[k] = {} }) do |(yid, seg, cnt, photos_sum), acc|
+          acc[yid][seg] = { creators: cnt.to_i, photos: photos_sum.to_i }
+        end
+
+        @years.each do |year|
+          rows = CreatorYearlyActivity.where(year_id: year.id).where.not(post_contest_edits_3m: nil)
+          next if rows.empty?
+
+          new_ids = year.new_creators.pluck(:id)
+          new_rows = rows.where(creator_id: new_ids)
+          ret_rows = rows.where.not(creator_id: new_ids)
+
+          retention_by_year[year.id] = {
+            new_total: new_rows.count,
+            new_active_3m: new_rows.where("post_contest_edits_3m > 0").count,
+            new_active_3m_plus_months: new_rows.where("active_months_after_12m >= 3").count,
+            returning_total: ret_rows.count,
+            returning_active_3m: ret_rows.where("post_contest_edits_3m > 0").count
+          }
+        end
       end
 
-      @retention_by_year = {}
-      @years.each do |year|
-        rows = CreatorYearlyActivity.where(year_id: year.id).where.not(post_contest_edits_3m: nil)
-        next if rows.empty?
+      upload_source_counts = Photo.where.not(upload_source: [nil, ""]).group(:year_id, :upload_source).count
+      has_upload_source = upload_source_counts.any?
+      upload_source_series = if has_upload_source
+                               sources = upload_source_counts.keys.map(&:last).uniq.sort
+                               sources.map do |src|
+                                 {
+                                   name: src,
+                                   data: @years.each_with_object({}) { |y, h| h[y.year] = upload_source_counts[[y.id, src]] || 0 }
+                                 }
+                               end
+                             else
+                               []
+                             end
 
-        new_ids = year.new_creators.pluck(:id)
-        new_rows = rows.where(creator_id: new_ids)
-        ret_rows = rows.where.not(creator_id: new_ids)
+      qi_counts = Photo.where(quality_image: true).group(:year_id).count
+      fp_counts = Photo.where(featured_picture: true).group(:year_id).count
+      has_quality = qi_counts.any? || fp_counts.any?
+      quality_series = if has_quality
+                         [
+                           {
+                             name: "Foto di qualità (QI)",
+                             data: @years.each_with_object({}) { |y, h| h[y.year] = qi_counts[y.id] || 0 }
+                           },
+                           {
+                             name: "Foto in vetrina (FP)",
+                             data: @years.each_with_object({}) { |y, h| h[y.year] = fp_counts[y.id] || 0 }
+                           }
+                         ]
+                       else
+                         []
+                       end
 
-        @retention_by_year[year.id] = {
-          new_total: new_rows.count,
-          new_active_3m: new_rows.where("post_contest_edits_3m > 0").count,
-          new_active_3m_plus_months: new_rows.where("active_months_after_12m >= 3").count,
-          returning_total: ret_rows.count,
-          returning_active_3m: ret_rows.where("post_contest_edits_3m > 0").count
-        }
-      end
+      {
+        has_activity: has_activity,
+        activity_by_year: activity_by_year,
+        retention_by_year: retention_by_year,
+        has_upload_source: has_upload_source,
+        upload_source_series: upload_source_series,
+        has_quality: has_quality,
+        quality_series: quality_series
+      }
     end
 
-    upload_source_counts = Photo.where.not(upload_source: [nil, ""]).group(:year_id, :upload_source).count
-    @has_upload_source_data = upload_source_counts.any?
-    if @has_upload_source_data
-      sources = upload_source_counts.keys.map(&:last).uniq.sort
-      @upload_source_series = sources.map do |src|
-        {
-          name: src,
-          data: @years.each_with_object({}) { |y, h| h[y.year] = upload_source_counts[[y.id, src]] || 0 }
-        }
-      end
-    end
-
-    qi_counts = Photo.where(quality_image: true).group(:year_id).count
-    fp_counts = Photo.where(featured_picture: true).group(:year_id).count
-    @has_quality_data = qi_counts.any? || fp_counts.any?
-    if @has_quality_data
-      @quality_series = [
-        {
-          name: "Foto di qualità (QI)",
-          data: @years.each_with_object({}) { |y, h| h[y.year] = qi_counts[y.id] || 0 }
-        },
-        {
-          name: "Foto in vetrina (FP)",
-          data: @years.each_with_object({}) { |y, h| h[y.year] = fp_counts[y.id] || 0 }
-        }
-      ]
-    end
+    @has_activity_data = cached[:has_activity]
+    @activity_by_year = cached[:activity_by_year]
+    @retention_by_year = cached[:retention_by_year]
+    @has_upload_source_data = cached[:has_upload_source]
+    @upload_source_series = cached[:upload_source_series]
+    @has_quality_data = cached[:has_quality]
+    @quality_series = cached[:quality_series]
   end
 end

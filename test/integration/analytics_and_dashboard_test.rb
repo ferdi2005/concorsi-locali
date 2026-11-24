@@ -72,6 +72,10 @@ class AnalyticsAndDashboardTest < ActionDispatch::IntegrationTest
     assert_equal 3, row[:total_photos]
     assert_equal 1, row[:remaining_photos]
     assert_equal 2, row[:removed_photos]
+    assert_equal 2, row[:total_monuments]
+    assert_equal 1, row[:excluded_monuments]
+    assert_equal 1, row[:removed_creators]
+    assert_equal 0, row[:removed_new_monuments]
   end
 
   test "numerics totalcreators and miglioriutenti include veteran participants" do
@@ -91,12 +95,19 @@ class AnalyticsAndDashboardTest < ActionDispatch::IntegrationTest
   test "dashboard routes render successfully" do
     get root_path
     assert_response :success
+    refute_includes response.body, "id=\"setanno\""
+    assert_includes response.body, "Dati nazionali"
+
+    get root_path(year: "2024")
+    assert_response :success
+    assert_includes response.body, "Dati nazionali 2024"
 
     get storico_path
     assert_response :success
 
     get storico_path, params: { simulate: "1", sim_max_photos: 2, sim_exclude_top: 0 }
     assert_response :success
+    assert_includes response.body, "Monumenti esclusi / ritratti"
 
     get contest_path(@contest, year: "2024")
     assert_response :success
@@ -155,9 +166,15 @@ class AnalyticsAndDashboardTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Metadati EXIF"
     assert_includes response.body, "Impatto su Wikipedia"
 
-    get recent_monuments_maintenance_path, params: { threshold: 1950 }
+    get recent_monuments_maintenance_path, params: { threshold: 1950, regione: "Puglia" }
     assert_response :success
     assert_includes response.body, "Ponte moderno di prova"
     assert_includes response.body, "1972"
+
+    get contest_path(@contest, year: "2024")
+    assert_response :success
+    assert_includes response.body, "Comuni piccoli, tipologie e sentinelle"
+    assert_includes response.body, "Metadati EXIF e dispositivi nel concorso"
+    assert_includes response.body, "Monumenti più fotografati"
   end
 end

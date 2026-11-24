@@ -6,13 +6,12 @@ class ApplicationController < ActionController::Base
       UpdateDataWorker.perform_async
     end
 
-    if !cookies[:year_id].blank? && Year.find_by(id: cookies[:year_id].to_i)
-      @year = Year.find(cookies[:year_id].to_i)
-    elsif (@year = Year.find_by_year(Date.today.year))
-      cookies[:year_id] = @year.id
+    if params[:year].present? && (requested = Year.find_by(year: params[:year].to_s))
+      @year = requested
+    elsif (@year = Year.find_by(year: Date.today.year.to_s))
+      @year
     else
-      @year = Year.last
+      @year = Year.order(:year).last
     end
   end
-
 end

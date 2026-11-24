@@ -339,13 +339,11 @@ def set_contest
 end
 
 def set_year
-    if params[:year].present? && (year = Year.find_by(year: params[:year]))
+    if params[:year].present? && (year = Year.find_by(year: params[:year].to_s))
         @year = year
-    elsif !cookies[:year_id].blank? && Year.find_by(id: cookies[:year_id].to_i)
-        @year = Year.find(cookies[:year_id].to_i)
-    elsif (@year = Year.find_by_year(Date.today.year))
-        cookies[:year_id] = @year.id
+    elsif (@year = Year.find_by(year: Date.today.year.to_s))
+        @year
     else
-        @year = Year.last
+        @year = Year.order(:year).last
     end
 end

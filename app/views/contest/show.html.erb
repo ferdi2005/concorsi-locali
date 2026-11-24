@@ -1,13 +1,16 @@
 <%= provide(:title, @contest.name) %>
 <div class="buttons">
-  <%= link_to "Home", root_path, class: "button is-small is-info", data: { turbolinks: false } %>
+  <%= link_to "Home nazionale", root_path, class: "button is-small is-info", data: { turbolinks: false } %>
   <%= link_to "Storico pluriennale", storico_path, class: "button is-small is-light" %>
+  <% if @contest.region.present? %>
+    <%= link_to "Monumenti recenti (#{@contest.region})", recent_monuments_maintenance_path(regione: @contest.region), class: "button is-small is-warning is-light" %>
+  <% end %>
 </div>
 
 <% if @contest.logo.attached? %>
-<div class="columns">
-    <div class="column">
-        <%= image_tag @contest.logo.variant(resize_to_limit: [200, 200]) if @contest.logo.attached? %>
+<div class="columns is-vcentered">
+    <div class="column is-narrow">
+        <%= image_tag @contest.logo.variant(resize_to_limit: [160, 160]) if @contest.logo.attached? %>
     </div>
     <div class="column">
         <h1 class="title"><%= @contest.name %></h1>
@@ -23,51 +26,53 @@
   <div class="columns">
     <div class="column">
       <h3 class="subtitle is-6">Foto caricate per edizione</h3>
-      <%= column_chart @history_photos_series %>
+      <%= column_chart @history_photos_series, colors: ["#2563eb"], thousands: "." %>
     </div>
     <div class="column">
       <h3 class="subtitle is-6">Partecipanti per edizione</h3>
-      <%= line_chart @history_creators_series %>
+      <%= line_chart @history_creators_series, colors: ["#16a34a"], thousands: "." %>
     </div>
     <div class="column">
       <h3 class="subtitle is-6">Peso del primo uploader (%)</h3>
-      <%= line_chart @history_top1_share_series, suffix: "%" %>
+      <%= line_chart @history_top1_share_series, colors: ["#dc2626"], suffix: "%" %>
     </div>
   </div>
 
-  <table class="table is-striped is-fullwidth is-narrow">
-    <thead>
-      <tr>
-        <th>Anno</th>
-        <th>Foto</th>
-        <th>Partecipanti</th>
-        <th>Nuovi iscritti</th>
-        <th>Peso primo uploader</th>
-        <th>Primo uploader</th>
-        <th>Quota primi 10</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @contest_years_history.reverse.each do |cy| %>
-        <% cya = cy.contest_year_analytic %>
-        <tr class="<%= 'is-selected' if @selected_year && cy.year_id == @selected_year.id %>">
-          <th><%= link_to cy.year.year, contest_path(@contest, year: cy.year.year) %></th>
-          <td><%= cy.count.to_i %></td>
-          <td><%= cy.creators.to_i %></td>
-          <td><%= cya ? cya.new_creators_count : cy.creatorsapposta.to_i %></td>
-          <td><%= cya ? "#{cya.top1_photos_share}%" : "-" %></td>
-          <td>
-            <% if cya&.top1_creator %>
-              <%= link_to cya.top1_creator.username, creator_path(cya.top1_creator) %>
-            <% else %>
-              -
-            <% end %>
-          </td>
-          <td><%= cya ? "#{cya.top10_photos_share}%" : "-" %></td>
+  <div class="table-container">
+    <table class="table is-striped is-fullwidth is-narrow">
+      <thead>
+        <tr>
+          <th>Anno</th>
+          <th>Foto</th>
+          <th>Partecipanti</th>
+          <th>Nuovi iscritti</th>
+          <th>Peso primo uploader</th>
+          <th>Primo uploader</th>
+          <th>Quota primi 10</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @contest_years_history.reverse.each do |cy| %>
+          <% cya = cy.contest_year_analytic %>
+          <tr class="<%= 'is-selected' if @selected_year && cy.year_id == @selected_year.id %>">
+            <th><%= link_to cy.year.year, contest_path(@contest, year: cy.year.year) %></th>
+            <td><%= fmt_int(cy.count) %></td>
+            <td><%= fmt_int(cy.creators) %></td>
+            <td><%= fmt_int(cya ? cya.new_creators_count : cy.creatorsapposta) %></td>
+            <td><%= cya ? fmt_pct(cya.top1_photos_share) : "-" %></td>
+            <td>
+              <% if cya&.top1_creator %>
+                <%= link_to cya.top1_creator.username, creator_path(cya.top1_creator) %>
+              <% else %>
+                -
+              <% end %>
+            </td>
+            <td><%= cya ? fmt_pct(cya.top10_photos_share) : "-" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </section>
 <% end %>
 
@@ -89,88 +94,333 @@
   <% if @contestyear_analytic %>
     <div class="columns is-multiline mb-4">
       <div class="column is-3">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Nuovi e già registrati</p>
-          <p class="title is-5"><%= @contestyear_analytic.new_creators_count %> / <%= @contestyear_analytic.returning_creators_count %></p>
+          <p class="title is-5"><%= fmt_int(@contestyear_analytic.new_creators_count) %> / <%= fmt_int(@contestyear_analytic.returning_creators_count) %></p>
         </div>
       </div>
       <div class="column is-3">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Peso primo uploader</p>
-          <p class="title is-5"><%= @contestyear_analytic.top1_photos_share %>% (<%= @contestyear_analytic.top1_photos_count %> foto)</p>
+          <p class="title is-5"><%= fmt_pct(@contestyear_analytic.top1_photos_share) %> (<%= fmt_int(@contestyear_analytic.top1_photos_count) %> foto)</p>
         </div>
       </div>
       <div class="column is-3">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Foto senza primi 10</p>
-          <p class="title is-5"><%= @contestyear_analytic.photos_without_top10 %> (primi 10: <%= @contestyear_analytic.top10_photos_share %>%)</p>
+          <p class="title is-5"><%= fmt_int(@contestyear_analytic.photos_without_top10) %> (primi 10: <%= fmt_pct(@contestyear_analytic.top10_photos_share) %>)</p>
         </div>
       </div>
       <div class="column is-3">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Ultimi 3 giorni</p>
-          <p class="title is-5"><%= @contestyear_analytic.last_3_days_photos_share %>%</p>
+          <p class="title is-5"><%= fmt_pct(@contestyear_analytic.last_3_days_photos_share) %></p>
         </div>
       </div>
     </div>
   <% end %>
 
-  <h3 class="subtitle">Andamento giornaliero</h3>
-  <%= line_chart @daily_photos, xmin: "#{@selected_year.year}-09-01", xmax: "#{@selected_year.year}-09-30" %>
-  <br />
-  <h3 class="subtitle">Classifica degli utenti</h3>
+  <div class="box">
+    <h3 class="subtitle is-5">Andamento giornaliero</h3>
+    <%= line_chart @daily_photos, xmin: "#{@selected_year.year}-09-01", xmax: "#{@selected_year.year}-09-30", colors: wlm_chart_colors, thousands: "." %>
+  </div>
 
-  <table class="table is-striped is-fullwidth">
-      <thead>
-          <th>Nome utente</th>
-          <th>Foto caricate</th>
-          <th>Foto usate su wiki</th>
-          <th>Foto di nuovi monumenti</th>
-          <th>Data di iscrizione (iscritto per WLM)</th>
-      </thead>
-      <tbody>
-          <% @creator_rows.each do |row| %>
+  <h3 class="subtitle is-5 mt-5">Classifica degli utenti (<%= @selected_year.year %>)</h3>
+  <div class="table-container">
+    <table class="table is-striped is-fullwidth">
+        <thead>
+            <th>Nome utente</th>
+            <th>Foto caricate</th>
+            <th>Foto usate su wiki</th>
+            <th>Foto di nuovi monumenti</th>
+            <th>Data di iscrizione (iscritto per WLM)</th>
+        </thead>
+        <tbody>
+            <% @creator_rows.each do |row| %>
+            <tr>
+                <td><%= link_to row[:username], creator_path(row[:id], year: @selected_year.year) %></td>
+                <td><%= fmt_int(row[:photos_count]) %></td>
+                <td><%= fmt_int(row[:used_count]) %> (<%= fmt_pct(row[:used_pct]) %>)</td>
+                <td><%= fmt_int(row[:new_monument_count]) %> (<%= fmt_pct(row[:new_monument_pct]) %>)</td>
+                <td><%= row[:creationdate]&.strftime('%d/%m/%Y') %> (<%= row[:is_new] ? 'Sì' : 'No' %>)</td>
+            </tr>
+            <% end %>
+        </tbody>
+    </table>
+  </div>
+
+  <% if @regional_top_monuments.any? %>
+    <h3 class="subtitle is-5 mt-5">Monumenti più fotografati (<%= @selected_year.year %>)</h3>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth">
+        <thead>
           <tr>
-              <td><%= link_to row[:username], creator_path(row[:id], year: @selected_year.year) %></td>
-              <td><%= row[:photos_count] %></td>
-              <td><%= row[:used_count] %> (<%= row[:used_pct] %> %)</td>
-              <td><%= row[:new_monument_count] %> (<%= row[:new_monument_pct] %> %)</td>
-              <td><%= row[:creationdate]&.strftime('%d/%m/%Y') %> (<%= row[:is_new] ? 'Sì' : 'No' %>)</td>
+            <th>Monumento</th>
+            <th>Comune</th>
+            <th>Tipologia</th>
+            <th>Foto</th>
+            <th>Autori distinti</th>
           </tr>
+        </thead>
+        <tbody>
+          <% @regional_top_monuments.each do |m| %>
+            <tr>
+              <td>
+                <% if m[:item] %>
+                  <%= link_to(m[:label].presence || m[:item], "https://www.wikidata.org/wiki/#{m[:item]}", target: "_blank", rel: "noopener") %>
+                <% else %>
+                  <%= m[:wlmid] %>
+                <% end %>
+                <span class="is-size-7 has-text-grey">(<%= m[:wlmid] %>)</span>
+              </td>
+              <td><%= m[:city].presence || "-" %></td>
+              <td><%= m[:monument_type].presence || "-" %></td>
+              <td><%= fmt_int(m[:photos]) %></td>
+              <td><%= fmt_int(m[:authors]) %></td>
+            </tr>
           <% end %>
-      </tbody>
-  </table>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 
-  <div class="buttons is-centered">
-      <%= link_to 'Categoria delle foto caricate', "https://commons.wikimedia.org/wiki/#{@contest.cat_name(@selected_year)}", class: 'button is-link is-big' %>
-      <%= link_to 'Pagina ufficiale del concorso', @contest.url, class: 'button is-danger is-big' %>
+  <div class="buttons is-centered my-5">
+      <%= link_to 'Categoria delle foto caricate', "https://commons.wikimedia.org/wiki/#{@contest.cat_name(@selected_year)}", class: 'button is-link' %>
+      <%= link_to 'Pagina ufficiale del concorso', @contest.url, class: 'button is-danger' %>
   </div>
 
   <% if @new_creators_daily.any? %>
-    <h3 class="subtitle mt-5">Utenti iscritti appositamente per WLM</h3>
-    <%= line_chart @new_creators_daily, xmin: "#{@selected_year.year}-09-01", xmax: "#{@selected_year.year}-09-30" %>
+    <div class="box">
+      <h3 class="subtitle is-5">Utenti iscritti appositamente per WLM (<%= @selected_year.year %>)</h3>
+      <%= line_chart @new_creators_daily, xmin: "#{@selected_year.year}-09-01", xmax: "#{@selected_year.year}-09-30", colors: ["#16a34a"], thousands: "." %>
+    </div>
   <% end %>
 
   <% if @last_nophoto && @contest.region.present? %>
-    <h3 class="subtitle mt-5">Grafico monumenti senza foto</h3>
-    <%= line_chart @nophotograph, xmin: "#{@selected_year.year}-08-31", xmax: "#{@selected_year.year}-09-30" %>
-    <h4 class="title is-5">Grafico percentuale</h4>
-    <%= line_chart @nophotographpercent, xmin: "#{@selected_year.year}-08-31", xmax: "#{@selected_year.year}-09-30" %>
-    <% total_m = @last_nophoto.monuments.to_i %>
-    <% nophoto_m = @last_nophoto.count.to_i %>
-    <p><b>Monumenti totali partecipanti</b>: <%= total_m %></p>
-    <p><b>Monumenti senza foto oggi</b>: <%= nophoto_m %> (<%= total_m > 0 ? (nophoto_m.to_f / total_m.to_f * 100.0).truncate(1) : '0.0' %>%)</p>
-    <p><b>Monumenti con foto oggi</b>: <%= total_m - nophoto_m %></p>
-    <p><b>Monumenti senza foto prima dell'inizio di WLM</b>: <%= @first_nophoto&.count %> (<%= @first_nophoto&.percent %> %)</p>
-    <p><b>Monumenti con una categoria su Commons</b>: <%= @last_nophoto.with_commons %></p>
-    <p><b>Monumenti con un'immagine su Wikidata</b>: <%= @last_nophoto.with_image %></p>
-    <p><b>Monumenti con un'immagine su Wikidata o una categoria su Commons ma senza foto partecipanti a WLM</b>: <%= @last_nophoto.nowlm %></p>
+    <div class="box">
+      <h3 class="subtitle is-5">Monumenti senza foto (<%= @selected_year.year %>)</h3>
+      <div class="columns">
+        <div class="column">
+          <h4 class="title is-6">Valore assoluto</h4>
+          <%= line_chart @nophotograph, xmin: "#{@selected_year.year}-08-31", xmax: "#{@selected_year.year}-09-30", colors: ["#dc2626"], thousands: "." %>
+        </div>
+        <div class="column">
+          <h4 class="title is-6">Percentuale</h4>
+          <%= line_chart @nophotographpercent, xmin: "#{@selected_year.year}-08-31", xmax: "#{@selected_year.year}-09-30", colors: ["#d97706"], suffix: "%" %>
+        </div>
+      </div>
+      <% total_m = @last_nophoto.monuments.to_i %>
+      <% nophoto_m = @last_nophoto.count.to_i %>
+      <div class="columns is-multiline mt-2">
+        <div class="column is-4"><b>Monumenti totali partecipanti</b>: <%= fmt_int(total_m) %></div>
+        <div class="column is-4"><b>Monumenti senza foto</b>: <%= fmt_int(nophoto_m) %> (<%= fmt_pct(total_m > 0 ? nophoto_m.to_f / total_m * 100.0 : 0.0) %>)</div>
+        <div class="column is-4"><b>Monumenti con foto</b>: <%= fmt_int(total_m - nophoto_m) %></div>
+        <div class="column is-4"><b>Senza foto prima di WLM</b>: <%= fmt_int(@first_nophoto&.count) %> (<%= fmt_pct(@first_nophoto&.percent) %>)</div>
+        <div class="column is-4"><b>Con categoria su Commons</b>: <%= fmt_int(@last_nophoto.with_commons) %></div>
+        <div class="column is-4"><b>Con immagine su Wikidata</b>: <%= fmt_int(@last_nophoto.with_image) %></div>
+        <div class="column is-12"><b>Con immagine su Wikidata o categoria Commons ma senza foto WLM</b>: <%= fmt_int(@last_nophoto.nowlm) %></div>
+      </div>
+    </div>
   <% end %>
+<% end %>
+
+<% if @regional_monuments_coverage %>
+  <% sent = @regional_monuments_coverage[:sentinels] %>
+  <% small = @regional_monuments_coverage[:small_municipalities] %>
+  <section class="box mt-5">
+    <h2 class="title is-4">Comuni piccoli, tipologie e sentinelle (<%= @contest.region %>)</h2>
+    <div class="columns is-multiline mb-4">
+      <div class="column is-3">
+        <div class="box kpi-box">
+          <p class="heading">Senza voce Wikipedia</p>
+          <p class="title is-5"><%= fmt_int(sent[:without_wikipedia]) %> (<%= fmt_pct(sent[:total] > 0 ? sent[:without_wikipedia].to_f / sent[:total] * 100 : 0) %>)</p>
+        </div>
+      </div>
+      <div class="column is-3">
+        <div class="box kpi-box">
+          <p class="heading">Senza categoria Commons</p>
+          <p class="title is-5"><%= fmt_int(sent[:without_commons]) %> (<%= fmt_pct(sent[:total] > 0 ? sent[:without_commons].to_f / sent[:total] * 100 : 0) %>)</p>
+        </div>
+      </div>
+      <div class="column is-3">
+        <div class="box kpi-box">
+          <p class="heading">Con foto WLM senza categoria</p>
+          <p class="title is-5"><%= fmt_int(sent[:with_wlm_without_commons]) %></p>
+        </div>
+      </div>
+      <div class="column is-3">
+        <div class="box kpi-box">
+          <p class="heading">Con foto WLM senza P18</p>
+          <p class="title is-5"><%= fmt_int(sent[:with_wlm_without_p18]) %></p>
+        </div>
+      </div>
+      <div class="column is-4">
+        <div class="box kpi-box">
+          <p class="heading">Comuni sotto 5.000 abitanti</p>
+          <p class="title is-5"><%= fmt_pct(small[:no_photo_share]) %> dei rossi / <%= fmt_pct(small[:photos_share]) %> delle foto</p>
+          <p class="is-size-7 has-text-grey"><%= fmt_int(small[:no_photo_monuments]) %> rossi su <%= fmt_int(small[:total_monuments]) %> monumenti</p>
+        </div>
+      </div>
+      <div class="column is-4">
+        <div class="box kpi-box">
+          <p class="heading">Comuni mai toccati</p>
+          <p class="title is-5"><%= fmt_int(small[:untouched_municipalities]) %> / <%= fmt_int(small[:total_municipalities]) %></p>
+        </div>
+      </div>
+      <div class="column is-4">
+        <div class="box kpi-box">
+          <p class="heading">Catalogo MiC e monumenti recenti</p>
+          <p class="title is-5"><%= fmt_int(sent[:with_mic_catalog]) %> MiC / <%= link_to "#{fmt_int(sent[:recent_since_1950])} recenti", recent_monuments_maintenance_path(regione: @contest.region) %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth is-narrow">
+        <thead>
+          <tr>
+            <th>Tipologia</th>
+            <th>Monumenti totali</th>
+            <th>Monumenti senza foto</th>
+            <th>Quota senza foto (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @regional_monuments_coverage[:types_stats].each do |row| %>
+            <tr>
+              <td><%= row[:type] %></td>
+              <td><%= fmt_int(row[:total]) %></td>
+              <td><%= fmt_int(row[:no_photo]) %></td>
+              <td><%= fmt_pct(row[:no_photo_pct]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% end %>
+
+<% if @regional_exif && @regional_exif[:by_year].any? %>
+  <section class="box mt-5">
+    <h2 class="title is-4">Metadati EXIF e dispositivi nel concorso</h2>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth is-narrow">
+        <thead>
+          <tr>
+            <th>Anno</th>
+            <th>Foto analizzate</th>
+            <th>Archivio (prima dell'anno)</th>
+            <th>Smartphone (% foto / % utenti)</th>
+            <th>Fotocamera (% foto / % utenti)</th>
+            <th>Senza EXIF</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @contest_years_history.reverse.each do |cy| %>
+            <% ex = @regional_exif[:by_year][cy.year_id] %>
+            <% next if ex.nil? %>
+            <tr>
+              <th><%= cy.year.year %></th>
+              <td><%= fmt_int(ex[:checked]) %></td>
+              <td><%= fmt_pct(ex[:archive_pct]) %></td>
+              <td><%= fmt_pct(ex[:smartphone_pct]) %> / <%= fmt_pct(ex[:smartphone_users_pct]) %></td>
+              <td><%= fmt_pct(ex[:camera_pct]) %> / <%= fmt_pct(ex[:camera_users_pct]) %></td>
+              <td><%= fmt_pct(ex[:no_exif_pct]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @regional_exif[:top_models].any? %>
+      <h3 class="subtitle is-6 mt-4">Modelli più usati (<%= @regional_exif[:top_models_year] %>)</h3>
+      <div class="table-container">
+        <table class="table is-striped is-fullwidth is-narrow">
+          <thead>
+            <tr>
+              <th>Marca e modello</th>
+              <th>Categoria</th>
+              <th>Foto</th>
+              <th>Quota (%)</th>
+              <th>Utenti</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @regional_exif[:top_models].each do |m| %>
+              <tr>
+                <td><%= [m[:make], m[:model]].compact.join(" ") %></td>
+                <td><%= m[:device_category] %></td>
+                <td><%= fmt_int(m[:photos]) %></td>
+                <td><%= fmt_pct(m[:share]) %></td>
+                <td><%= fmt_int(m[:users]) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+<% end %>
+
+<% if @regional_pageviews && @regional_pageviews[:by_year].any? %>
+  <section class="box mt-5">
+    <h2 class="title is-4">Impatto su Wikipedia e visite alle voci</h2>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth is-narrow">
+        <thead>
+          <tr>
+            <th>Anno</th>
+            <th>Voci distinte</th>
+            <th>Progetti / lingue</th>
+            <th>Visite registrate</th>
+            <th>Quota prime 12 voci (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @contest_years_history.reverse.each do |cy| %>
+            <% pv = @regional_pageviews[:by_year][cy.year_id] %>
+            <% next if pv.nil? %>
+            <tr>
+              <th><%= cy.year.year %></th>
+              <td><%= fmt_int(pv[:pages_count]) %></td>
+              <td><%= fmt_int(pv[:wikis_count]) %></td>
+              <td><%= fmt_int(pv[:total_views]) %></td>
+              <td><%= fmt_pct(pv[:top12_share]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @regional_pageviews[:top_pages].any? %>
+      <h3 class="subtitle is-6 mt-4">Voci più viste</h3>
+      <div class="table-container">
+        <table class="table is-striped is-fullwidth is-narrow">
+          <thead>
+            <tr>
+              <th>Voce</th>
+              <th>Progetto</th>
+              <th>Visite</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @regional_pageviews[:top_pages].each do |p| %>
+              <tr>
+                <td><%= p[:url] ? link_to(p[:page_title], p[:url], target: "_blank", rel: "noopener") : p[:page_title] %></td>
+                <td><%= p[:wiki] %></td>
+                <td><%= fmt_int(p[:views]) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
 <% end %>
 
 <br />
 <a id="show-complete" class="button is-small is-info">Mostra dati completi</a>
-<div id="complete" class="is-hidden">
+<div id="complete" class="is-hidden mt-3">
     <ul>
         <% @contest.as_json.each do |key, val| %>
         <li><b><%= key %>:</b> <%= val %></li>
@@ -186,6 +436,6 @@
 
 <script>
     $("#show-complete").click(function() {
-        $("#complete").removeClass("is-hidden");
+        $("#complete").toggleClass("is-hidden");
     });
 </script>

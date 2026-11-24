@@ -3,6 +3,9 @@ class ContestController < ApplicationController
   http_basic_authenticate_with name: "wikilovesmonuments", password: ENV["SECRET_PASSWORD"], only: [:upload, :uploadpost]
 
   def index
+    @available_years = Year.order(year: :desc).to_a
+    @year ||= @available_years.first
+
     contest_years = @year ? ContestYear.where(year: @year).includes(contest_year_analytic: :top1_creator).index_by(&:contest_id) : {}
     @contest_years_by_contest_id = contest_years
 
@@ -11,7 +14,37 @@ class ContestController < ApplicationController
     }.reverse
 
     @year_analytic = @year&.year_analytic
-    @daily_photos = @year ? Photo.where(year: @year).group_by_day(:photodate).count : {}
+    @prev_year = @year ? @available_years.find { |y| y.year.to_i < @year.year.to_i } : nil
+    @prev_year_analytic = @prev_year&.year_analytic
+    if @prev_year
+      prev_photos = Photo.where(year: @prev_year)
+      @prev_national_photos_count = @prev_year.total.to_i > 0 ? @prev_year.total.to_i : prev_photos.count
+      @prev_national_creators_count = @prev_year.creators_count.to_i > 0 ? @prev_year.creators_count.to_i : prev_photos.distinct.count(:creator_id)
+      @prev_national_depicted_monuments = @prev_year.depicted_monuments.to_i > 0 ? @prev_year.depicted_monuments.to_i : prev_photos.where.not(wlmid: [nil, ""]).distinct.count(:wlmid)
+    end
+
+    if @year
+      year_photos = Photo.where(year: @year)
+      @national_photos_count = @year.total.to_i > 0 ? @year.total.to_i : year_photos.count
+      @national_used_photos = year_photos.where(usedonwiki: true).count
+      @national_used_pct = @national_photos_count > 0 ? (@national_used_photos.to_f / @national_photos_count * 100.0).round(1) : 0.0
+      @national_creators_count = @year.creators_count.to_i > 0 ? @year.creators_count.to_i : year_photos.distinct.count(:creator_id)
+      @national_depicted_monuments = @year.depicted_monuments.to_i > 0 ? @year.depicted_monuments.to_i : year_photos.where.not(wlmid: [nil, ""]).distinct.count(:wlmid)
+      @national_new_monuments = @year.new_monuments.to_i > 0 ? @year.new_monuments.to_i : year_photos.where(new_monument: true).count
+      @national_qi_count = year_photos.where(quality_image: true).count
+      @national_fp_count = year_photos.where(featured_picture: true).count
+      @daily_photos = year_photos.group_by_day(:photodate).count
+    else
+      @national_photos_count = 0
+      @national_used_photos = 0
+      @national_used_pct = 0.0
+      @national_creators_count = 0
+      @national_depicted_monuments = 0
+      @national_new_monuments = 0
+      @national_qi_count = 0
+      @national_fp_count = 0
+      @daily_photos = {}
+    end
 
     @nophotos_for_year = @year ? Nophoto.where(regione: nil, year: @year).order(:created_at).to_a : []
     @nophotograph = @nophotos_for_year.each_with_object({}) { |nop, h| h[nop.created_at] = nop.count }
@@ -47,6 +80,13 @@ class ContestController < ApplicationController
     @history_photos_series = @contest_years_history.each_with_object({}) { |cy, h| h[cy.year.year] = cy.count.to_i }
     @history_creators_series = @contest_years_history.each_with_object({}) { |cy, h| h[cy.year.year] = cy.creators.to_i }
     @history_top1_share_series = @contest_years_history.each_with_object({}) { |cy, h| h[cy.year.year] = cy.contest_year_analytic&.top1_photos_share || 0.0 }
+
+    # Approfondimenti regionali (in cache via DashboardInsights)
+    history_years = @contest_years_history.map(&:year)
+    @regional_monuments_coverage = @contest.region.present? ? DashboardInsights.monuments_coverage(regione: @contest.region, contest_id: @contest.id) : nil
+    @regional_exif = DashboardInsights.exif_summary(years: history_years, contest_id: @contest.id)
+    @regional_pageviews = DashboardInsights.pageviews_summary(years: history_years, contest_id: @contest.id)
+    @regional_top_monuments = @selected_year ? DashboardInsights.top_monuments(year: @selected_year, contest_id: @contest.id, limit: 15) : []
 
     # Dettaglio per l'anno selezionato (query aggregata senza N+1)
     if @selected_year

@@ -13,5 +13,6 @@ class UpdateAnalyticsWorker
         AnalyticsCalculator.recalculate_year!(year)
       end
     end
+    DashboardInsights.clear_cache!
   end
 end

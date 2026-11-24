@@ -2,7 +2,7 @@
 
 <div class="buttons">
   <%= link_to "Torna allo storico", storico_path, class: "button is-small is-info" %>
-  <%= link_to "Home", root_path, class: "button is-small is-light" %>
+  <%= link_to "Home nazionale", root_path, class: "button is-small is-light" %>
 </div>
 
 <h1 class="title">Segnalazione foto di monumenti recenti</h1>
@@ -13,6 +13,13 @@
     <div class="column">
       <label class="label">Anno minimo Wikidata (P571)</label>
       <%= number_field_tag :threshold, @threshold, min: 1800, max: Date.today.year, class: "input" %>
+    </div>
+    <div class="column">
+      <label class="label">Regione</label>
+      <div class="select is-fullwidth">
+        <%= select_tag :regione,
+              options_for_select([["Tutte le regioni", ""]] + @regions.map { |r| [r, r] }, @selected_region) %>
+      </div>
     </div>
     <div class="column">
       <label class="label">Edizione WLM</label>
@@ -29,55 +36,57 @@
 
 <div class="columns mb-4">
   <div class="column is-4">
-    <div class="box">
+    <div class="box kpi-box">
       <p class="heading">Monumenti con P571 >= <%= @threshold %></p>
-      <p class="title is-4"><%= @total_recent_monuments %></p>
+      <p class="title is-4"><%= fmt_int(@total_recent_monuments) %></p>
     </div>
   </div>
   <div class="column is-4">
-    <div class="box">
+    <div class="box kpi-box">
       <p class="heading">Foto WLM su monumenti recenti</p>
-      <p class="title is-4"><%= @total_flagged_photos %></p>
+      <p class="title is-4"><%= fmt_int(@total_flagged_photos) %></p>
     </div>
   </div>
 </div>
 
 <% if @flagged_photos.any? %>
-  <table id="recent-monuments-table" class="table is-striped is-fullwidth">
-    <thead>
-      <tr>
-        <th>Foto su Commons</th>
-        <th>Monumento</th>
-        <th>Anno Wikidata</th>
-        <th>Regione</th>
-        <th>Edizione</th>
-        <th>Autore</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @flagged_photos.each do |entry| %>
-        <% photo = entry[:photo] %>
-        <% mon = entry[:monument] %>
+  <div class="table-container">
+    <table id="recent-monuments-table" class="table is-striped is-fullwidth">
+      <thead>
         <tr>
-          <td>
-            <%= link_to photo.name, "https://commons.wikimedia.org/wiki/#{ERB::Util.url_encode(photo.name)}", target: "_blank", rel: "noopener" %>
-          </td>
-          <td>
-            <% if mon %>
-              <%= link_to(mon.label.presence || mon.item, "https://www.wikidata.org/wiki/#{mon.item}", target: "_blank", rel: "noopener") %>
-              (<%= mon.wlmid %>)
-            <% else %>
-              <%= photo.wlmid %>
-            <% end %>
-          </td>
-          <td><%= mon&.inception_year || "-" %></td>
-          <td><%= mon&.regione || photo.contest&.name %></td>
-          <td><%= photo.year&.year %></td>
-          <td><%= link_to photo.creator.username, creator_path(photo.creator) if photo.creator %></td>
+          <th>Foto su Commons</th>
+          <th>Monumento</th>
+          <th>Anno Wikidata</th>
+          <th>Regione</th>
+          <th>Edizione</th>
+          <th>Autore</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @flagged_photos.each do |entry| %>
+          <% photo = entry[:photo] %>
+          <% mon = entry[:monument] %>
+          <tr>
+            <td>
+              <%= link_to photo.name, "https://commons.wikimedia.org/wiki/#{ERB::Util.url_encode(photo.name)}", target: "_blank", rel: "noopener" %>
+            </td>
+            <td>
+              <% if mon %>
+                <%= link_to(mon.label.presence || mon.item, "https://www.wikidata.org/wiki/#{mon.item}", target: "_blank", rel: "noopener") %>
+                (<%= mon.wlmid %>)
+              <% else %>
+                <%= photo.wlmid %>
+              <% end %>
+            </td>
+            <td><%= mon&.inception_year || "-" %></td>
+            <td><%= mon&.regione || photo.contest&.name %></td>
+            <td><%= photo.year&.year %></td>
+            <td><%= link_to photo.creator.username, creator_path(photo.creator) if photo.creator %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
   <p class="is-size-7 has-text-grey">Mostrate fino a 500 fotografie più recenti. La copertura della data di costruzione su Wikidata è parziale.</p>
 
   <script>

@@ -2,9 +2,12 @@ class MaintenanceController < ApplicationController
   def recent_monuments
     @threshold = params[:threshold].present? ? params[:threshold].to_i : 1950
     @years = Year.order(year: :desc).to_a
+    @regions = Monument.where.not(regione: [nil, ""]).distinct.order(:regione).pluck(:regione)
     @selected_year_id = params[:year_id].presence
+    @selected_region = params[:regione].presence
 
     recent_monuments = Monument.where("inception_year >= ?", @threshold)
+    recent_monuments = recent_monuments.where(regione: @selected_region) if @selected_region
     @total_recent_monuments = recent_monuments.count
 
     monuments_by_wlmid = recent_monuments.where.not(normalized_wlmid: [nil, ""]).index_by(&:normalized_wlmid)

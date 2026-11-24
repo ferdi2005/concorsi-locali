@@ -31,41 +31,43 @@
 <section id="partecipanti" class="mb-6">
   <h2 class="title is-4">Partecipanti nuovi e già registrati</h2>
   <p class="mb-3">Suddivisione dei partecipanti effettivi di ogni edizione in base alla data di registrazione su Wikimedia rispetto alla finestra del concorso.</p>
-  <%= column_chart @participants_series, stacked: true %>
+  <%= column_chart @participants_series, stacked: true, colors: ["#2563eb", "#16a34a"], thousands: "." %>
 
-  <table class="table is-striped is-fullwidth mt-4">
-    <thead>
-      <tr>
-        <th>Anno</th>
-        <th>Foto totali</th>
-        <th>Partecipanti</th>
-        <th>Nuovi iscritti</th>
-        <th>Già registrati</th>
-        <th>Foto ultimi 3 giorni (%)</th>
-        <th>Bluificazione (monumenti / %)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @years.reverse.each do |year| %>
-        <% ya = year.year_analytic %>
+  <div class="table-container mt-4">
+    <table class="table is-striped is-fullwidth">
+      <thead>
         <tr>
-          <th><%= year.year %></th>
-          <td><%= year.total || year.photos.count %></td>
-          <td><%= year.creators_count || ((ya&.new_creators_count || 0) + (ya&.returning_creators_count || 0)) %></td>
-          <td><%= ya&.new_creators_count || "-" %></td>
-          <td><%= ya&.returning_creators_count || "-" %></td>
-          <td><%= ya ? "#{ya.last_3_days_photos_share}%" : "-" %></td>
-          <td>
-            <% if ya&.bluification_count %>
-              <%= ya.bluification_count %> (<%= ya.bluification_rate %>%)
-            <% else %>
-              -
-            <% end %>
-          </td>
+          <th>Anno</th>
+          <th>Foto totali</th>
+          <th>Partecipanti</th>
+          <th>Nuovi iscritti</th>
+          <th>Già registrati</th>
+          <th>Foto ultimi 3 giorni (%)</th>
+          <th>Bluificazione (monumenti / %)</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @years.reverse.each do |year| %>
+          <% ya = year.year_analytic %>
+          <tr>
+            <th><%= link_to year.year, root_path(year: year.year) %></th>
+            <td><%= fmt_int(year.total || year.photos.count) %></td>
+            <td><%= fmt_int(year.creators_count || ((ya&.new_creators_count || 0) + (ya&.returning_creators_count || 0))) %></td>
+            <td><%= fmt_int(ya&.new_creators_count) %></td>
+            <td><%= fmt_int(ya&.returning_creators_count) %></td>
+            <td><%= ya ? fmt_pct(ya.last_3_days_photos_share) : "-" %></td>
+            <td>
+              <% if ya&.bluification_count %>
+                <%= fmt_int(ya.bluification_count) %> (<%= fmt_pct(ya.bluification_rate) %>)
+              <% else %>
+                -
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <hr />
@@ -75,51 +77,53 @@
   <div class="columns">
     <div class="column">
       <h3 class="subtitle is-6">Foto totali e foto senza i primi 10 uploader</h3>
-      <%= line_chart @photos_series %>
+      <%= line_chart @photos_series, colors: ["#2563eb", "#dc2626"], thousands: "." %>
     </div>
     <div class="column">
       <h3 class="subtitle is-6">Utenti necessari per il 50% e il 90% delle foto</h3>
-      <%= line_chart @concentration_users_series %>
+      <%= line_chart @concentration_users_series, colors: ["#16a34a", "#d97706"], thousands: "." %>
     </div>
   </div>
 
   <div class="columns">
     <div class="column">
       <h3 class="subtitle is-6">Quota dei primi 10 uploader sul totale (%)</h3>
-      <%= line_chart @top10_share_series, suffix: "%" %>
+      <%= line_chart @top10_share_series, colors: ["#dc2626"], suffix: "%" %>
     </div>
     <div class="column">
       <h3 class="subtitle is-6">Quota foto caricate negli ultimi 3 giorni (%)</h3>
-      <%= line_chart @last3_days_series, suffix: "%" %>
+      <%= line_chart @last3_days_series, colors: ["#7c3aed"], suffix: "%" %>
     </div>
   </div>
 
-  <table class="table is-striped is-fullwidth mt-4">
-    <thead>
-      <tr>
-        <th>Anno</th>
-        <th>Quota primi 10 (%)</th>
-        <th>Foto senza primi 10</th>
-        <th>Utenti per 50% foto</th>
-        <th>Utenti per 90% foto</th>
-        <th>Quota metà inferiore (%)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @years.reverse.each do |year| %>
-        <% ya = year.year_analytic %>
-        <% next if ya.nil? %>
+  <div class="table-container mt-4">
+    <table class="table is-striped is-fullwidth">
+      <thead>
         <tr>
-          <th><%= year.year %></th>
-          <td><%= ya.top10_photos_share %>%</td>
-          <td><%= ya.photos_without_top10 %></td>
-          <td><%= ya.creators_for_50_percent %></td>
-          <td><%= ya.creators_for_90_percent %></td>
-          <td><%= ya.bottom_half_photos_share %>%</td>
+          <th>Anno</th>
+          <th>Quota primi 10 (%)</th>
+          <th>Foto senza primi 10</th>
+          <th>Utenti per 50% foto</th>
+          <th>Utenti per 90% foto</th>
+          <th>Quota metà inferiore (%)</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @years.reverse.each do |year| %>
+          <% ya = year.year_analytic %>
+          <% next if ya.nil? %>
+          <tr>
+            <th><%= year.year %></th>
+            <td><%= fmt_pct(ya.top10_photos_share) %></td>
+            <td><%= fmt_int(ya.photos_without_top10) %></td>
+            <td><%= fmt_int(ya.creators_for_50_percent) %></td>
+            <td><%= fmt_int(ya.creators_for_90_percent) %></td>
+            <td><%= fmt_pct(ya.bottom_half_photos_share) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <hr />
@@ -127,33 +131,35 @@
 <section id="temi" class="mb-6">
   <h2 class="title is-4">Partecipazione ai temi speciali</h2>
   <% if @special_years.any? %>
-    <table class="table is-striped is-fullwidth">
-      <thead>
-        <tr>
-          <th>Anno</th>
-          <th>Tema</th>
-          <th>Foto tema</th>
-          <th>Utenti sul tema (%)</th>
-          <th>Foto tema senza primi 10</th>
-          <th>Quota tema senza primi 10 (%)</th>
-          <th>Foto tema per utente senza primi 10</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @special_years.reverse.each do |year| %>
-          <% ya = year.year_analytic %>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth">
+        <thead>
           <tr>
-            <th><%= year.year %></th>
-            <td><%= year.special_category_label.presence || year.special_category %></td>
-            <td><%= year.special_category_total || 0 %></td>
-            <td><%= ya ? "#{ya.special_creators_count} (#{ya.special_creators_share}%)" : "-" %></td>
-            <td><%= ya ? ya.special_photos_without_top10 : "-" %></td>
-            <td><%= ya ? "#{ya.special_share_without_top10}%" : "-" %></td>
-            <td><%= ya ? ya.special_photos_per_creator_without_top10 : "-" %></td>
+            <th>Anno</th>
+            <th>Tema</th>
+            <th>Foto tema</th>
+            <th>Utenti sul tema (%)</th>
+            <th>Foto tema senza primi 10</th>
+            <th>Quota tema senza primi 10 (%)</th>
+            <th>Foto tema per utente senza primi 10</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @special_years.reverse.each do |year| %>
+            <% ya = year.year_analytic %>
+            <tr>
+              <th><%= year.year %></th>
+              <td><%= year.special_category_label.presence || year.special_category %></td>
+              <td><%= fmt_int(year.special_category_total || 0) %></td>
+              <td><%= ya ? "#{fmt_int(ya.special_creators_count)} (#{fmt_pct(ya.special_creators_share)})" : "-" %></td>
+              <td><%= ya ? fmt_int(ya.special_photos_without_top10) : "-" %></td>
+              <td><%= ya ? fmt_pct(ya.special_share_without_top10) : "-" %></td>
+              <td><%= ya ? fmt_dec(ya.special_photos_per_creator_without_top10) : "-" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% else %>
     <p>Nessuna edizione con tema speciale configurato.</p>
   <% end %>
@@ -163,120 +169,203 @@
 
 <section id="monumenti" class="mb-6">
   <h2 class="title is-4">Distribuzione sui monumenti e riuso</h2>
-  <table class="table is-striped is-fullwidth">
-    <thead>
-      <tr>
-        <th>Anno</th>
-        <th>Monumenti per 50% foto</th>
-        <th>Monumenti con un solo autore (%)</th>
-        <th>Media foto per monumento</th>
-        <th>Mediana foto per monumento</th>
-        <th>Riuso: 1 foto</th>
-        <th>Riuso: 2-5 foto</th>
-        <th>Riuso: 6-20 foto</th>
-        <th>Riuso: oltre 20 foto</th>
-        <th>Riuso: nuovi monumenti</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @years.reverse.each do |year| %>
-        <% ya = year.year_analytic %>
-        <% next if ya.nil? %>
-        <% reuse = ya.reuse_by_monument_bucket %>
-        <% buckets = reuse["buckets"] || {} %>
-        <% new_mon = reuse["new_monument"] || {} %>
+
+  <% if @reuse_bucket_chart.any? %>
+    <div class="box mb-4">
+      <h3 class="subtitle is-6">Percentuale di foto usate su wiki per fascia di foto per monumento (<%= @reuse_chart_year %>)</h3>
+      <%= column_chart @reuse_bucket_chart, colors: ["#2563eb"], suffix: "%" %>
+    </div>
+  <% end %>
+
+  <div class="table-container">
+    <table class="table is-striped is-fullwidth">
+      <thead>
         <tr>
-          <th><%= year.year %></th>
-          <td><%= ya.monuments_for_50_percent_photos %></td>
-          <td><%= ya.single_author_monuments_count %> (<%= ya.single_author_monuments_share %>%)</td>
-          <td><%= ya.avg_photos_per_monument %></td>
-          <td><%= ya.median_photos_per_monument %></td>
-          <td><%= buckets.dig("1", "rate") || 0.0 %>%</td>
-          <td><%= buckets.dig("2_5", "rate") || 0.0 %>%</td>
-          <td><%= buckets.dig("6_20", "rate") || 0.0 %>%</td>
-          <td><%= buckets.dig("gt_20", "rate") || 0.0 %>%</td>
-          <td>
-            <% if year.year.to_i >= 2024 && new_mon["total"].to_i > 0 %>
-              <%= new_mon["rate"] %>% (<%= new_mon["used"] %>/<%= new_mon["total"] %>)
-            <% else %>
-              -
-            <% end %>
-          </td>
+          <th>Anno</th>
+          <th>Monumenti per 50% foto</th>
+          <th>Monumenti con un solo autore (%)</th>
+          <th>Media foto per monumento</th>
+          <th>Mediana foto per monumento</th>
+          <th>Riuso: 1 foto</th>
+          <th>Riuso: 2-5 foto</th>
+          <th>Riuso: 6-20 foto</th>
+          <th>Riuso: oltre 20 foto</th>
+          <th>Riuso: nuovi monumenti</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @years.reverse.each do |year| %>
+          <% ya = year.year_analytic %>
+          <% next if ya.nil? %>
+          <% reuse = ya.reuse_by_monument_bucket %>
+          <% buckets = reuse["buckets"] || {} %>
+          <% new_mon = reuse["new_monument"] || {} %>
+          <tr>
+            <th><%= year.year %></th>
+            <td><%= fmt_int(ya.monuments_for_50_percent_photos) %></td>
+            <td><%= fmt_int(ya.single_author_monuments_count) %> (<%= fmt_pct(ya.single_author_monuments_share) %>)</td>
+            <td><%= fmt_dec(ya.avg_photos_per_monument) %></td>
+            <td><%= fmt_dec(ya.median_photos_per_monument) %></td>
+            <td><%= fmt_pct(buckets.dig("1", "rate") || 0.0) %></td>
+            <td><%= fmt_pct(buckets.dig("2_5", "rate") || 0.0) %></td>
+            <td><%= fmt_pct(buckets.dig("6_20", "rate") || 0.0) %></td>
+            <td><%= fmt_pct(buckets.dig("gt_20", "rate") || 0.0) %></td>
+            <td>
+              <% if year.year.to_i >= 2024 && new_mon["total"].to_i > 0 %>
+                <%= fmt_pct(new_mon["rate"]) %> (<%= fmt_int(new_mon["used"]) %>/<%= fmt_int(new_mon["total"]) %>)
+              <% else %>
+                -
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
   <p class="is-size-7 has-text-grey">Nota: il flag nuovi monumenti è disponibile a partire dall'edizione 2024.</p>
+
+  <% if @top_monuments.any? %>
+    <h3 class="subtitle is-5 mt-5">Monumenti più fotografati (<%= @latest_year&.year %>)</h3>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth">
+        <thead>
+          <tr>
+            <th>Monumento</th>
+            <th>Comune</th>
+            <th>Regione</th>
+            <th>Tipologia</th>
+            <th>Foto</th>
+            <th>Autori distinti</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @top_monuments.each do |m| %>
+            <tr>
+              <td>
+                <% if m[:item] %>
+                  <%= link_to(m[:label].presence || m[:item], "https://www.wikidata.org/wiki/#{m[:item]}", target: "_blank", rel: "noopener") %>
+                <% else %>
+                  <%= m[:wlmid] %>
+                <% end %>
+                <span class="is-size-7 has-text-grey">(<%= m[:wlmid] %>)</span>
+              </td>
+              <td><%= m[:city].presence || "-" %></td>
+              <td><%= m[:regione].presence || "-" %></td>
+              <td><%= m[:monument_type].presence || "-" %></td>
+              <td><%= fmt_int(m[:photos]) %></td>
+              <td><%= fmt_int(m[:authors]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 </section>
 
 <hr />
 
 <section id="uploader" class="mb-6">
   <h2 class="title is-4">Primi uploader pluriennali</h2>
-  <table id="top-uploaders-table" class="table is-striped is-fullwidth">
-    <thead>
-      <tr>
-        <th>Posizione</th>
-        <th>Utente</th>
-        <th>Foto totali</th>
-        <th>Edizioni partecipate</th>
-        <th>Anni nei primi 10</th>
-        <th>Dettaglio anni nei primi 10</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @top_uploaders.each_with_index do |row, idx| %>
+  <div class="table-container">
+    <table id="top-uploaders-table" class="table is-striped is-fullwidth">
+      <thead>
         <tr>
-          <th><%= idx + 1 %></th>
-          <td><%= link_to row[:creator].username, creator_path(row[:creator]) %></td>
-          <td><%= row[:total_photos] %></td>
-          <td><%= row[:editions_count] %> (<%= row[:editions].join(", ") %>)</td>
-          <td><%= row[:top10_count] %></td>
-          <td><%= row[:top10_years].any? ? row[:top10_years].join(", ") : "-" %></td>
+          <th>Posizione</th>
+          <th>Utente</th>
+          <th>Foto totali</th>
+          <th>Edizioni partecipate</th>
+          <th>Anni nei primi 10</th>
+          <th>Dettaglio anni nei primi 10</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @top_uploaders.each_with_index do |row, idx| %>
+          <tr>
+            <th data-order="<%= idx + 1 %>"><%= idx + 1 %></th>
+            <td><%= link_to row[:creator].username, creator_path(row[:creator]) %></td>
+            <td data-order="<%= row[:total_photos] %>"><%= fmt_int(row[:total_photos]) %></td>
+            <td data-order="<%= row[:editions_count] %>"><%= row[:editions_count] %> (<%= row[:editions].join(", ") %>)</td>
+            <td data-order="<%= row[:top10_count] %>"><%= row[:top10_count] %></td>
+            <td><%= row[:top10_years].any? ? row[:top10_years].join(", ") : "-" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <hr />
 
 <section id="territorio" class="mb-6">
   <h2 class="title is-4">Concorsi regionali e peso del primo uploader</h2>
-  <table id="territorio-table" class="table is-striped is-fullwidth">
-    <thead>
-      <tr>
-        <th>Concorso</th>
-        <th>Edizioni attive</th>
-        <th>Foto totali</th>
-        <th>Partecipanti (ultima edizione)</th>
-        <th>Peso primo uploader (ultima edizione)</th>
-        <th>Primo uploader (ultima edizione)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @contests.each do |contest| %>
-        <% rows = (@contest_years_matrix[contest.id] || []).select { |cy| cy.count.to_i > 0 }.sort_by { |cy| cy.year.year.to_i } %>
-        <% next if rows.empty? %>
-        <% latest = rows.last %>
-        <% latest_a = latest.contest_year_analytic %>
+  <div class="table-container">
+    <table id="territorio-table" class="table is-striped is-fullwidth">
+      <thead>
         <tr>
-          <td><%= link_to contest.name, contest_path(contest) %></td>
-          <td><%= rows.size %> (<%= rows.first.year.year %>-<%= latest.year.year %>)</td>
-          <td><%= rows.sum { |cy| cy.count.to_i } %></td>
-          <td><%= latest.creators.to_i %> (<%= latest.year.year %>)</td>
-          <td><%= latest_a ? "#{latest_a.top1_photos_share}%" : "-" %></td>
-          <td>
-            <% if latest_a&.top1_creator %>
-              <%= link_to latest_a.top1_creator.username, creator_path(latest_a.top1_creator) %>
-            <% else %>
-              -
-            <% end %>
-          </td>
+          <th>Concorso</th>
+          <th>Edizioni attive</th>
+          <th>Foto totali</th>
+          <th>Partecipanti (ultima edizione)</th>
+          <th>Peso primo uploader (ultima edizione)</th>
+          <th>Primo uploader (ultima edizione)</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @contests.each do |contest| %>
+          <% rows = (@contest_years_matrix[contest.id] || []).select { |cy| cy.count.to_i > 0 }.sort_by { |cy| cy.year.year.to_i } %>
+          <% next if rows.empty? %>
+          <% latest = rows.last %>
+          <% latest_a = latest.contest_year_analytic %>
+          <% total_c_photos = rows.sum { |cy| cy.count.to_i } %>
+          <tr>
+            <td><%= link_to contest.name, contest_path(contest) %></td>
+            <td data-order="<%= rows.size %>"><%= rows.size %> (<%= rows.first.year.year %>-<%= latest.year.year %>)</td>
+            <td data-order="<%= total_c_photos %>"><%= fmt_int(total_c_photos) %></td>
+            <td data-order="<%= latest.creators.to_i %>"><%= fmt_int(latest.creators) %> (<%= latest.year.year %>)</td>
+            <td data-order="<%= latest_a ? latest_a.top1_photos_share : -1 %>"><%= latest_a ? fmt_pct(latest_a.top1_photos_share) : "-" %></td>
+            <td>
+              <% if latest_a&.top1_creator %>
+                <%= link_to latest_a.top1_creator.username, creator_path(latest_a.top1_creator) %>
+              <% else %>
+                -
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="subtitle is-5 mt-5">Matrice concorsi regionali per anno (partecipanti / foto)</h3>
+  <div class="table-container">
+    <table class="table is-striped is-bordered is-narrow is-fullwidth is-size-7">
+      <thead>
+        <tr>
+          <th>Concorso</th>
+          <% @years.each do |y| %>
+            <th><%= y.year %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% @contests.each do |contest| %>
+          <% by_year_id = (@contest_years_matrix[contest.id] || []).index_by(&:year_id) %>
+          <% next if by_year_id.values.all? { |cy| cy.count.to_i == 0 } %>
+          <tr>
+            <th><%= link_to contest.name, contest_path(contest) %></th>
+            <% @years.each do |y| %>
+              <% cy = by_year_id[y.id] %>
+              <% if cy && cy.count.to_i > 0 %>
+                <td><%= fmt_int(cy.creators) %> / <%= fmt_int(cy.count) %></td>
+              <% else %>
+                <td class="matrix-cell-empty">-</td>
+              <% end %>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <% if @has_activity_data || @has_upload_source_data || @has_quality_data %>
@@ -286,75 +375,79 @@
 
     <% if @has_activity_data %>
       <h3 class="subtitle is-5">A chi serve l'incentivo di settembre</h3>
-      <table class="table is-striped is-fullwidth">
-        <thead>
-          <tr>
-            <th>Anno</th>
-            <th>Nuovi solo WLM (utenti / foto)</th>
-            <th>Già registrati solo WLM</th>
-            <th>Occasionali fuori settembre</th>
-            <th>Attivi tutto l'anno (100+ file)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @years.reverse.each do |year| %>
-            <% segs = @activity_by_year[year.id] %>
-            <% next if segs.blank? %>
-            <tr>
-              <th><%= year.year %></th>
-              <% %w[new_only_wlm returning_only_wlm occasional year_round_100_plus].each do |seg| %>
-                <% info = segs[seg] || { creators: 0, photos: 0 } %>
-                <td><%= info[:creators] %> / <%= info[:photos] %></td>
-              <% end %>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-
-      <% if @retention_by_year.any? %>
-        <h3 class="subtitle is-5 mt-5">Ritorno dei partecipanti su Commons dopo il concorso</h3>
+      <div class="table-container">
         <table class="table is-striped is-fullwidth">
           <thead>
             <tr>
               <th>Anno</th>
-              <th>Nuovi attivi nei 3 mesi dopo</th>
-              <th>Nuovi attivi per almeno 3 mesi in 12 mesi</th>
-              <th>Già registrati attivi nei 3 mesi dopo</th>
+              <th>Nuovi solo WLM (utenti / foto)</th>
+              <th>Già registrati solo WLM</th>
+              <th>Occasionali fuori settembre</th>
+              <th>Attivi tutto l'anno (100+ file)</th>
             </tr>
           </thead>
           <tbody>
             <% @years.reverse.each do |year| %>
-              <% ret = @retention_by_year[year.id] %>
-              <% next if ret.nil? %>
+              <% segs = @activity_by_year[year.id] %>
+              <% next if segs.blank? %>
               <tr>
                 <th><%= year.year %></th>
-                <td>
-                  <%= ret[:new_active_3m] %>/<%= ret[:new_total] %>
-                  (<%= ret[:new_total] > 0 ? (ret[:new_active_3m].to_f / ret[:new_total] * 100).round(1) : 0.0 %>%)
-                </td>
-                <td>
-                  <%= ret[:new_active_3m_plus_months] %>/<%= ret[:new_total] %>
-                  (<%= ret[:new_total] > 0 ? (ret[:new_active_3m_plus_months].to_f / ret[:new_total] * 100).round(1) : 0.0 %>%)
-                </td>
-                <td>
-                  <%= ret[:returning_active_3m] %>/<%= ret[:returning_total] %>
-                  (<%= ret[:returning_total] > 0 ? (ret[:returning_active_3m].to_f / ret[:returning_total] * 100).round(1) : 0.0 %>%)
-                </td>
+                <% %w[new_only_wlm returning_only_wlm occasional year_round_100_plus].each do |seg| %>
+                  <% info = segs[seg] || { creators: 0, photos: 0 } %>
+                  <td><%= fmt_int(info[:creators]) %> / <%= fmt_int(info[:photos]) %></td>
+                <% end %>
               </tr>
             <% end %>
           </tbody>
         </table>
+      </div>
+
+      <% if @retention_by_year.any? %>
+        <h3 class="subtitle is-5 mt-5">Ritorno dei partecipanti su Commons dopo il concorso</h3>
+        <div class="table-container">
+          <table class="table is-striped is-fullwidth">
+            <thead>
+              <tr>
+                <th>Anno</th>
+                <th>Nuovi attivi nei 3 mesi dopo</th>
+                <th>Nuovi attivi per almeno 3 mesi in 12 mesi</th>
+                <th>Già registrati attivi nei 3 mesi dopo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @years.reverse.each do |year| %>
+                <% ret = @retention_by_year[year.id] %>
+                <% next if ret.nil? %>
+                <tr>
+                  <th><%= year.year %></th>
+                  <td>
+                    <%= fmt_int(ret[:new_active_3m]) %>/<%= fmt_int(ret[:new_total]) %>
+                    (<%= fmt_pct(ret[:new_total] > 0 ? ret[:new_active_3m].to_f / ret[:new_total] * 100 : 0) %>)
+                  </td>
+                  <td>
+                    <%= fmt_int(ret[:new_active_3m_plus_months]) %>/<%= fmt_int(ret[:new_total]) %>
+                    (<%= fmt_pct(ret[:new_total] > 0 ? ret[:new_active_3m_plus_months].to_f / ret[:new_total] * 100 : 0) %>)
+                  </td>
+                  <td>
+                    <%= fmt_int(ret[:returning_active_3m]) %>/<%= fmt_int(ret[:returning_total]) %>
+                    (<%= fmt_pct(ret[:returning_total] > 0 ? ret[:returning_active_3m].to_f / ret[:returning_total] * 100 : 0) %>)
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
       <% end %>
     <% end %>
 
     <% if @has_upload_source_data %>
       <h3 class="subtitle is-5 mt-5">Canale di caricamento</h3>
-      <%= column_chart @upload_source_series, stacked: true %>
+      <%= column_chart @upload_source_series, stacked: true, colors: wlm_chart_colors, thousands: "." %>
     <% end %>
 
     <% if @has_quality_data %>
       <h3 class="subtitle is-5 mt-5">Foto di qualità e in vetrina</h3>
-      <%= line_chart @quality_series %>
+      <%= line_chart @quality_series, colors: ["#16a34a", "#d97706"], thousands: "." %>
     <% end %>
   </section>
 <% end %>
@@ -365,70 +458,80 @@
     <h2 class="title is-4">Piccoli comuni, tipologie e sentinelle</h2>
     <div class="columns is-multiline mb-4">
       <div class="column is-3">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Senza voce Wikipedia</p>
-          <p class="title is-5"><%= @monument_sentinels[:without_wikipedia] %> (<%= @monument_sentinels[:total] > 0 ? (@monument_sentinels[:without_wikipedia].to_f / @monument_sentinels[:total] * 100).round(1) : 0.0 %>%)</p>
+          <p class="title is-5"><%= fmt_int(@monument_sentinels[:without_wikipedia]) %> (<%= fmt_pct(@monument_sentinels[:total] > 0 ? @monument_sentinels[:without_wikipedia].to_f / @monument_sentinels[:total] * 100 : 0) %>)</p>
         </div>
       </div>
       <div class="column is-3">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Senza categoria Commons</p>
-          <p class="title is-5"><%= @monument_sentinels[:without_commons] %> (<%= @monument_sentinels[:total] > 0 ? (@monument_sentinels[:without_commons].to_f / @monument_sentinels[:total] * 100).round(1) : 0.0 %>%)</p>
+          <p class="title is-5"><%= fmt_int(@monument_sentinels[:without_commons]) %> (<%= fmt_pct(@monument_sentinels[:total] > 0 ? @monument_sentinels[:without_commons].to_f / @monument_sentinels[:total] * 100 : 0) %>)</p>
         </div>
       </div>
       <div class="column is-3">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Con foto WLM senza categoria</p>
-          <p class="title is-5"><%= @monument_sentinels[:with_wlm_without_commons] %></p>
+          <p class="title is-5"><%= fmt_int(@monument_sentinels[:with_wlm_without_commons]) %></p>
         </div>
       </div>
       <div class="column is-3">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Con foto WLM senza P18</p>
-          <p class="title is-5"><%= @monument_sentinels[:with_wlm_without_p18] %></p>
+          <p class="title is-5"><%= fmt_int(@monument_sentinels[:with_wlm_without_p18]) %></p>
         </div>
       </div>
       <div class="column is-4">
-        <div class="box">
-          <p class="heading">Comuni sotto 5.000 abitanti (senza foto)</p>
-          <p class="title is-5"><%= @small_municipalities[:no_photo_monuments] %> / <%= @small_municipalities[:total_monuments] %></p>
+        <div class="box kpi-box">
+          <p class="heading">Comuni sotto 5.000 abitanti</p>
+          <p class="title is-5"><%= fmt_pct(@small_municipalities[:no_photo_share]) %> dei rossi / <%= fmt_pct(@small_municipalities[:photos_share]) %> delle foto</p>
+          <p class="is-size-7 has-text-grey"><%= fmt_int(@small_municipalities[:no_photo_monuments]) %> senza foto su <%= fmt_int(@small_municipalities[:total_monuments]) %> monumenti</p>
         </div>
       </div>
       <div class="column is-4">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Comuni mai toccati</p>
-          <p class="title is-5"><%= @small_municipalities[:untouched_municipalities] %> / <%= @small_municipalities[:total_municipalities] %></p>
+          <p class="title is-5"><%= fmt_int(@small_municipalities[:untouched_municipalities]) %> / <%= fmt_int(@small_municipalities[:total_municipalities]) %></p>
         </div>
       </div>
       <div class="column is-4">
-        <div class="box">
+        <div class="box kpi-box">
           <p class="heading">Collegati al Catalogo MiC / recenti (>= 1950)</p>
-          <p class="title is-5"><%= @monument_sentinels[:with_mic_catalog] %> MiC / <%= link_to "#{@monument_sentinels[:recent_since_1950]} recenti", recent_monuments_maintenance_path %></p>
+          <p class="title is-5"><%= fmt_int(@monument_sentinels[:with_mic_catalog]) %> MiC / <%= link_to "#{fmt_int(@monument_sentinels[:recent_since_1950])} recenti", recent_monuments_maintenance_path %></p>
         </div>
       </div>
     </div>
 
+    <% if @monument_types_chart.any? %>
+      <div class="box mb-4">
+        <h3 class="subtitle is-6">Quota di monumenti senza foto per tipologia (%)</h3>
+        <%= bar_chart @monument_types_chart, colors: ["#dc2626"], suffix: "%" %>
+      </div>
+    <% end %>
+
     <h3 class="subtitle is-5">Copertura per tipologia di monumento</h3>
-    <table class="table is-striped is-fullwidth">
-      <thead>
-        <tr>
-          <th>Tipologia</th>
-          <th>Monumenti totali</th>
-          <th>Monumenti senza foto</th>
-          <th>Quota senza foto (%)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @monument_types_stats.each do |row| %>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth">
+        <thead>
           <tr>
-            <td><%= row[:type] %></td>
-            <td><%= row[:total] %></td>
-            <td><%= row[:no_photo] %></td>
-            <td><%= row[:no_photo_pct] %>%</td>
+            <th>Tipologia</th>
+            <th>Monumenti totali</th>
+            <th>Monumenti senza foto</th>
+            <th>Quota senza foto (%)</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @monument_types_stats.each do |row| %>
+            <tr>
+              <td><%= row[:type] %></td>
+              <td><%= fmt_int(row[:total]) %></td>
+              <td><%= fmt_int(row[:no_photo]) %></td>
+              <td><%= fmt_pct(row[:no_photo_pct]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </section>
 <% end %>
 
@@ -436,34 +539,102 @@
   <hr />
   <section id="exif" class="mb-6">
     <h2 class="title is-4">Metadati EXIF: archivio e dispositivi</h2>
-    <table class="table is-striped is-fullwidth">
-      <thead>
-        <tr>
-          <th>Anno</th>
-          <th>Foto analizzate</th>
-          <th>Scattate prima dell'anno (%)</th>
-          <th>Scattate almeno 2 anni prima (%)</th>
-          <th>Smartphone (%)</th>
-          <th>Fotocamera (%)</th>
-          <th>Senza EXIF (%)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @years.reverse.each do |year| %>
-          <% ex = @exif_by_year[year.id] %>
-          <% next if ex.nil? %>
+
+    <div class="box mb-4">
+      <h3 class="subtitle is-6">Andamento smartphone e fotocamera nel tempo (%)</h3>
+      <%= line_chart @exif_device_chart, colors: ["#2563eb", "#7c3aed", "#16a34a"], suffix: "%" %>
+    </div>
+
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth">
+        <thead>
           <tr>
-            <th><%= year.year %></th>
-            <td><%= ex[:checked] %></td>
-            <td><%= ex[:archive_pct] %>%</td>
-            <td><%= ex[:archive_prev_pct] %>%</td>
-            <td><%= ex[:smartphone_pct] %>%</td>
-            <td><%= ex[:camera_pct] %>%</td>
-            <td><%= ex[:no_exif_pct] %>%</td>
+            <th>Anno</th>
+            <th>Foto analizzate</th>
+            <th>Scattate prima dell'anno (%)</th>
+            <th>Almeno 2 anni prima (%)</th>
+            <th>Smartphone (% foto / % utenti)</th>
+            <th>Fotocamera (% foto / % utenti)</th>
+            <th>Senza EXIF (%)</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @years.reverse.each do |year| %>
+            <% ex = @exif_by_year[year.id] %>
+            <% next if ex.nil? %>
+            <tr>
+              <th><%= year.year %></th>
+              <td><%= fmt_int(ex[:checked]) %></td>
+              <td><%= fmt_pct(ex[:archive_pct]) %></td>
+              <td><%= fmt_pct(ex[:archive_prev_pct]) %></td>
+              <td><%= fmt_pct(ex[:smartphone_pct]) %> / <%= fmt_pct(ex[:smartphone_users_pct]) %></td>
+              <td><%= fmt_pct(ex[:camera_pct]) %> / <%= fmt_pct(ex[:camera_users_pct]) %></td>
+              <td><%= fmt_pct(ex[:no_exif_pct]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="columns mt-4">
+      <% if @exif_no_exif_by_source.any? %>
+        <div class="column">
+          <h3 class="subtitle is-5">File senza EXIF per canale di caricamento</h3>
+          <div class="table-container">
+            <table class="table is-striped is-fullwidth is-narrow">
+              <thead>
+                <tr>
+                  <th>Canale</th>
+                  <th>Foto totali</th>
+                  <th>Senza EXIF</th>
+                  <th>Quota senza EXIF (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @exif_no_exif_by_source.each do |row| %>
+                  <tr>
+                    <td><%= row[:source] %></td>
+                    <td><%= fmt_int(row[:total]) %></td>
+                    <td><%= fmt_int(row[:no_exif]) %></td>
+                    <td><%= fmt_pct(row[:no_exif_pct]) %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @exif_top_models.any? %>
+        <div class="column">
+          <h3 class="subtitle is-5">Modelli di fotocamera più usati (<%= @exif_top_models_year %>)</h3>
+          <div class="table-container">
+            <table class="table is-striped is-fullwidth is-narrow">
+              <thead>
+                <tr>
+                  <th>Marca e modello</th>
+                  <th>Tipo</th>
+                  <th>Foto</th>
+                  <th>Quota</th>
+                  <th>Utenti</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @exif_top_models.each do |m| %>
+                  <tr>
+                    <td><%= [m[:make], m[:model]].compact.join(" ") %></td>
+                    <td><%= m[:device_category] %></td>
+                    <td><%= fmt_int(m[:photos]) %></td>
+                    <td><%= fmt_pct(m[:share]) %></td>
+                    <td><%= fmt_int(m[:users]) %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% end %>
+    </div>
   </section>
 <% end %>
 
@@ -471,30 +642,56 @@
   <hr />
   <section id="impatto" class="mb-6">
     <h2 class="title is-4">Impatto su Wikipedia e visite alle voci</h2>
-    <table class="table is-striped is-fullwidth">
-      <thead>
-        <tr>
-          <th>Anno</th>
-          <th>Voci distinte</th>
-          <th>Progetti / lingue</th>
-          <th>Visite registrate</th>
-          <th>Quota prime 12 voci (%)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @years.reverse.each do |year| %>
-          <% pv = @pageviews_by_year[year.id] %>
-          <% next if pv.nil? %>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth">
+        <thead>
           <tr>
-            <th><%= year.year %></th>
-            <td><%= pv[:pages_count] %></td>
-            <td><%= pv[:wikis_count] %></td>
-            <td><%= pv[:total_views] %></td>
-            <td><%= pv[:top12_share] %>%</td>
+            <th>Anno</th>
+            <th>Voci distinte</th>
+            <th>Progetti / lingue</th>
+            <th>Visite registrate</th>
+            <th>Quota prime 12 voci (%)</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @years.reverse.each do |year| %>
+            <% pv = @pageviews_by_year[year.id] %>
+            <% next if pv.nil? %>
+            <tr>
+              <th><%= year.year %></th>
+              <td><%= fmt_int(pv[:pages_count]) %></td>
+              <td><%= fmt_int(pv[:wikis_count]) %></td>
+              <td><%= fmt_int(pv[:total_views]) %></td>
+              <td><%= fmt_pct(pv[:top12_share]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @top_viewed_pages.any? %>
+      <h3 class="subtitle is-5 mt-4">Prime 10 voci Wikipedia per visite</h3>
+      <div class="table-container">
+        <table class="table is-striped is-fullwidth is-narrow">
+          <thead>
+            <tr>
+              <th>Voce</th>
+              <th>Progetto</th>
+              <th>Visite registrate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @top_viewed_pages.each do |p| %>
+              <tr>
+                <td><%= p[:url] ? link_to(p[:page_title], p[:url], target: "_blank", rel: "noopener") : p[:page_title] %></td>
+                <td><%= p[:wiki] %></td>
+                <td><%= fmt_int(p[:views]) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
   </section>
 <% end %>
 
@@ -529,30 +726,41 @@
   <% end %>
 
   <% if @simulation_results.present? %>
-    <table class="table is-striped is-fullwidth mt-4">
-      <thead>
-        <tr>
-          <th>Anno</th>
-          <th>Foto originali</th>
-          <th>Foto residue</th>
-          <th>Foto rimosse (%)</th>
-          <th>Partecipanti residui</th>
-          <th>Nuovi monumenti residui</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @simulation_results.reverse.each do |res| %>
+    <div class="table-container mt-4">
+      <table class="table is-striped is-fullwidth">
+        <thead>
           <tr>
-            <th><%= res[:year] %></th>
-            <td><%= res[:total_photos] %></td>
-            <td><%= res[:remaining_photos] %></td>
-            <td><%= res[:removed_photos] %> (<%= res[:removed_share] %>%)</td>
-            <td><%= res[:remaining_creators] %> / <%= res[:total_creators] %></td>
-            <td><%= res[:remaining_new_monuments] %> / <%= res[:total_new_monuments] %></td>
+            <th>Anno</th>
+            <th>Foto residue / originali</th>
+            <th>Foto rimosse (%)</th>
+            <th>Monumenti esclusi / ritratti (%)</th>
+            <th>Partecipanti residui / totali (persi)</th>
+            <th>Nuovi monumenti persi (dal 2024)</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @simulation_results.reverse.each do |res| %>
+            <tr>
+              <th><%= res[:year] %></th>
+              <td><%= fmt_int(res[:remaining_photos]) %> / <%= fmt_int(res[:total_photos]) %></td>
+              <td>-<%= fmt_int(res[:removed_photos]) %> (-<%= fmt_pct(res[:removed_share]) %>)</td>
+              <td>-<%= fmt_int(res[:excluded_monuments]) %> su <%= fmt_int(res[:total_monuments]) %> (-<%= fmt_pct(res[:excluded_monuments_share]) %>)</td>
+              <td><%= fmt_int(res[:remaining_creators]) %> / <%= fmt_int(res[:total_creators]) %> (-<%= fmt_int(res[:removed_creators]) %>, -<%= fmt_pct(res[:removed_creators_share]) %>)</td>
+              <td>
+                <% if res[:new_monuments_available] %>
+                  <%= fmt_int(res[:removed_new_monuments]) %> persi su <%= fmt_int(res[:total_new_monuments]) %>
+                <% else %>
+                  n.d.
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="is-size-7 has-text-grey mt-2">
+      Legenda: <strong>Monumenti esclusi</strong> indica quanti monumenti distinti fotografati nell'anno verrebbero esclusi dalla regola; <strong>Partecipanti persi</strong> indica gli utenti che avevano fotografato solo monumenti esclusi (o esclusi come primi uploader); <strong>Nuovi monumenti persi</strong> è disponibile dal 2024 e resta pari a 0 con la sola soglia sulle foto pregresse, perché i monumenti nuovi non avevano foto in edizioni precedenti.
+    </p>
   <% end %>
 </section>
 

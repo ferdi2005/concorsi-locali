@@ -32,6 +32,16 @@
       <% end %>
     </tbody>
   </table>
+
+  <div class="tabs is-boxed mt-4 mb-4">
+    <ul>
+      <% @yearly_stats.each do |row| %>
+        <li class="<%= 'is-active' if @selected_year && row[:year_id] == @selected_year.id %>">
+          <%= link_to "Edizione #{row[:year]}", creator_path(@uploader, year: row[:year]) %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
 <% end %>
 
 <% if @selected_year && @photos.any? %>

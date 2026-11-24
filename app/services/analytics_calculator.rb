@@ -104,8 +104,18 @@ class AnalyticsCalculator
         removed_share = total_photos > 0 ? (removed_photos.to_f / total_photos * 100.0).round(1) : 0.0
         remaining_creators = remaining_scope.distinct.count(:creator_id)
         total_creators = year_photos.distinct.count(:creator_id)
+        removed_creators = total_creators - remaining_creators
+        removed_creators_share = total_creators > 0 ? (removed_creators.to_f / total_creators * 100.0).round(1) : 0.0
+
+        total_monuments = wlmid_counts_this_year.keys.map { |w| normalize_wlmid(w) }.uniq.size
+        remaining_wlmids = remaining_scope.where.not(wlmid: [nil, ""]).distinct.pluck(:wlmid)
+        remaining_monuments = remaining_wlmids.map { |w| normalize_wlmid(w) }.uniq.size
+        excluded_monuments = total_monuments - remaining_monuments
+        excluded_monuments_share = total_monuments > 0 ? (excluded_monuments.to_f / total_monuments * 100.0).round(1) : 0.0
+
         remaining_new_monuments = remaining_scope.where(new_monument: true).count
         total_new_monuments = year_photos.where(new_monument: true).count
+        removed_new_monuments = total_new_monuments - remaining_new_monuments
 
         results << {
           year: year.year,
@@ -113,10 +123,18 @@ class AnalyticsCalculator
           remaining_photos: remaining_photos,
           removed_photos: removed_photos,
           removed_share: removed_share,
+          total_monuments: total_monuments,
+          remaining_monuments: remaining_monuments,
+          excluded_monuments: excluded_monuments,
+          excluded_monuments_share: excluded_monuments_share,
           total_creators: total_creators,
           remaining_creators: remaining_creators,
+          removed_creators: removed_creators,
+          removed_creators_share: removed_creators_share,
           total_new_monuments: total_new_monuments,
-          remaining_new_monuments: remaining_new_monuments
+          remaining_new_monuments: remaining_new_monuments,
+          removed_new_monuments: removed_new_monuments,
+          new_monuments_available: year.year.to_i >= 2024
         }
       end
 
