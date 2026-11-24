@@ -34,6 +34,16 @@ class ContestController < ApplicationController
       @national_qi_count = year_photos.where(quality_image: true).count
       @national_fp_count = year_photos.where(featured_picture: true).count
       @daily_photos = year_photos.group_by_day(:photodate).count
+      @top_monuments = DashboardInsights.top_monuments(year: @year, limit: 15)
+      @top_camera_models = DashboardInsights.top_camera_models(year: @year, limit: 10)
+      @reuse_bucket_chart = if @year_analytic&.reuse_by_monument_bucket&.dig("buckets").present?
+                              buckets = @year_analytic.reuse_by_monument_bucket["buckets"]
+                              AnalyticsCalculator::BUCKET_LABELS.each_with_object({}) do |(key, label), h|
+                                h[label] = buckets.dig(key, "rate") || 0.0
+                              end
+                            else
+                              {}
+                            end
     else
       @national_photos_count = 0
       @national_used_photos = 0
@@ -44,6 +54,9 @@ class ContestController < ApplicationController
       @national_qi_count = 0
       @national_fp_count = 0
       @daily_photos = {}
+      @top_monuments = []
+      @top_camera_models = []
+      @reuse_bucket_chart = {}
     end
 
     @nophotos_for_year = @year ? Nophoto.where(regione: nil, year: @year).order(:created_at).to_a : []

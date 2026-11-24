@@ -147,6 +147,82 @@
       </div>
     <% end %>
 
+    <% if @reuse_bucket_chart.any? %>
+      <div class="box mt-4 chart-block">
+        <h3 class="subtitle is-5 mb-3">Riuso su wiki per fascia di foto per monumento (<%= @year.year %>)</h3>
+        <%= column_chart @reuse_bucket_chart, colors: ["#2563eb"], suffix: "%" %>
+      </div>
+    <% end %>
+
+    <% if @top_monuments.any? %>
+      <div class="box mt-4">
+        <h3 class="subtitle is-5 mb-3">Monumenti più fotografati (<%= @year.year %>)</h3>
+        <div class="table-container">
+          <table class="table is-striped is-fullwidth is-narrow">
+            <thead>
+              <tr>
+                <th>Monumento</th>
+                <th>Comune</th>
+                <th>Regione</th>
+                <th>Tipologia</th>
+                <th>Foto</th>
+                <th>Autori distinti</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @top_monuments.each do |m| %>
+                <tr>
+                  <td>
+                    <% if m[:item] %>
+                      <%= link_to(m[:label].presence || m[:item], "https://www.wikidata.org/wiki/#{m[:item]}", target: "_blank", rel: "noopener") %>
+                    <% else %>
+                      <%= m[:wlmid] %>
+                    <% end %>
+                    <span class="is-size-7 has-text-grey">(<%= m[:wlmid] %>)</span>
+                  </td>
+                  <td><%= m[:city].presence || "-" %></td>
+                  <td><%= m[:regione].presence || "-" %></td>
+                  <td><%= m[:monument_type].presence || "-" %></td>
+                  <td><%= fmt_int(m[:photos]) %></td>
+                  <td><%= fmt_int(m[:authors]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @top_camera_models.any? %>
+      <div class="box mt-4">
+        <h3 class="subtitle is-5 mb-3">Modelli di fotocamera più usati (<%= @year.year %>)</h3>
+        <div class="table-container">
+          <table class="table is-striped is-fullwidth is-narrow">
+            <thead>
+              <tr>
+                <th>Marca e modello</th>
+                <th>Tipo</th>
+                <th>Foto</th>
+                <th>Quota</th>
+                <th>Utenti</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @top_camera_models.each do |m| %>
+                <tr>
+                  <td><%= [m[:make], m[:model]].compact.join(" ") %></td>
+                  <td><%= m[:device_category] %></td>
+                  <td><%= fmt_int(m[:photos]) %></td>
+                  <td><%= fmt_pct(m[:share]) %></td>
+                  <td><%= fmt_int(m[:users]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+
     <% if @last_nophoto %>
       <% a = @last_nophoto.monuments.to_i %>
       <% b = @last_nophoto.count.to_i %>

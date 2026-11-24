@@ -169,10 +169,10 @@
 <section id="monumenti" class="mb-6">
   <h2 class="title is-4">Distribuzione sui monumenti e riuso</h2>
 
-  <% if @reuse_bucket_chart.any? %>
+  <% if @reuse_trend_series.any? { |s| s[:data].any? } %>
     <div class="box mb-4">
-      <h3 class="subtitle is-6">Percentuale di foto usate su wiki per fascia di foto per monumento (<%= @reuse_chart_year %>)</h3>
-      <%= column_chart @reuse_bucket_chart, colors: ["#2563eb"], suffix: "%" %>
+      <h3 class="subtitle is-6">Andamento nel tempo del riuso su wiki per fascia di foto per monumento (%)</h3>
+      <%= line_chart @reuse_trend_series, colors: wlm_chart_colors, suffix: "%" %>
     </div>
   <% end %>
 
@@ -224,7 +224,7 @@
   <p class="is-size-7 has-text-grey">Nota: il flag nuovi monumenti è disponibile a partire dall'edizione 2024.</p>
 
   <% if @top_monuments.any? %>
-    <h3 class="subtitle is-5 mt-5">Monumenti più fotografati (<%= @latest_year&.year %>)</h3>
+    <h3 class="subtitle is-5 mt-5">Monumenti più fotografati (tutte le edizioni)</h3>
     <div class="table-container">
       <table class="table is-striped is-fullwidth">
         <thead>
@@ -233,8 +233,9 @@
             <th>Comune</th>
             <th>Regione</th>
             <th>Tipologia</th>
-            <th>Foto</th>
+            <th>Foto totali</th>
             <th>Autori distinti</th>
+            <th>Edizioni</th>
           </tr>
         </thead>
         <tbody>
@@ -253,6 +254,7 @@
               <td><%= m[:monument_type].presence || "-" %></td>
               <td><%= fmt_int(m[:photos]) %></td>
               <td><%= fmt_int(m[:authors]) %></td>
+              <td><%= fmt_int(m[:editions]) %></td>
             </tr>
           <% end %>
         </tbody>
@@ -606,7 +608,7 @@
 
       <% if @exif_top_models.any? %>
         <div class="column">
-          <h3 class="subtitle is-5">Modelli di fotocamera più usati (<%= @exif_top_models_year %>)</h3>
+          <h3 class="subtitle is-5">Modelli di fotocamera più usati (tutte le edizioni)</h3>
           <div class="table-container">
             <table class="table is-striped is-fullwidth is-narrow">
               <thead>

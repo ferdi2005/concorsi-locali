@@ -45,20 +45,19 @@ class HistoryController < ApplicationController
       }
     ]
 
-    # Grafico riuso per fascia di foto per monumento (ultima edizione con analytics)
-    latest_with_reuse = @years.reverse.find { |y| y.year_analytic&.reuse_by_monument_bucket&.dig("buckets").present? }
-    @reuse_chart_year = latest_with_reuse&.year
-    @reuse_bucket_chart = if latest_with_reuse
-                            buckets = latest_with_reuse.year_analytic.reuse_by_monument_bucket["buckets"]
-                            AnalyticsCalculator::BUCKET_LABELS.each_with_object({}) do |(key, label), h|
-                              h[label] = buckets.dig(key, "rate") || 0.0
-                            end
-                          else
-                            {}
-                          end
+    # Trend pluriennale riuso per fascia di foto per monumento
+    @reuse_trend_series = AnalyticsCalculator::BUCKET_LABELS.map do |key, label|
+      {
+        name: label,
+        data: @years.each_with_object({}) do |y, h|
+          rate = y.year_analytic&.reuse_by_monument_bucket&.dig("buckets", key, "rate")
+          h[y.year] = rate unless rate.nil?
+        end
+      }
+    end
 
-    # Top monumenti più fotografati dell'ultima edizione
-    @top_monuments = DashboardInsights.top_monuments(year: @latest_year, limit: 15)
+    # Top monumenti più fotografati su tutte le edizioni (aggregato)
+    @top_monuments = DashboardInsights.top_monuments_all_years(limit: 20)
 
     # Temi
     @special_years = @years.select(&:special?)
@@ -115,7 +114,6 @@ class HistoryController < ApplicationController
       @exif_by_year = @exif_summary[:by_year]
       @exif_no_exif_by_source = @exif_summary[:no_exif_by_source]
       @exif_top_models = @exif_summary[:top_models]
-      @exif_top_models_year = @exif_summary[:top_models_year]
       @exif_device_chart = [
         {
           name: "Smartphone (% foto)",

@@ -42,6 +42,20 @@ class DashboardInsights
     end
   end
 
+  def self.top_monuments_all_years(contest_id: nil, limit: 20)
+    key = "dashboard_insights:v#{cache_version}:top_monuments_all:#{contest_id || 'all'}:#{limit}"
+    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+      compute_top_monuments_all_years(contest_id: contest_id, limit: limit)
+    end
+  end
+
+  def self.top_camera_models(year: nil, contest_id: nil, limit: 10)
+    key = "dashboard_insights:v#{cache_version}:top_cameras:#{year&.id || 'all'}:#{contest_id || 'all'}:#{limit}"
+    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+      compute_top_camera_models(year: year, contest_id: contest_id, limit: limit)
+    end
+  end
+
   class << self
     private
 
@@ -185,42 +199,13 @@ class DashboardInsights
         }
       end.sort_by { |r| -r[:total] }
 
-      # Modelli di fotocamera più usati nell'edizione più recente con EXIF
-      top_models = []
-      if latest_year_with_exif
-        latest_scope = base.where(year_id: latest_year_with_exif.id)
-        latest_total = latest_scope.count
-        model_rows = latest_scope
-          .where.not(camera_model: [nil, ""])
-          .group(:camera_make, :camera_model, :device_category)
-          .order(Arel.sql("COUNT(*) DESC"))
-          .limit(10)
-          .pluck(
-            :camera_make,
-            :camera_model,
-            :device_category,
-            Arel.sql("COUNT(*)"),
-            Arel.sql("COUNT(DISTINCT creator_id)")
-          )
-
-        top_models = model_rows.map do |make, model, dev_cat, cnt, users_cnt|
-          cnt_i = cnt.to_i
-          {
-            make: make,
-            model: model,
-            device_category: dev_cat,
-            photos: cnt_i,
-            share: latest_total > 0 ? (cnt_i.to_f / latest_total * 100.0).round(1) : 0.0,
-            users: users_cnt.to_i
-          }
-        end
-      end
+      # Modelli di fotocamera più usati su tutte le edizioni
+      top_models = compute_top_camera_models(year: nil, contest_id: contest_id, limit: 10)
 
       {
         by_year: by_year,
         no_exif_by_source: no_exif_by_source,
-        top_models: top_models,
-        top_models_year: latest_year_with_exif&.year
+        top_models: top_models
       }
     end
 
@@ -299,6 +284,75 @@ class DashboardInsights
           regione: mon&.regione,
           monument_type: mon&.monument_type
         )
+      end
+    end
+
+    def compute_top_monuments_all_years(contest_id: nil, limit: 20)
+      scope = Photo.where.not(wlmid: [nil, ""])
+      scope = scope.where(contest_id: contest_id) if contest_id.present?
+
+      rows = scope
+        .group(:wlmid)
+        .order(Arel.sql("COUNT(*) DESC"))
+        .limit(limit)
+        .pluck(
+          :wlmid,
+          Arel.sql("COUNT(*)"),
+          Arel.sql("COUNT(DISTINCT creator_id)"),
+          Arel.sql("COUNT(DISTINCT year_id)")
+        )
+      return [] if rows.empty?
+
+      norms = rows.map { |wlmid, _, _, _| AnalyticsCalculator.normalize_wlmid(wlmid) }.uniq
+      monuments_by_norm = Monument.where(normalized_wlmid: norms).index_by(&:normalized_wlmid)
+
+      rows.map do |wlmid, cnt, authors, editions|
+        norm = AnalyticsCalculator.normalize_wlmid(wlmid)
+        mon = monuments_by_norm[norm]
+        {
+          wlmid: wlmid,
+          photos: cnt.to_i,
+          authors: authors.to_i,
+          editions: editions.to_i,
+          item: mon&.item,
+          label: mon&.label,
+          city: mon&.city,
+          regione: mon&.regione,
+          monument_type: mon&.monument_type
+        }
+      end
+    end
+
+    def compute_top_camera_models(year: nil, contest_id: nil, limit: 10)
+      scope = Photo.where.not(exif_checked_at: nil)
+      scope = scope.where(year_id: year.id) if year.present?
+      scope = scope.where(contest_id: contest_id) if contest_id.present?
+      total = scope.count
+      return [] if total == 0
+
+      rows = scope
+        .where.not(camera_model: [nil, ""])
+        .group(:camera_make, :camera_model, :device_category)
+        .order(Arel.sql("COUNT(*) DESC"))
+        .limit(limit)
+        .pluck(
+          :camera_make,
+          :camera_model,
+          :device_category,
+          Arel.sql("COUNT(*)"),
+          Arel.sql("COUNT(DISTINCT creator_id)")
+        )
+
+      rows.map do |make, model, dev_cat, cnt, users_cnt|
+        cnt_i = cnt.to_i
+        {
+          make: make,
+          model: model,
+          device_category: dev_cat,
+          photos: cnt_i,
+          share: (cnt_i.to_f / total * 100.0).round(1),
+          users: users_cnt.to_i
+        }
       end
     end
   end
