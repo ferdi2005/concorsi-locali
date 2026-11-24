@@ -84,6 +84,74 @@
       </tbody>
     </table>
   </div>
+
+  <% regional_retention = @regional_trends && @regional_trends[:wlm_retention] %>
+  <% if regional_retention && (regional_retention[:yoy_rows].any? || regional_retention[:editions_distribution].any?) %>
+    <h3 class="subtitle is-5 mt-5">Fedeltà e ritorno nel concorso</h3>
+    <div class="columns">
+      <% if regional_retention[:yoy_rows].any? %>
+        <div class="column">
+          <div class="table-container">
+            <table class="table is-striped is-fullwidth is-narrow">
+              <thead>
+                <tr>
+                  <th>Edizione</th>
+                  <th>Partecipanti</th>
+                  <th>Tornati nell'edizione successiva</th>
+                  <th>Ritorno nuovi iscritti</th>
+                  <th>Ritorno già registrati</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% regional_retention[:yoy_rows].reverse.each do |row| %>
+                  <tr>
+                    <th><%= row[:year] %> → <%= row[:next_year] %></th>
+                    <td><%= fmt_int(row[:participants]) %></td>
+                    <td><%= fmt_int(row[:returned_next]) %> (<%= fmt_pct(row[:return_rate_next]) %>)</td>
+                    <td><%= fmt_int(row[:new_returned_next]) %>/<%= fmt_int(row[:new_participants]) %> (<%= fmt_pct(row[:new_return_rate_next]) %>)</td>
+                    <td><%= fmt_int(row[:veteran_returned_next]) %>/<%= fmt_int(row[:veteran_participants]) %> (<%= fmt_pct(row[:veteran_return_rate_next]) %>)</td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% end %>
+
+      <% if regional_retention[:editions_distribution].any? %>
+        <div class="column">
+          <div class="table-container">
+            <table class="table is-striped is-fullwidth is-narrow">
+              <thead>
+                <tr>
+                  <th>Edizioni partecipate</th>
+                  <th>Partecipanti</th>
+                  <th>Quota utenti</th>
+                  <th>Foto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% regional_retention[:editions_distribution].each do |d| %>
+                  <tr>
+                    <td><%= d[:label] %></td>
+                    <td><%= fmt_int(d[:creators]) %></td>
+                    <td><%= fmt_pct(d[:creators_pct]) %></td>
+                    <td><%= fmt_int(d[:photos]) %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% regional_nophoto_hist = @regional_trends && @regional_trends[:nophoto_history] %>
+  <% if regional_nophoto_hist && regional_nophoto_hist[:rows].size > 1 %>
+    <h3 class="subtitle is-5 mt-4">Quota monumenti senza foto tra le edizioni (%)</h3>
+    <%= line_chart regional_nophoto_hist[:without_photo_pct_series], colors: ["#dc2626"], suffix: "%" %>
+  <% end %>
 </section>
 <% end %>
 
@@ -237,6 +305,135 @@
         </tbody>
       </table>
     </div>
+  <% end %>
+
+  <% if @regional_edition_insights %>
+    <div class="columns is-multiline mt-4">
+      <% if @regional_edition_insights[:participant_buckets].any? %>
+        <div class="column is-6-desktop is-12-tablet">
+          <div class="box kpi-box">
+            <h3 class="subtitle is-5 mb-3">Fasce di foto per partecipante (<%= @selected_year.year %>)</h3>
+            <div class="table-container mb-0">
+              <table class="table is-striped is-fullwidth is-narrow">
+                <thead>
+                  <tr>
+                    <th>Fascia</th>
+                    <th>Partecipanti</th>
+                    <th>Quota utenti</th>
+                    <th>Foto</th>
+                    <th>Quota foto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @regional_edition_insights[:participant_buckets].each do |b| %>
+                    <tr>
+                      <td><%= b[:label] %></td>
+                      <td><%= fmt_int(b[:creators]) %></td>
+                      <td><%= fmt_pct(b[:creators_pct]) %></td>
+                      <td><%= fmt_int(b[:photos]) %></td>
+                      <td><%= fmt_pct(b[:photos_pct]) %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% newcomers = @regional_edition_insights[:newcomers_profile] %>
+      <% if newcomers && newcomers[:newcomers_count] > 0 %>
+        <div class="column is-6-desktop is-12-tablet">
+          <div class="box kpi-box">
+            <h3 class="subtitle is-5 mb-3">Profilo dei nuovi iscritti (<%= @selected_year.year %>)</h3>
+            <p class="mb-2">
+              <b>Nuovi iscritti</b>: <%= fmt_int(newcomers[:newcomers_count]) %> (<%= fmt_int(newcomers[:photos_total]) %> foto)
+            </p>
+            <% if newcomers[:checked_photos] > 0 %>
+              <p class="is-size-7 has-text-grey mb-2">
+                Smartphone: <%= fmt_pct(newcomers[:smartphone_pct]) %> delle foto (<%= fmt_pct(newcomers[:smartphone_users_pct]) %> degli utenti) | Fotocamera: <%= fmt_pct(newcomers[:camera_pct]) %> | Senza EXIF: <%= fmt_pct(newcomers[:no_exif_pct]) %>
+              </p>
+              <% if newcomers[:by_source].any? %>
+                <div class="table-container mb-0">
+                  <table class="table is-striped is-fullwidth is-narrow">
+                    <thead>
+                      <tr>
+                        <th>Canale di caricamento</th>
+                        <th>Foto</th>
+                        <th>Senza EXIF</th>
+                        <th>Quota senza EXIF</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% newcomers[:by_source].each do |src| %>
+                        <tr>
+                          <td><%= src[:source] %></td>
+                          <td><%= fmt_int(src[:total]) %></td>
+                          <td><%= fmt_int(src[:no_exif]) %></td>
+                          <td><%= fmt_pct(src[:no_exif_pct]) %></td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @regional_year_camera_models.any? %>
+      <h3 class="subtitle is-5 mt-4">Modelli di fotocamera più usati (<%= @selected_year.year %>)</h3>
+      <div class="table-container">
+        <table class="table is-striped is-fullwidth is-narrow">
+          <thead>
+            <tr>
+              <th>Marca e modello</th>
+              <th>Tipo</th>
+              <th>Foto</th>
+              <th>Quota</th>
+              <th>Utenti</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @regional_year_camera_models.each do |m| %>
+              <tr>
+                <td><%= [m[:make], m[:model]].compact.join(" ") %></td>
+                <td><%= m[:device_category] %></td>
+                <td><%= fmt_int(m[:photos]) %></td>
+                <td><%= fmt_pct(m[:share]) %></td>
+                <td><%= fmt_int(m[:users]) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+
+    <% if @regional_edition_insights[:top_viewed_pages].any? %>
+      <h3 class="subtitle is-5 mt-4">Prime 10 voci Wikipedia per visite (<%= @selected_year.year %>)</h3>
+      <div class="table-container">
+        <table class="table is-striped is-fullwidth is-narrow">
+          <thead>
+            <tr>
+              <th>Voce</th>
+              <th>Progetto</th>
+              <th>Visite registrate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @regional_edition_insights[:top_viewed_pages].each do |p| %>
+              <tr>
+                <td><%= p[:url] ? link_to(p[:page_title], p[:url], target: "_blank", rel: "noopener") : p[:page_title] %></td>
+                <td><%= p[:wiki] %></td>
+                <td><%= fmt_int(p[:views]) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
   <% end %>
 
   <div class="buttons is-centered my-5">

@@ -5,6 +5,7 @@
 
 <div class="buttons">
   <a href="#partecipanti" class="button is-small is-light">Partecipanti</a>
+  <a href="#fedelta" class="button is-small is-light">Fedeltà e ritorno</a>
   <a href="#concentrazione" class="button is-small is-light">Concentrazione</a>
   <a href="#temi" class="button is-small is-light">Temi</a>
   <a href="#monumenti" class="button is-small is-light">Monumenti e riuso</a>
@@ -71,6 +72,106 @@
 
 <hr />
 
+<section id="fedelta" class="mb-6">
+  <h2 class="title is-4">Fedeltà e ritorno al concorso</h2>
+
+  <% if @wlm_retention && @wlm_retention[:yoy_rows].any? %>
+    <div class="box mb-4">
+      <h3 class="subtitle is-6">Tasso di ritorno nell'edizione successiva (%)</h3>
+      <%= line_chart @wlm_retention[:yoy_series], colors: ["#2563eb", "#dc2626", "#16a34a"], suffix: "%" %>
+    </div>
+
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth">
+        <thead>
+          <tr>
+            <th>Edizione</th>
+            <th>Partecipanti</th>
+            <th>Tornati nell'edizione successiva</th>
+            <th>Tornati in almeno un'edizione successiva</th>
+            <th>Ritorno nuovi iscritti</th>
+            <th>Ritorno già registrati</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @wlm_retention[:yoy_rows].reverse.each do |row| %>
+            <tr>
+              <th><%= row[:year] %> → <%= row[:next_year] %></th>
+              <td><%= fmt_int(row[:participants]) %></td>
+              <td><%= fmt_int(row[:returned_next]) %> (<%= fmt_pct(row[:return_rate_next]) %>)</td>
+              <td><%= fmt_int(row[:returned_any_later]) %> (<%= fmt_pct(row[:return_rate_any_later]) %>)</td>
+              <td><%= fmt_int(row[:new_returned_next]) %>/<%= fmt_int(row[:new_participants]) %> (<%= fmt_pct(row[:new_return_rate_next]) %>)</td>
+              <td><%= fmt_int(row[:veteran_returned_next]) %>/<%= fmt_int(row[:veteran_participants]) %> (<%= fmt_pct(row[:veteran_return_rate_next]) %>)</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <% if @wlm_retention && @wlm_retention[:editions_distribution].any? %>
+    <h3 class="subtitle is-5 mt-5">Distribuzione dei partecipanti per numero di edizioni</h3>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth is-narrow">
+        <thead>
+          <tr>
+            <th>Edizioni partecipate</th>
+            <th>Partecipanti</th>
+            <th>Quota utenti</th>
+            <th>Foto totali</th>
+            <th>Quota foto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @wlm_retention[:editions_distribution].each do |d| %>
+            <tr>
+              <td><%= d[:label] %></td>
+              <td><%= fmt_int(d[:creators]) %></td>
+              <td><%= fmt_pct(d[:creators_pct]) %></td>
+              <td><%= fmt_int(d[:photos]) %></td>
+              <td><%= fmt_pct(d[:photos_pct]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <% if @wlm_retention && @wlm_retention[:by_contest].any? %>
+    <h3 class="subtitle is-5 mt-5">Fedeltà per concorso regionale</h3>
+    <div class="table-container">
+      <table id="retention-regioni-table" class="table is-striped is-fullwidth is-narrow">
+        <thead>
+          <tr>
+            <th>Concorso</th>
+            <th>Edizioni attive</th>
+            <th>Partecipanti unici totali</th>
+            <th>Quota una sola edizione (%)</th>
+            <th>Ritorno nello stesso concorso (%)</th>
+            <th>Ritorno in WLM Italia (%)</th>
+            <th>Ritorno dei nuovi iscritti (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @wlm_retention[:by_contest].each do |row| %>
+            <tr>
+              <td><%= link_to row[:contest_name], contest_path(row[:contest_id]) %></td>
+              <td data-order="<%= row[:editions_count] %>"><%= fmt_int(row[:editions_count]) %></td>
+              <td data-order="<%= row[:unique_creators] %>"><%= fmt_int(row[:unique_creators]) %></td>
+              <td data-order="<%= row[:single_edition_pct] %>"><%= fmt_pct(row[:single_edition_pct]) %></td>
+              <td data-order="<%= row[:same_contest_return_rate] || -1 %>"><%= row[:same_contest_return_rate].nil? ? "-" : fmt_pct(row[:same_contest_return_rate]) %></td>
+              <td data-order="<%= row[:national_return_rate] || -1 %>"><%= row[:national_return_rate].nil? ? "-" : fmt_pct(row[:national_return_rate]) %></td>
+              <td data-order="<%= row[:newcomers_return_rate] || -1 %>"><%= row[:newcomers_return_rate].nil? ? "-" : fmt_pct(row[:newcomers_return_rate]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</section>
+
+<hr />
+
 <section id="concentrazione" class="mb-6">
   <h2 class="title is-4">Concentrazione dei caricamenti</h2>
   <div class="columns">
@@ -123,6 +224,20 @@
       </tbody>
     </table>
   </div>
+
+  <% if @seasonality && @seasonality[:month_phases_series].any? { |s| s[:data].any? } %>
+    <h3 class="subtitle is-5 mt-5">Stagionalità e fasi del mese</h3>
+    <div class="columns">
+      <div class="column">
+        <h4 class="subtitle is-6">Distribuzione per fase del mese (%)</h4>
+        <%= column_chart @seasonality[:month_phases_series], stacked: true, colors: ["#2563eb", "#d97706", "#dc2626"], suffix: "%" %>
+      </div>
+      <div class="column">
+        <h4 class="subtitle is-6">Caricamenti aggregati per giorno della settimana</h4>
+        <%= column_chart @seasonality[:weekday_totals], colors: ["#16a34a"], thousands: "." %>
+      </div>
+    </div>
+  <% end %>
 </section>
 
 <hr />
@@ -222,6 +337,50 @@
     </table>
   </div>
   <p class="is-size-7 has-text-grey">Nota: il flag nuovi monumenti è disponibile a partire dall'edizione 2024.</p>
+
+  <% if @nophoto_history && @nophoto_history[:rows].size > 1 %>
+    <h3 class="subtitle is-5 mt-5">Evoluzione dell'elenco monumenti e quota senza foto</h3>
+    <div class="columns">
+      <div class="column">
+        <h4 class="subtitle is-6">Totale monumenti in elenco</h4>
+        <%= line_chart @nophoto_history[:monuments_series], colors: ["#2563eb"], thousands: "." %>
+      </div>
+      <div class="column">
+        <h4 class="subtitle is-6">Monumenti senza foto (%)</h4>
+        <%= line_chart @nophoto_history[:without_photo_pct_series], colors: ["#dc2626"], suffix: "%" %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @wlmid_quality && @wlmid_quality[:rows].any? %>
+    <h3 class="subtitle is-5 mt-5">Qualità dei codici WLM per edizione</h3>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth is-narrow">
+        <thead>
+          <tr>
+            <th>Anno</th>
+            <th>Foto totali</th>
+            <th>Senza codice WLM</th>
+            <% if @wlmid_quality[:has_monuments_ref] %>
+              <th>Con codice WLM assente dall'elenco attuale</th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @wlmid_quality[:rows].reverse.each do |r| %>
+            <tr>
+              <th><%= r[:year] %></th>
+              <td><%= fmt_int(r[:total]) %></td>
+              <td><%= fmt_int(r[:missing]) %> (<%= fmt_pct(r[:missing_pct]) %>)</td>
+              <% if @wlmid_quality[:has_monuments_ref] %>
+                <td><%= fmt_int(r[:unknown]) %> (<%= fmt_pct(r[:unknown_pct]) %>)</td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 
   <% if @top_monuments.any? %>
     <h3 class="subtitle is-5 mt-5">Monumenti più fotografati (tutte le edizioni)</h3>
@@ -510,6 +669,25 @@
       </div>
     <% end %>
 
+    <% if @territory_type_trends && @territory_type_trends[:small_muni_photos_pct_series].any? %>
+      <div class="columns mb-4">
+        <div class="column">
+          <div class="box">
+            <h3 class="subtitle is-6">Andamento annuale delle foto nei comuni sotto i 5.000 abitanti (%)</h3>
+            <%= line_chart @territory_type_trends[:small_muni_photos_pct_series], colors: ["#2563eb"], suffix: "%" %>
+          </div>
+        </div>
+        <% if @territory_type_trends[:type_share_series].any? %>
+          <div class="column">
+            <div class="box">
+              <h3 class="subtitle is-6">Andamento annuale delle foto per tipologia (%)</h3>
+              <%= line_chart @territory_type_trends[:type_share_series], colors: wlm_chart_colors, suffix: "%" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
     <h3 class="subtitle is-5">Copertura per tipologia di monumento</h3>
     <div class="table-container">
       <table class="table is-striped is-fullwidth">
@@ -773,6 +951,12 @@
     buttons: ['copy', 'csv', 'excel']
   });
   $('#territorio-table').DataTable({
+    pageLength: 25,
+    order: [[2, 'desc']],
+    dom: 'Bfrtip',
+    buttons: ['copy', 'csv', 'excel']
+  });
+  $('#retention-regioni-table').DataTable({
     pageLength: 25,
     order: [[2, 'desc']],
     dom: 'Bfrtip',

@@ -92,6 +92,14 @@ class HistoryController < ApplicationController
 
     # Fase 3: anagrafica monumenti (cerca), EXIF e pageviews (in cache via DashboardInsights)
     load_phase3_data
+
+    # Trend aggregati pluriennali e fedeltà al concorso
+    @historical_trends = DashboardInsights.historical_trends(years: @years)
+    @wlm_retention = @historical_trends[:wlm_retention]
+    @nophoto_history = @historical_trends[:nophoto_history]
+    @territory_type_trends = @historical_trends[:territory_and_type_trends]
+    @wlmid_quality = @historical_trends[:wlmid_quality]
+    @seasonality = @historical_trends[:seasonality]
   end
 
   private

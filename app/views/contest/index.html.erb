@@ -147,6 +147,189 @@
       </div>
     <% end %>
 
+    <% if @edition_insights %>
+      <div class="columns is-multiline mt-2">
+        <% if @edition_insights[:participant_buckets].any? %>
+          <div class="column is-6-desktop is-12-tablet">
+            <div class="box kpi-box">
+              <h3 class="subtitle is-5 mb-3">Fasce di foto per partecipante (<%= @year.year %>)</h3>
+              <div class="table-container mb-0">
+                <table class="table is-striped is-fullwidth is-narrow">
+                  <thead>
+                    <tr>
+                      <th>Fascia</th>
+                      <th>Partecipanti</th>
+                      <th>Quota utenti</th>
+                      <th>Foto</th>
+                      <th>Quota foto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% @edition_insights[:participant_buckets].each do |b| %>
+                      <tr>
+                        <td><%= b[:label] %></td>
+                        <td><%= fmt_int(b[:creators]) %></td>
+                        <td><%= fmt_pct(b[:creators_pct]) %></td>
+                        <td><%= fmt_int(b[:photos]) %></td>
+                        <td><%= fmt_pct(b[:photos_pct]) %></td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <% if @edition_insights[:multiregional].any? %>
+          <div class="column is-6-desktop is-12-tablet">
+            <div class="box kpi-box">
+              <h3 class="subtitle is-5 mb-3">Mobilità tra regioni (<%= @year.year %>)</h3>
+              <div class="table-container mb-0">
+                <table class="table is-striped is-fullwidth is-narrow">
+                  <thead>
+                    <tr>
+                      <th>Regioni fotografate</th>
+                      <th>Partecipanti</th>
+                      <th>Quota utenti</th>
+                      <th>Foto</th>
+                      <th>Quota foto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% @edition_insights[:multiregional].each do |m| %>
+                      <tr>
+                        <td><%= m[:label] %></td>
+                        <td><%= fmt_int(m[:creators]) %></td>
+                        <td><%= fmt_pct(m[:creators_pct]) %></td>
+                        <td><%= fmt_int(m[:photos]) %></td>
+                        <td><%= fmt_pct(m[:photos_pct]) %></td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <% if @edition_insights[:activity_segments] %>
+          <% act = @edition_insights[:activity_segments] %>
+          <div class="column is-6-desktop is-12-tablet">
+            <div class="box kpi-box">
+              <h3 class="subtitle is-5 mb-3">A chi serve l'incentivo (<%= @year.year %>)</h3>
+              <div class="table-container mb-2">
+                <table class="table is-striped is-fullwidth is-narrow">
+                  <thead>
+                    <tr>
+                      <th>Profilo</th>
+                      <th>Partecipanti</th>
+                      <th>Quota utenti</th>
+                      <th>Foto</th>
+                      <th>Quota foto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% act[:segments].each do |s| %>
+                      <tr>
+                        <td><%= s[:label] %></td>
+                        <td><%= fmt_int(s[:creators]) %></td>
+                        <td><%= fmt_pct(s[:creators_pct]) %></td>
+                        <td><%= fmt_int(s[:photos]) %></td>
+                        <td><%= fmt_pct(s[:photos_pct]) %></td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+              <% if act[:top50_median_sep_share] %>
+                <p class="is-size-7 has-text-grey">
+                  Primi <%= fmt_int(act[:top50_sample_size]) %> uploader: quota mediana di caricamenti a settembre <%= fmt_pct(act[:top50_median_sep_share]) %>; <%= fmt_int(act[:top50_year_round_count]) %> caricano almeno 100 file fuori settembre.
+                </p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% newcomers = @edition_insights[:newcomers_profile] %>
+        <% if newcomers && newcomers[:newcomers_count] > 0 %>
+          <div class="column is-6-desktop is-12-tablet">
+            <div class="box kpi-box">
+              <h3 class="subtitle is-5 mb-3">Profilo dei nuovi iscritti (<%= @year.year %>)</h3>
+              <p class="mb-2">
+                <b>Nuovi iscritti</b>: <%= fmt_int(newcomers[:newcomers_count]) %> (<%= fmt_int(newcomers[:photos_total]) %> foto)
+              </p>
+              <% if newcomers[:checked_photos] > 0 %>
+                <p class="is-size-7 has-text-grey mb-2">
+                  Smartphone: <%= fmt_pct(newcomers[:smartphone_pct]) %> delle foto (<%= fmt_pct(newcomers[:smartphone_users_pct]) %> degli utenti) | Fotocamera: <%= fmt_pct(newcomers[:camera_pct]) %> | Senza EXIF: <%= fmt_pct(newcomers[:no_exif_pct]) %>
+                </p>
+                <% if newcomers[:by_source].any? %>
+                  <div class="table-container mb-0">
+                    <table class="table is-striped is-fullwidth is-narrow">
+                      <thead>
+                        <tr>
+                          <th>Canale di caricamento</th>
+                          <th>Foto</th>
+                          <th>Senza EXIF</th>
+                          <th>Quota senza EXIF</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% newcomers[:by_source].each do |src| %>
+                          <tr>
+                            <td><%= src[:source] %></td>
+                            <td><%= fmt_int(src[:total]) %></td>
+                            <td><%= fmt_int(src[:no_exif]) %></td>
+                            <td><%= fmt_pct(src[:no_exif_pct]) %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @edition_insights[:top_uploaders].any? %>
+        <div class="box mt-4">
+          <h3 class="subtitle is-5 mb-3">Primi 20 uploader nazionali (<%= @year.year %>)</h3>
+          <div class="table-container">
+            <table class="table is-striped is-fullwidth is-narrow">
+              <thead>
+                <tr>
+                  <th>Pos.</th>
+                  <th>Utente</th>
+                  <th>Iscritto per WLM</th>
+                  <th>Foto nell'edizione</th>
+                  <th>Regioni</th>
+                  <th>Edizioni totali</th>
+                  <th>Anni nei primi 10</th>
+                  <th>Caricamenti fuori settembre</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @edition_insights[:top_uploaders].each_with_index do |u, idx| %>
+                  <tr>
+                    <th><%= idx + 1 %></th>
+                    <td><%= link_to u[:username], creator_path(u[:creator_id], year: @year.year) %></td>
+                    <td><%= u[:is_new] ? "Sì" : "No" %></td>
+                    <td><%= fmt_int(u[:photos_count]) %></td>
+                    <td><%= fmt_int(u[:contests_count]) %></td>
+                    <td><%= fmt_int(u[:editions_count]) %></td>
+                    <td><%= fmt_int(u[:top10_years_count]) %></td>
+                    <td><%= u[:non_wlm_uploads_year].nil? ? "-" : fmt_int(u[:non_wlm_uploads_year]) %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
     <% if @reuse_bucket_chart.any? %>
       <div class="box mt-4 chart-block">
         <h3 class="subtitle is-5 mb-3">Riuso su wiki per fascia di foto per monumento (<%= @year.year %>)</h3>
@@ -215,6 +398,32 @@
                   <td><%= fmt_int(m[:photos]) %></td>
                   <td><%= fmt_pct(m[:share]) %></td>
                   <td><%= fmt_int(m[:users]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @edition_insights && @edition_insights[:top_viewed_pages].any? %>
+      <div class="box mt-4">
+        <h3 class="subtitle is-5 mb-3">Prime 10 voci Wikipedia per visite (<%= @year.year %>)</h3>
+        <div class="table-container">
+          <table class="table is-striped is-fullwidth is-narrow">
+            <thead>
+              <tr>
+                <th>Voce</th>
+                <th>Progetto</th>
+                <th>Visite registrate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @edition_insights[:top_viewed_pages].each do |p| %>
+                <tr>
+                  <td><%= p[:url] ? link_to(p[:page_title], p[:url], target: "_blank", rel: "noopener") : p[:page_title] %></td>
+                  <td><%= p[:wiki] %></td>
+                  <td><%= fmt_int(p[:views]) %></td>
                 </tr>
               <% end %>
             </tbody>

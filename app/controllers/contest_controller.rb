@@ -36,6 +36,7 @@ class ContestController < ApplicationController
       @daily_photos = year_photos.group_by_day(:photodate).count
       @top_monuments = DashboardInsights.top_monuments(year: @year, limit: 15)
       @top_camera_models = DashboardInsights.top_camera_models(year: @year, limit: 10)
+      @edition_insights = DashboardInsights.edition_insights(year: @year)
       @reuse_bucket_chart = if @year_analytic&.reuse_by_monument_bucket&.dig("buckets").present?
                               buckets = @year_analytic.reuse_by_monument_bucket["buckets"]
                               AnalyticsCalculator::BUCKET_LABELS.each_with_object({}) do |(key, label), h|
@@ -56,6 +57,7 @@ class ContestController < ApplicationController
       @daily_photos = {}
       @top_monuments = []
       @top_camera_models = []
+      @edition_insights = nil
       @reuse_bucket_chart = {}
     end
 
@@ -104,6 +106,9 @@ class ContestController < ApplicationController
     @regional_exif = DashboardInsights.exif_summary(years: history_years, contest_id: @contest.id)
     @regional_pageviews = DashboardInsights.pageviews_summary(years: history_years, contest_id: @contest.id)
     @regional_top_monuments = @selected_year ? DashboardInsights.top_monuments(year: @selected_year, contest_id: @contest.id, limit: 15) : []
+    @regional_trends = DashboardInsights.historical_trends(years: history_years, contest_id: @contest.id, regione: @contest.region)
+    @regional_edition_insights = @selected_year ? DashboardInsights.edition_insights(year: @selected_year, contest_id: @contest.id) : nil
+    @regional_year_camera_models = @selected_year ? DashboardInsights.top_camera_models(year: @selected_year, contest_id: @contest.id, limit: 10) : []
 
     # Dettaglio per l'anno selezionato (query aggregata senza N+1)
     if @selected_year

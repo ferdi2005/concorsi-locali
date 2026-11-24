@@ -174,11 +174,50 @@ class AnalyticsAndDashboardTest < ActionDispatch::IntegrationTest
     original_cache = Rails.cache
     Rails.cache = ActiveSupport::Cache::MemoryStore.new
     begin
+      trends = DashboardInsights.historical_trends(years: [@year2024, @year2025])
+      yoy = trends.dig(:wlm_retention, :yoy_rows)
+      assert_equal 1, yoy.size
+      row_2024 = yoy.first
+      assert_equal "2024", row_2024[:year]
+      assert_equal 2, row_2024[:participants]
+      assert_equal 1, row_2024[:returned_next]
+      assert_equal 50.0, row_2024[:return_rate_next]
+      assert_equal 100.0, row_2024[:veteran_return_rate_next]
+      assert_equal 0.0, row_2024[:new_return_rate_next]
+
+      ed = DashboardInsights.edition_insights(year: @year2024)
+      assert_not_nil ed
+      assert_equal 2, ed[:top_uploaders].size
+      assert_equal "VeteranUser", ed[:top_uploaders].first[:username]
+      assert_equal 2, ed[:multiregional].first[:creators]
+      assert_equal 4, ed[:multiregional].first[:photos]
+
+      get root_path
+      assert_response :success
+      assert_includes response.body, "Fasce di foto per partecipante"
+
+      get root_path(year: "2024")
+      assert_response :success
+      assert_includes response.body, "Primi 20 uploader nazionali (2024)"
+      assert_includes response.body, "Prime 10 voci Wikipedia per visite (2024)"
+
       get storico_path
       assert_response :success
+      assert_includes response.body, "Fedeltà e ritorno al concorso"
+      assert_includes response.body, "Fedeltà per concorso regionale"
+      assert_includes response.body, "Stagionalità e fasi del mese"
+      assert_includes response.body, "Qualità dei codici WLM per edizione"
       assert_includes response.body, "Piccoli comuni, tipologie e sentinelle"
       assert_includes response.body, "Metadati EXIF"
       assert_includes response.body, "Impatto su Wikipedia"
+
+      get contest_path(@contest, year: "2024")
+      assert_response :success
+      assert_includes response.body, "Fedeltà e ritorno nel concorso"
+      assert_includes response.body, "Fasce di foto per partecipante (2024)"
+      assert_includes response.body, "Comuni piccoli, tipologie e sentinelle"
+      assert_includes response.body, "Metadati EXIF e dispositivi nel concorso"
+      assert_includes response.body, "Monumenti più fotografati"
     ensure
       Rails.cache = original_cache
     end
@@ -187,11 +226,5 @@ class AnalyticsAndDashboardTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Ponte moderno di prova"
     assert_includes response.body, "1972"
-
-    get contest_path(@contest, year: "2024")
-    assert_response :success
-    assert_includes response.body, "Comuni piccoli, tipologie e sentinelle"
-    assert_includes response.body, "Metadati EXIF e dispositivi nel concorso"
-    assert_includes response.body, "Monumenti più fotografati"
   end
 end
