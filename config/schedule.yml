@@ -14,6 +14,9 @@ update_photos_count_job:
 update_analytics_job:
   cron: "<%= "15 2 * #{ENV["MONTHS"]} *" %>"
   class: "UpdateAnalyticsWorker"
+update_special_photos_job:
+  cron: "<%= "45 1 * #{ENV["MONTHS"]} *" %>"
+  class: "Toolforge::UpdateSpecialPhotosWorker"
 update_quality_status_monthly_job:
   cron: "0 4 3 * *"
   class: "Toolforge::UpdateQualityStatusWorker"

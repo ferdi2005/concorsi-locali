@@ -159,12 +159,29 @@ class AnalyticsAndDashboardTest < ActionDispatch::IntegrationTest
     photo.update!(taken_at: Time.utc(2022, 6, 1), device_category: "smartphone", has_exif: true, exif_checked_at: Time.current)
     PhotoUsage.create!(photo: photo, wiki: "itwiki", page_title: "Bari", active: true)
     WikiPageMonthlyView.create!(wiki: "itwiki", page_title: "Bari", year_month: "202509", views: 12345)
+    CreatorYearlyActivity.create!(
+      creator: @veteran,
+      year: @year2024,
+      wlm_uploads_count: 3,
+      non_wlm_uploads_year: 150,
+      uploader_segment: "year_round_100_plus",
+      post_contest_edits_3m: 20,
+      post_contest_edits_12m: 80,
+      active_months_after_12m: 6,
+      computed_at: Time.current
+    )
 
-    get storico_path
-    assert_response :success
-    assert_includes response.body, "Piccoli comuni, tipologie e sentinelle"
-    assert_includes response.body, "Metadati EXIF"
-    assert_includes response.body, "Impatto su Wikipedia"
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    begin
+      get storico_path
+      assert_response :success
+      assert_includes response.body, "Piccoli comuni, tipologie e sentinelle"
+      assert_includes response.body, "Metadati EXIF"
+      assert_includes response.body, "Impatto su Wikipedia"
+    ensure
+      Rails.cache = original_cache
+    end
 
     get recent_monuments_maintenance_path, params: { threshold: 1950, regione: "Puglia" }
     assert_response :success

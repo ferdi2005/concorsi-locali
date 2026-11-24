@@ -16,11 +16,11 @@
 <% end %>
 
 <% if @year %>
-  <section class="mb-6">
-    <h2 class="title is-4">Dati nazionali <%= @year.year %></h2>
+  <section class="mb-5">
+    <h2 class="title is-4 mb-3">Dati nazionali <%= @year.year %></h2>
 
-    <div class="columns is-multiline">
-      <div class="column is-3">
+    <div class="columns is-multiline is-variable is-2 kpi-grid">
+      <div class="column is-3-desktop is-6-tablet">
         <div class="box kpi-box">
           <p class="heading">Fotografie caricate</p>
           <p class="title is-4 mb-1"><%= fmt_int(@national_photos_count) %></p>
@@ -31,7 +31,7 @@
         </div>
       </div>
 
-      <div class="column is-3">
+      <div class="column is-3-desktop is-6-tablet">
         <div class="box kpi-box">
           <p class="heading">Partecipanti</p>
           <p class="title is-4 mb-1"><%= fmt_int(@national_creators_count) %></p>
@@ -44,7 +44,7 @@
         </div>
       </div>
 
-      <div class="column is-3">
+      <div class="column is-3-desktop is-6-tablet">
         <div class="box kpi-box">
           <p class="heading">Monumenti ritratti</p>
           <p class="title is-4 mb-1"><%= fmt_int(@national_depicted_monuments) %></p>
@@ -61,26 +61,20 @@
         </div>
       </div>
 
-      <div class="column is-3">
+      <div class="column is-3-desktop is-6-tablet">
         <div class="box kpi-box">
-          <% if @last_nophoto %>
-            <% total_m = @last_nophoto.monuments.to_i %>
-            <% nophoto_m = @last_nophoto.count.to_i %>
-            <p class="heading">Elenco nazionale monumenti</p>
-            <p class="title is-4 mb-1"><%= fmt_int(total_m - nophoto_m) %> con foto</p>
-            <p class="is-size-7 has-text-grey">
-              Senza foto: <%= fmt_int(nophoto_m) %> su <%= fmt_int(total_m) %> (<%= fmt_pct(total_m > 0 ? nophoto_m.to_f / total_m * 100.0 : 0.0) %>)
-            </p>
-          <% elsif @year_analytic %>
-            <p class="heading">Foto per monumento</p>
-            <p class="title is-4 mb-1"><%= fmt_dec(@year_analytic.avg_photos_per_monument) %> media</p>
-            <p class="is-size-7 has-text-grey">Mediana: <%= fmt_dec(@year_analytic.median_photos_per_monument) %> | 50% foto su <%= fmt_int(@year_analytic.monuments_for_50_percent_photos) %> monumenti</p>
-          <% end %>
+          <p class="heading">Qualità e riconoscimento</p>
+          <p class="title is-4 mb-1"><%= fmt_int(@national_qi_count) %> QI / <%= fmt_int(@national_fp_count) %> FP</p>
+          <p class="is-size-7 has-text-grey">
+            <% if @year_analytic %>
+              Monumenti con 1 solo autore: <%= fmt_pct(@year_analytic.single_author_monuments_share) %>
+            <% end %>
+          </p>
         </div>
       </div>
 
       <% if @year_analytic %>
-        <div class="column is-3">
+        <div class="column is-3-desktop is-6-tablet">
           <div class="box kpi-box">
             <p class="heading">Quota primi 10 uploader</p>
             <p class="title is-5 mb-1"><%= fmt_pct(@year_analytic.top10_photos_share) %></p>
@@ -91,7 +85,7 @@
           </div>
         </div>
 
-        <div class="column is-3">
+        <div class="column is-3-desktop is-6-tablet">
           <div class="box kpi-box">
             <p class="heading">Concentrazione utenti</p>
             <p class="title is-5 mb-1"><%= fmt_int(@year_analytic.creators_for_50_percent) %> per il 50% / <%= fmt_int(@year_analytic.creators_for_90_percent) %> per il 90%</p>
@@ -99,7 +93,7 @@
           </div>
         </div>
 
-        <div class="column is-3">
+        <div class="column is-3-desktop is-6-tablet">
           <div class="box kpi-box">
             <p class="heading">Ultimi 3 giorni</p>
             <p class="title is-5 mb-1"><%= fmt_pct(@year_analytic.last_3_days_photos_share) %></p>
@@ -107,27 +101,48 @@
           </div>
         </div>
 
-        <div class="column is-3">
+        <div class="column is-3-desktop is-6-tablet">
           <div class="box kpi-box">
-            <% if @year.special? %>
+            <p class="heading">Foto per monumento</p>
+            <p class="title is-5 mb-1"><%= fmt_dec(@year_analytic.avg_photos_per_monument) %> media / <%= fmt_dec(@year_analytic.median_photos_per_monument) %> mediana</p>
+            <p class="is-size-7 has-text-grey">50% foto su <%= fmt_int(@year_analytic.monuments_for_50_percent_photos) %> monumenti</p>
+          </div>
+        </div>
+
+        <% if @year.special? %>
+          <div class="column is-6-desktop is-12-tablet">
+            <div class="box kpi-box">
               <p class="heading">Tema: <%= @year.special_category_label.presence || @year.special_category %></p>
-              <p class="title is-5 mb-1"><%= fmt_int(@year.special_category_total || 0) %> foto</p>
+              <p class="title is-5 mb-1"><%= fmt_int(@year.special_category_total || 0) %> foto (<%= fmt_int(@year.special_depicted_monuments || 0) %> monumenti)</p>
               <p class="is-size-7 has-text-grey">
-                Utenti: <%= fmt_pct(@year_analytic.special_creators_share) %> | Senza primi 10: <%= fmt_pct(@year_analytic.special_share_without_top10) %>
+                Utenti sul tema: <%= fmt_pct(@year_analytic.special_creators_share) %> | Senza primi 10: <%= fmt_pct(@year_analytic.special_share_without_top10) %> (<%= fmt_dec(@year_analytic.special_photos_per_creator_without_top10) %> foto/utente)
               </p>
-            <% else %>
-              <p class="heading">Qualità e riconoscimento</p>
-              <p class="title is-5 mb-1"><%= fmt_int(@national_qi_count) %> QI / <%= fmt_int(@national_fp_count) %> FP</p>
-              <p class="is-size-7 has-text-grey">Monumenti con 1 solo autore: <%= fmt_pct(@year_analytic.single_author_monuments_share) %></p>
-            <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+
+      <% if @last_nophoto %>
+        <% total_m = @last_nophoto.monuments.to_i %>
+        <% nophoto_m = @last_nophoto.count.to_i %>
+        <div class="column is-6-desktop is-12-tablet">
+          <div class="box kpi-box">
+            <p class="heading">Elenco nazionale monumenti</p>
+            <p class="title is-5 mb-1"><%= fmt_int(total_m - nophoto_m) %> con foto / <%= fmt_int(nophoto_m) %> senza foto (<%= fmt_pct(total_m > 0 ? nophoto_m.to_f / total_m * 100.0 : 0.0) %>)</p>
+            <p class="is-size-7 has-text-grey">
+              Totale elenco: <%= fmt_int(total_m) %>
+              <% if @year_analytic&.bluification_count %>
+                | Ritratti per la prima volta: <%= fmt_int(@year_analytic.bluification_count) %> (<%= fmt_pct(@year_analytic.bluification_rate) %>)
+              <% end %>
+            </p>
           </div>
         </div>
       <% end %>
     </div>
 
     <% if @daily_photos.any? %>
-      <div class="box mt-4">
-        <h3 class="subtitle is-5">Andamento giornaliero nazionale (<%= @year.year %>)</h3>
+      <div class="box mt-4 chart-block">
+        <h3 class="subtitle is-5 mb-3">Andamento giornaliero nazionale (<%= @year.year %>)</h3>
         <%= line_chart @daily_photos, xmin: "#{@year.year}-09-01", xmax: "#{@year.year}-09-30", colors: wlm_chart_colors, thousands: "." %>
       </div>
     <% end %>
@@ -136,18 +151,16 @@
       <% a = @last_nophoto.monuments.to_i %>
       <% b = @last_nophoto.count.to_i %>
       <div class="box mt-4">
-        <h3 class="subtitle is-5">Copertura monumenti senza foto (<%= @year.year %>)</h3>
-        <div class="columns">
-          <div class="column">
-            <h4 class="title is-6">Monumenti senza foto (valore assoluto)</h4>
-            <%= line_chart @nophotograph, xmin: "#{@year.year}-08-31", xmax: "#{@year.year}-09-30", colors: ["#dc2626"], thousands: "." %>
-          </div>
-          <div class="column">
-            <h4 class="title is-6">Monumenti senza foto (%)</h4>
-            <%= line_chart @nophotographpercent, xmin: "#{@year.year}-08-31", xmax: "#{@year.year}-09-30", colors: ["#d97706"], suffix: "%" %>
-          </div>
+        <h3 class="subtitle is-5 mb-3">Copertura monumenti senza foto (<%= @year.year %>)</h3>
+        <div class="chart-block mb-5">
+          <h4 class="title is-6 mb-2">Monumenti senza foto (valore assoluto)</h4>
+          <%= line_chart @nophotograph, xmin: "#{@year.year}-08-31", xmax: "#{@year.year}-09-30", colors: ["#dc2626"], thousands: "." %>
         </div>
-        <div class="columns is-multiline is-size-6 mt-2">
+        <div class="chart-block mb-4">
+          <h4 class="title is-6 mb-2">Monumenti senza foto (%)</h4>
+          <%= line_chart @nophotographpercent, xmin: "#{@year.year}-08-31", xmax: "#{@year.year}-09-30", colors: ["#d97706"], suffix: "%" %>
+        </div>
+        <div class="columns is-multiline is-variable is-2 is-size-6 mt-2">
           <div class="column is-4"><b>Monumenti totali partecipanti</b>: <%= fmt_int(a) %></div>
           <div class="column is-4"><b>Monumenti senza foto</b>: <%= fmt_int(b) %> (<%= fmt_pct(a > 0 ? b.to_f / a * 100.0 : 0.0) %>)</div>
           <div class="column is-4"><b>Monumenti con foto</b>: <%= fmt_int(a - b) %></div>
@@ -156,7 +169,7 @@
           <div class="column is-4"><b>Con immagine su Wikidata</b>: <%= fmt_int(@last_nophoto.with_image) %></div>
           <div class="column is-8"><b>Con immagine su Wikidata o categoria Commons ma senza foto WLM</b>: <%= fmt_int(@last_nophoto.nowlm) %></div>
           <% if @year_analytic&.bluification_count %>
-            <div class="column is-4"><b>Bluificazione</b>: <%= fmt_int(@year_analytic.bluification_count) %> (<%= fmt_pct(@year_analytic.bluification_rate) %>)</div>
+            <div class="column is-4"><b>Monumenti ritratti per la prima volta</b>: <%= fmt_int(@year_analytic.bluification_count) %> (<%= fmt_pct(@year_analytic.bluification_rate) %>)</div>
           <% end %>
         </div>
       </div>
@@ -264,8 +277,6 @@
 </div>
 
 <div class="buttons mt-4">
-  <%= link_to 'Storico e analisi pluriennali', storico_path, class: 'button is-info' %>
-  <%= link_to 'Segnalazione monumenti recenti', recent_monuments_maintenance_path, class: 'button is-warning is-light' %>
   <%= link_to 'Trova i monumenti WLM vicino a te', 'https://app.wikilovesmonuments.it', class: 'button is-danger' %>
   <%= link_to "Aiuta a creare le categorie per i monumenti con un'immagine ma sprovvisti di categoria", "https://it.wikipedia.org/wiki/Progetto:Wiki_Loves_Monuments/Manutenzione/Monumenti_con_immagine_senza_categoria", class: 'button is-warning' %>
 </div>

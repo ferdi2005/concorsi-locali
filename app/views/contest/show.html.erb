@@ -1,11 +1,9 @@
 <%= provide(:title, @contest.name) %>
-<div class="buttons">
-  <%= link_to "Home nazionale", root_path, class: "button is-small is-info", data: { turbolinks: false } %>
-  <%= link_to "Storico pluriennale", storico_path, class: "button is-small is-light" %>
-  <% if @contest.region.present? %>
+<% if @contest.region.present? %>
+  <div class="buttons">
     <%= link_to "Monumenti recenti (#{@contest.region})", recent_monuments_maintenance_path(regione: @contest.region), class: "button is-small is-warning is-light" %>
-  <% end %>
-</div>
+  </div>
+<% end %>
 
 <% if @contest.logo.attached? %>
 <div class="columns is-vcentered">
@@ -52,12 +50,25 @@
         </tr>
       </thead>
       <tbody>
-        <% @contest_years_history.reverse.each do |cy| %>
+        <% @contest_years_history.reverse.each_with_index do |cy, idx| %>
+          <% prev_cy = @contest_years_history.reverse[idx + 1] %>
           <% cya = cy.contest_year_analytic %>
           <tr class="<%= 'is-selected' if @selected_year && cy.year_id == @selected_year.id %>">
             <th><%= link_to cy.year.year, contest_path(@contest, year: cy.year.year) %></th>
-            <td><%= fmt_int(cy.count) %></td>
-            <td><%= fmt_int(cy.creators) %></td>
+            <td>
+              <%= fmt_int(cy.count) %>
+              <% if prev_cy && prev_cy.count.to_i > 0 %>
+                <% diff = ((cy.count.to_f - prev_cy.count.to_f) / prev_cy.count.to_f * 100.0).round(1) %>
+                <span class="is-size-7 <%= diff >= 0 ? 'has-text-success' : 'has-text-danger' %>">(<%= diff > 0 ? "+#{fmt_dec(diff)}" : fmt_dec(diff) %>%)</span>
+              <% end %>
+            </td>
+            <td>
+              <%= fmt_int(cy.creators) %>
+              <% if prev_cy && prev_cy.creators.to_i > 0 %>
+                <% diff_c = ((cy.creators.to_f - prev_cy.creators.to_f) / prev_cy.creators.to_f * 100.0).round(1) %>
+                <span class="is-size-7 <%= diff_c >= 0 ? 'has-text-success' : 'has-text-danger' %>">(<%= diff_c > 0 ? "+#{fmt_dec(diff_c)}" : fmt_dec(diff_c) %>%)</span>
+              <% end %>
+            </td>
             <td><%= fmt_int(cya ? cya.new_creators_count : cy.creatorsapposta) %></td>
             <td><%= cya ? fmt_pct(cya.top1_photos_share) : "-" %></td>
             <td>
@@ -89,34 +100,78 @@
 <% end %>
 
 <% if @selected_year %>
-  <h2 class="title is-4">Dettaglio edizione <%= @selected_year.year %></h2>
+  <h2 class="title is-4 mb-3">Dettaglio edizione <%= @selected_year.year %></h2>
 
-  <% if @contestyear_analytic %>
-    <div class="columns is-multiline mb-4">
-      <div class="column is-3">
-        <div class="box kpi-box">
-          <p class="heading">Nuovi e già registrati</p>
-          <p class="title is-5"><%= fmt_int(@contestyear_analytic.new_creators_count) %> / <%= fmt_int(@contestyear_analytic.returning_creators_count) %></p>
+  <% if @contestyear || @contestyear_analytic %>
+    <div class="columns is-multiline is-variable is-2 kpi-grid mb-4">
+      <% if @contestyear %>
+        <div class="column is-4-desktop is-6-tablet">
+          <div class="box kpi-box">
+            <p class="heading">Fotografie caricate</p>
+            <p class="title is-4 mb-1"><%= fmt_int(@contestyear.count) %></p>
+            <div>
+              <p class="is-size-7 has-text-grey">Usate su wiki (ns0): <%= fmt_int(@contestyear.usedonwiki) %> (<%= fmt_pct(@contestyear.usedonwiki_percentage) %>)</p>
+              <%= delta_badge(@contestyear.count, @prev_contestyear&.count, previous_label: @prev_contestyear&.year&.year) if @prev_contestyear %>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="column is-3">
-        <div class="box kpi-box">
-          <p class="heading">Peso primo uploader</p>
-          <p class="title is-5"><%= fmt_pct(@contestyear_analytic.top1_photos_share) %> (<%= fmt_int(@contestyear_analytic.top1_photos_count) %> foto)</p>
+
+        <div class="column is-4-desktop is-6-tablet">
+          <div class="box kpi-box">
+            <p class="heading">Partecipanti</p>
+            <p class="title is-4 mb-1"><%= fmt_int(@contestyear.creators) %></p>
+            <div>
+              <% if @contestyear_analytic %>
+                <p class="is-size-7 has-text-grey"><%= fmt_int(@contestyear_analytic.new_creators_count) %> nuovi / <%= fmt_int(@contestyear_analytic.returning_creators_count) %> già registrati</p>
+              <% end %>
+              <%= delta_badge(@contestyear.creators, @prev_contestyear&.creators, previous_label: @prev_contestyear&.year&.year) if @prev_contestyear %>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="column is-3">
-        <div class="box kpi-box">
-          <p class="heading">Foto senza primi 10</p>
-          <p class="title is-5"><%= fmt_int(@contestyear_analytic.photos_without_top10) %> (primi 10: <%= fmt_pct(@contestyear_analytic.top10_photos_share) %>)</p>
+
+        <div class="column is-4-desktop is-6-tablet">
+          <div class="box kpi-box">
+            <p class="heading">Monumenti ritratti</p>
+            <p class="title is-4 mb-1"><%= fmt_int(@contestyear.depicted_monuments) %></p>
+            <div>
+              <p class="is-size-7 has-text-grey">Nuovi monumenti: <%= fmt_int(@contestyear.new_monuments) %></p>
+              <%= delta_badge(@contestyear.depicted_monuments, @prev_contestyear&.depicted_monuments, previous_label: @prev_contestyear&.year&.year) if @prev_contestyear %>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="column is-3">
-        <div class="box kpi-box">
-          <p class="heading">Ultimi 3 giorni</p>
-          <p class="title is-5"><%= fmt_pct(@contestyear_analytic.last_3_days_photos_share) %></p>
+      <% end %>
+
+      <% if @contestyear_analytic %>
+        <div class="column is-4-desktop is-6-tablet">
+          <div class="box kpi-box">
+            <p class="heading">Peso primo uploader</p>
+            <p class="title is-5 mb-1"><%= fmt_pct(@contestyear_analytic.top1_photos_share) %> (<%= fmt_int(@contestyear_analytic.top1_photos_count) %> foto)</p>
+            <div>
+              <%= delta_badge(@contestyear_analytic.top1_photos_share, @prev_contestyear_analytic&.top1_photos_share, previous_label: @prev_contestyear&.year&.year, invert: true) if @prev_contestyear_analytic %>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div class="column is-4-desktop is-6-tablet">
+          <div class="box kpi-box">
+            <p class="heading">Foto senza primi 10</p>
+            <p class="title is-5 mb-1"><%= fmt_int(@contestyear_analytic.photos_without_top10) %> (primi 10: <%= fmt_pct(@contestyear_analytic.top10_photos_share) %>)</p>
+            <div>
+              <%= delta_badge(@contestyear_analytic.photos_without_top10, @prev_contestyear_analytic&.photos_without_top10, previous_label: @prev_contestyear&.year&.year) if @prev_contestyear_analytic %>
+            </div>
+          </div>
+        </div>
+
+        <div class="column is-4-desktop is-6-tablet">
+          <div class="box kpi-box">
+            <p class="heading">Ultimi 3 giorni</p>
+            <p class="title is-5 mb-1"><%= fmt_pct(@contestyear_analytic.last_3_days_photos_share) %></p>
+            <div>
+              <%= delta_badge(@contestyear_analytic.last_3_days_photos_share, @prev_contestyear_analytic&.last_3_days_photos_share, previous_label: @prev_contestyear&.year&.year, invert: true) if @prev_contestyear_analytic %>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
   <% end %>
 
@@ -198,16 +253,14 @@
 
   <% if @last_nophoto && @contest.region.present? %>
     <div class="box">
-      <h3 class="subtitle is-5">Monumenti senza foto (<%= @selected_year.year %>)</h3>
-      <div class="columns">
-        <div class="column">
-          <h4 class="title is-6">Valore assoluto</h4>
-          <%= line_chart @nophotograph, xmin: "#{@selected_year.year}-08-31", xmax: "#{@selected_year.year}-09-30", colors: ["#dc2626"], thousands: "." %>
-        </div>
-        <div class="column">
-          <h4 class="title is-6">Percentuale</h4>
-          <%= line_chart @nophotographpercent, xmin: "#{@selected_year.year}-08-31", xmax: "#{@selected_year.year}-09-30", colors: ["#d97706"], suffix: "%" %>
-        </div>
+      <h3 class="subtitle is-5 mb-3">Monumenti senza foto (<%= @selected_year.year %>)</h3>
+      <div class="chart-block mb-5">
+        <h4 class="title is-6 mb-2">Valore assoluto</h4>
+        <%= line_chart @nophotograph, xmin: "#{@selected_year.year}-08-31", xmax: "#{@selected_year.year}-09-30", colors: ["#dc2626"], thousands: "." %>
+      </div>
+      <div class="chart-block mb-4">
+        <h4 class="title is-6 mb-2">Percentuale</h4>
+        <%= line_chart @nophotographpercent, xmin: "#{@selected_year.year}-08-31", xmax: "#{@selected_year.year}-09-30", colors: ["#d97706"], suffix: "%" %>
       </div>
       <% total_m = @last_nophoto.monuments.to_i %>
       <% nophoto_m = @last_nophoto.count.to_i %>

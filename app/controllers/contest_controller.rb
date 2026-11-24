@@ -75,6 +75,10 @@ class ContestController < ApplicationController
 
     @contestyear = @selected_year ? ContestYear.find_by(contest: @contest, year: @selected_year) : nil
     @contestyear_analytic = @contestyear&.contest_year_analytic
+    @prev_contestyear = if @selected_year
+                          @contest_years_history.reverse.find { |cy| cy.year.year.to_i < @selected_year.year.to_i && cy.count.to_i > 0 }
+                        end
+    @prev_contestyear_analytic = @prev_contestyear&.contest_year_analytic
 
     # Serie pluriennali per la vista globale del concorso
     @history_photos_series = @contest_years_history.each_with_object({}) { |cy, h| h[cy.year.year] = cy.count.to_i }

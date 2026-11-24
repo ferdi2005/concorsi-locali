@@ -39,6 +39,21 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding: 0.75rem 0.9rem;
+}
+
+.kpi-box .heading {
+  margin-bottom: 0.25rem;
+}
+
+.kpi-grid .column {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+.chart-block {
+  width: 100%;
+  overflow: hidden;
 }
 
 .table-container {

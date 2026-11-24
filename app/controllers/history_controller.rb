@@ -152,7 +152,8 @@ class HistoryController < ApplicationController
           :uploader_segment,
           Arel.sql("COUNT(*)"),
           Arel.sql("SUM(wlm_uploads_count)")
-        ).each_with_object(Hash.new { |h, k| h[k] = {} }) do |(yid, seg, cnt, photos_sum), acc|
+        ).each_with_object({}) do |(yid, seg, cnt, photos_sum), acc|
+          acc[yid] ||= {}
           acc[yid][seg] = { creators: cnt.to_i, photos: photos_sum.to_i }
         end
 

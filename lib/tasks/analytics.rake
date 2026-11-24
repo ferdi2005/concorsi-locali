@@ -65,4 +65,10 @@ namespace :analytics do
     UpdatePageviewsWorker.new.perform
     puts "Aggiornamento pageviews completato."
   end
+
+  desc "Allinea il flag photos.special per tutti gli anni con tema speciale e ricalcola le analytics (Toolforge)"
+  task backfill_special_photos: :environment do
+    Toolforge::UpdateSpecialPhotosWorker.new.perform
+    puts "Backfill photos.special completato."
+  end
 end
