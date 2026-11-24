@@ -51,9 +51,24 @@
   padding-bottom: 0.4rem;
 }
 
-.chart-block {
-  width: 100%;
+.columns > .column {
+  min-width: 0;
+}
+
+.box {
+  max-width: 100%;
+}
+
+.chart-block,
+[id^="chart-"] {
+  position: relative;
+  width: 100% !important;
+  max-width: 100% !important;
   overflow: hidden;
+}
+
+[id^="chart-"] canvas {
+  max-width: 100% !important;
 }
 
 .table-container {
