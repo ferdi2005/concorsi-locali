@@ -4,7 +4,7 @@
 # the maximum value specified for Puma. Default is set to 5 threads for minimum
 # and maximum; this matches the default thread size of Active Record.
 #
-max_threads_count = ENV.fetch("RAILS_MAX_THREADS") { 5 }
+max_threads_count = ENV.fetch("RAILS_MAX_THREADS") { ENV["TOOLFORGE"] == "true" ? 3 : 5 }
 min_threads_count = ENV.fetch("RAILS_MIN_THREADS") { max_threads_count }
 threads min_threads_count, max_threads_count
 
@@ -33,6 +33,15 @@ pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" } unless ENV["TOOLFORGE"] =
 # process behavior so workers use less memory.
 #
 # preload_app!
+
+if ENV["TOOLFORGE"] == "true"
+  workers Integer(ENV.fetch("TOOLFORGE_WORKERS") { 2 })
+  preload_app!
+
+  on_worker_boot do
+    ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
+  end
+end
 
 # Allow puma to be restarted by `rails restart` command.
 plugin :tmp_restart

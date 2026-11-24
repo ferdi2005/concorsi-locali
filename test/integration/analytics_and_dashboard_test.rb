@@ -174,6 +174,15 @@ class AnalyticsAndDashboardTest < ActionDispatch::IntegrationTest
     original_cache = Rails.cache
     Rails.cache = ActiveSupport::Cache::MemoryStore.new
     begin
+      cov = DashboardInsights.monuments_coverage
+      assert_not_nil cov
+      assert_equal 4, cov[:small_municipalities][:photos_count]
+
+      exif = DashboardInsights.exif_summary(years: [@year2024, @year2025])
+      assert_not_nil exif
+      assert_equal 100.0, exif.dig(:by_year, @year2024.id, :archive_pct)
+      assert_equal 100.0, exif.dig(:by_year, @year2024.id, :smartphone_pct)
+
       trends = DashboardInsights.historical_trends(years: [@year2024, @year2025])
       yoy = trends.dig(:wlm_retention, :yoy_rows)
       assert_equal 1, yoy.size
@@ -184,6 +193,11 @@ class AnalyticsAndDashboardTest < ActionDispatch::IntegrationTest
       assert_equal 50.0, row_2024[:return_rate_next]
       assert_equal 100.0, row_2024[:veteran_return_rate_next]
       assert_equal 0.0, row_2024[:new_return_rate_next]
+
+      assert_equal 100.0, trends.dig(:territory_and_type_trends, :small_muni_photos_pct_series, "2024")
+      assert_equal "ponte", trends.dig(:territory_and_type_trends, :type_share_series, 0, :name)
+      assert_equal 2, trends.dig(:wlmid_quality, :rows, 0, :unknown)
+      assert DashboardInsights.warm_historical_cache!
 
       ed = DashboardInsights.edition_insights(year: @year2024)
       assert_not_nil ed

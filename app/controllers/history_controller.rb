@@ -63,9 +63,7 @@ class HistoryController < ApplicationController
     @special_years = @years.select(&:special?)
 
     # Top uploader pluriennali (in cache)
-    @top_uploaders = Rails.cache.fetch("dashboard_insights:v#{DashboardInsights.cache_version}:top_uploaders", expires_in: DashboardInsights::CACHE_TTL) do
-      AnalyticsCalculator.top_uploaders_across_years(limit: 50)
-    end
+    @top_uploaders = DashboardInsights.top_uploaders(limit: 50)
 
     # Territorio: matrice anni x regioni
     @contests = Contest.order(:name).to_a
@@ -147,7 +145,7 @@ class HistoryController < ApplicationController
   end
 
   def load_phase2_data
-    cached = Rails.cache.fetch("dashboard_insights:v#{DashboardInsights.cache_version}:phase2:#{@years.map(&:id).join('-')}", expires_in: DashboardInsights::CACHE_TTL) do
+    cached = Rails.cache.fetch("dashboard_insights:v#{DashboardInsights.cache_version}:phase2:#{@years.map(&:id).join('-')}", expires_in: DashboardInsights::CACHE_TTL, race_condition_ttl: DashboardInsights::RACE_TTL) do
       has_activity = CreatorYearlyActivity.exists?
       activity_by_year = {}
       retention_by_year = {}
@@ -163,22 +161,35 @@ class HistoryController < ApplicationController
           acc[yid][seg] = { creators: cnt.to_i, photos: photos_sum.to_i }
         end
 
-        @years.each do |year|
-          rows = CreatorYearlyActivity.where(year_id: year.id).where.not(post_contest_edits_3m: nil)
-          next if rows.empty?
+        years_by_id = @years.index_by(&:id)
+        reg_windows_by_year_id = @years.each_with_object({}) { |y, h| h[y.id] = y.registration_window_range }
 
-          new_ids = year.new_creators.pluck(:id)
-          new_rows = rows.where(creator_id: new_ids)
-          ret_rows = rows.where.not(creator_id: new_ids)
+        CreatorYearlyActivity
+          .where(year_id: years_by_id.keys)
+          .where.not(post_contest_edits_3m: nil)
+          .joins(:creator)
+          .pluck(:year_id, :post_contest_edits_3m, :active_months_after_12m, "creators.creationdate")
+          .each do |yid, edits_3m, active_12m, creationdate|
+            acc = (retention_by_year[yid] ||= {
+              new_total: 0,
+              new_active_3m: 0,
+              new_active_3m_plus_months: 0,
+              returning_total: 0,
+              returning_active_3m: 0
+            })
+            reg_win = reg_windows_by_year_id[yid]
+            is_new = !creationdate.nil? && reg_win.cover?(creationdate)
+            active_3m = edits_3m.to_i > 0
 
-          retention_by_year[year.id] = {
-            new_total: new_rows.count,
-            new_active_3m: new_rows.where("post_contest_edits_3m > 0").count,
-            new_active_3m_plus_months: new_rows.where("active_months_after_12m >= 3").count,
-            returning_total: ret_rows.count,
-            returning_active_3m: ret_rows.where("post_contest_edits_3m > 0").count
-          }
-        end
+            if is_new
+              acc[:new_total] += 1
+              acc[:new_active_3m] += 1 if active_3m
+              acc[:new_active_3m_plus_months] += 1 if active_12m.to_i >= 3
+            else
+              acc[:returning_total] += 1
+              acc[:returning_active_3m] += 1 if active_3m
+            end
+          end
       end
 
       upload_source_counts = Photo.where.not(upload_source: [nil, ""]).group(:year_id, :upload_source).count

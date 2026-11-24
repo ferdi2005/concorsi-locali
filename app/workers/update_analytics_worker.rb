@@ -14,5 +14,10 @@ class UpdateAnalyticsWorker
       end
     end
     DashboardInsights.clear_cache!
+    begin
+      DashboardInsights.warm_historical_cache!
+    rescue StandardError => e
+      Rails.logger.warn("Warm cache failed: #{e.message}")
+    end
   end
 end

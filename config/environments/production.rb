@@ -57,6 +57,32 @@ Rails.application.configure do
 
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store
+  if toolforge_mode || ENV["REDIS_CACHE_URL"].present?
+    require "redis"
+    redis_cache_url = if ENV["REDIS_CACHE_URL"].present?
+                        ENV["REDIS_CACHE_URL"]
+                      elsif ENV["REDIS_URL"].present? && !(toolforge_mode && ENV["REDIS_URL"].include?("localhost"))
+                        ENV["REDIS_URL"]
+                      elsif ENV["REDIS_PASSWORD"].present?
+                        "redis://:#{ENV['REDIS_PASSWORD']}@redis:6379/0"
+                      else
+                        "redis://redis.svc.tools.eqiad1.wikimedia.cloud:6379/0"
+                      end
+    cache_namespace = ENV["REDIS_CACHE_NAMESPACE"].presence || "#{ENV['TOOL_TOOLSDB_USER'] || ENV['USER'] || 'concorsilocali'}_cache"
+    config.cache_store = :redis_cache_store, {
+      url: redis_cache_url,
+      namespace: cache_namespace,
+      connect_timeout: 2,
+      read_timeout: 2,
+      write_timeout: 2,
+      reconnect_attempts: 1,
+      expires_in: 12.hours,
+      race_condition_ttl: 30.seconds,
+      error_handler: ->(method:, returning:, exception:) {
+        Rails.logger.warn("Redis cache error (#{method}): #{exception.class} - #{exception.message}")
+      }
+    }
+  end
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   # config.active_job.queue_adapter     = :resque

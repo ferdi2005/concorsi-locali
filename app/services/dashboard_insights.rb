@@ -2,7 +2,8 @@ require "set"
 require "uri"
 
 class DashboardInsights
-  CACHE_TTL = 2.hours
+  CACHE_TTL = 12.hours
+  RACE_TTL = 30.seconds
 
   def self.cache_version
     Rails.cache.read("dashboard_insights:version") || 1
@@ -14,21 +15,21 @@ class DashboardInsights
 
   def self.monuments_coverage(regione: nil, contest_id: nil)
     key = "dashboard_insights:v#{cache_version}:monuments:#{regione || 'all'}:#{contest_id || 'all'}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
       compute_monuments_coverage(regione: regione, contest_id: contest_id)
     end
   end
 
   def self.exif_summary(years:, contest_id: nil)
     key = "dashboard_insights:v#{cache_version}:exif:#{contest_id || 'all'}:#{years.map(&:id).join('-')}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
       compute_exif_summary(years: years, contest_id: contest_id)
     end
   end
 
   def self.pageviews_summary(years:, contest_id: nil)
     key = "dashboard_insights:v#{cache_version}:pageviews:#{contest_id || 'all'}:#{years.map(&:id).join('-')}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
       compute_pageviews_summary(years: years, contest_id: contest_id)
     end
   end
@@ -37,15 +38,22 @@ class DashboardInsights
     return [] if year.nil?
 
     key = "dashboard_insights:v#{cache_version}:top_monuments:#{year.id}:#{contest_id || 'all'}:#{limit}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
       compute_top_monuments(year: year, contest_id: contest_id, limit: limit)
     end
   end
 
   def self.top_monuments_all_years(contest_id: nil, limit: 20)
     key = "dashboard_insights:v#{cache_version}:top_monuments_all:#{contest_id || 'all'}:#{limit}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
       compute_top_monuments_all_years(contest_id: contest_id, limit: limit)
+    end
+  end
+
+  def self.top_uploaders(limit: 50)
+    key = limit == 50 ? "dashboard_insights:v#{cache_version}:top_uploaders" : "dashboard_insights:v#{cache_version}:top_uploaders:#{limit}"
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
+      AnalyticsCalculator.top_uploaders_across_years(limit: limit)
     end
   end
 
@@ -58,7 +66,7 @@ class DashboardInsights
 
   def self.top_camera_models(year: nil, contest_id: nil, limit: 10)
     key = "dashboard_insights:v#{cache_version}:top_cameras:#{year&.id || 'all'}:#{contest_id || 'all'}:#{limit}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
       compute_top_camera_models(year: year, contest_id: contest_id, limit: limit)
     end
   end
@@ -67,16 +75,34 @@ class DashboardInsights
     return nil if year.nil?
 
     key = "dashboard_insights:v#{cache_version}:edition_insights:#{year.id}:#{contest_id || 'all'}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
       compute_edition_insights(year: year, contest_id: contest_id)
     end
   end
 
   def self.historical_trends(years:, contest_id: nil, regione: nil)
     key = "dashboard_insights:v#{cache_version}:historical_trends:#{contest_id || 'all'}:#{regione || 'all'}:#{years.map(&:id).join('-')}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: RACE_TTL) do
       compute_historical_trends(years: years, contest_id: contest_id, regione: regione)
     end
+  end
+
+  def self.warm_historical_cache!
+    years = Year.includes(:year_analytic).order(:year).to_a
+    return if years.empty?
+
+    top_monuments_all_years(limit: 20)
+    top_uploaders(limit: 50)
+    monuments_coverage
+    exif_summary(years: years)
+    pageviews_summary(years: years)
+    historical_trends(years: years)
+
+    latest = years.last
+    edition_insights(year: latest)
+    top_monuments(year: latest, limit: 15)
+    top_camera_models(year: latest, limit: 10)
+    true
   end
 
   class << self
@@ -85,39 +111,46 @@ class DashboardInsights
     def compute_monuments_coverage(regione: nil, contest_id: nil)
       scope = Monument.all
       scope = scope.where(regione: regione) if regione.present?
-      return nil unless scope.exists?
 
-      total_m = scope.count
-      no_photo_m = scope.where(photos_count: 0).count
+      counts = scope.pick(
+        Arel.sql("COUNT(*)"),
+        Arel.sql("SUM(CASE WHEN photos_count = 0 THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN has_wikipedia = false THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN has_commons_category = false THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN photos_count > 0 AND has_commons_category = false THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN photos_count > 0 AND has_p18 = false THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN mic_catalog_id IS NOT NULL AND mic_catalog_id != '' THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN inception_year >= 1950 THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN municipality_population IS NOT NULL AND municipality_population < 5000 THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN municipality_population IS NOT NULL AND municipality_population < 5000 AND photos_count = 0 THEN 1 ELSE 0 END)")
+      )
+      return nil if counts.nil? || counts[0].to_i == 0
+
+      total_m, no_photo_m, without_wiki, without_commons, with_wlm_without_commons,
+        with_wlm_without_p18, with_mic, recent_1950, small_total, small_no_photo = counts.map(&:to_i)
 
       sentinels = {
         total: total_m,
         without_photo: no_photo_m,
         with_photo_total: total_m - no_photo_m,
-        without_wikipedia: scope.where(has_wikipedia: false).count,
-        without_commons: scope.where(has_commons_category: false).count,
-        with_wlm_without_commons: scope.where("photos_count > 0").where(has_commons_category: false).count,
-        with_wlm_without_p18: scope.where("photos_count > 0").where(has_p18: false).count,
-        with_mic_catalog: scope.where.not(mic_catalog_id: [nil, ""]).count,
-        recent_since_1950: scope.where("inception_year >= ?", 1950).count
+        without_wikipedia: without_wiki,
+        without_commons: without_commons,
+        with_wlm_without_commons: with_wlm_without_commons,
+        with_wlm_without_p18: with_wlm_without_p18,
+        with_mic_catalog: with_mic,
+        recent_since_1950: recent_1950
       }
 
       small_scope = scope.small_municipality(5000)
-      small_total = small_scope.count
-      small_no_photo = small_scope.where(photos_count: 0).count
       small_no_photo_share = no_photo_m > 0 ? (small_no_photo.to_f / no_photo_m * 100.0).round(1) : 0.0
 
       # Quota di foto WLM che finiscono nei comuni sotto i 5.000 abitanti
-      small_wlmids = small_scope.where.not(wlmid: [nil, ""]).pluck(:wlmid, :normalized_wlmid).flatten.compact.uniq
       photo_scope = Photo.where.not(wlmid: [nil, ""])
       photo_scope = photo_scope.where(contest_id: contest_id) if contest_id.present?
       total_photos_with_wlmid = photo_scope.count
-      small_photos_count = if small_wlmids.any? && total_photos_with_wlmid > 0
-                             cnt = 0
-                             small_wlmids.each_slice(2000) do |slice|
-                               cnt += photo_scope.where(wlmid: slice).count
-                             end
-                             cnt
+      small_wlmid_subquery = small_scope.where.not(wlmid: [nil, ""]).select(:wlmid)
+      small_photos_count = if total_photos_with_wlmid > 0 && small_total > 0
+                             photo_scope.where(wlmid: small_wlmid_subquery).count
                            else
                              0
                            end
@@ -161,47 +194,69 @@ class DashboardInsights
     end
 
     def compute_exif_summary(years:, contest_id: nil)
-      base = Photo.where.not(exif_checked_at: nil)
+      year_ids = years.map(&:id)
+      return nil if year_ids.empty?
+
+      base = Photo.where(year_id: year_ids).where.not(exif_checked_at: nil)
       base = base.where(contest_id: contest_id) if contest_id.present?
-      return nil unless base.exists?
+
+      totals_rows = base.group(:year_id).pluck(
+        :year_id,
+        Arel.sql("COUNT(*)"),
+        Arel.sql("SUM(CASE WHEN device_category = 'smartphone' THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN device_category = 'camera' THEN 1 ELSE 0 END)"),
+        Arel.sql("SUM(CASE WHEN has_exif = false THEN 1 ELSE 0 END)")
+      )
+      return nil if totals_rows.empty?
+
+      totals_by_year = {}
+      totals_rows.each do |yid, checked, smartphone, camera, no_exif|
+        totals_by_year[yid] = {
+          checked: checked.to_i,
+          smartphone: smartphone.to_i,
+          camera: camera.to_i,
+          no_exif: no_exif.to_i
+        }
+      end
+
+      archive_by_year = {}
+      base.where.not(taken_at: nil).group(:year_id, Arel.sql("EXTRACT(YEAR FROM taken_at)")).count.each do |(yid, t_year), cnt|
+        archive_by_year[yid] ||= {}
+        archive_by_year[yid][t_year.to_i] = archive_by_year[yid][t_year.to_i].to_i + cnt.to_i
+      end
+
+      per_year_users = {}
+      base.group(:year_id, :creator_id, :device_category).count.each do |(yid, cid, cat), cnt|
+        per_year_users[yid] ||= {}
+        per_year_users[yid][cid] ||= {}
+        per_year_users[yid][cid][cat.to_s] = per_year_users[yid][cid][cat.to_s].to_i + cnt.to_i
+      end
 
       by_year = {}
-      latest_year_with_exif = nil
-
       years.each do |year|
-        scope = base.where(year_id: year.id)
-        checked = scope.count
-        next if checked == 0
+        totals = totals_by_year[year.id]
+        next if totals.nil? || totals[:checked] == 0
 
-        latest_year_with_exif = year
-        year_start = Time.utc(year.year.to_i, 1, 1)
-        prev_year_start = Time.utc(year.year.to_i - 1, 1, 1)
+        checked = totals[:checked]
+        y_int = year.year.to_i
+        taken_map = archive_by_year[year.id] || {}
+        archive_before_year = taken_map.sum { |ty, cnt| ty < y_int ? cnt : 0 }
+        archive_before_prev = taken_map.sum { |ty, cnt| ty < (y_int - 1) ? cnt : 0 }
 
-        archive_before_year = scope.where("taken_at IS NOT NULL AND taken_at < ?", year_start).count
-        archive_before_prev = scope.where("taken_at IS NOT NULL AND taken_at < ?", prev_year_start).count
-        smartphone = scope.where(device_category: "smartphone").count
-        camera = scope.where(device_category: "camera").count
-        no_exif = scope.where(has_exif: false).count
-
-        # Dispositivo prevalente per partecipante
-        user_dev_rows = scope.group(:creator_id, :device_category).count
-        per_user = Hash.new { |h, k| h[k] = Hash.new(0) }
-        user_dev_rows.each do |(cid, cat), cnt|
-          per_user[cid][cat.to_s] += cnt
-        end
+        per_user = per_year_users[year.id] || {}
         total_users = per_user.size
-        smartphone_users = per_user.values.count { |h| h["smartphone"] > 0 && h["smartphone"] >= h["camera"] }
-        camera_users = per_user.values.count { |h| h["camera"] > 0 && h["camera"] > h["smartphone"] }
+        smartphone_users = per_user.values.count { |h| h["smartphone"].to_i > 0 && h["smartphone"].to_i >= h["camera"].to_i }
+        camera_users = per_user.values.count { |h| h["camera"].to_i > 0 && h["camera"].to_i > h["smartphone"].to_i }
 
         by_year[year.id] = {
           checked: checked,
-          archive_pct: (archive_before_year.to_f / checked * 100.0).round(1),
-          archive_prev_pct: (archive_before_prev.to_f / checked * 100.0).round(1),
-          smartphone_pct: (smartphone.to_f / checked * 100.0).round(1),
-          camera_pct: (camera.to_f / checked * 100.0).round(1),
-          no_exif_pct: (no_exif.to_f / checked * 100.0).round(1),
-          smartphone_users_pct: total_users > 0 ? (smartphone_users.to_f / total_users * 100.0).round(1) : 0.0,
-          camera_users_pct: total_users > 0 ? (camera_users.to_f / total_users * 100.0).round(1) : 0.0
+          archive_pct: pct_val(archive_before_year, checked),
+          archive_prev_pct: pct_val(archive_before_prev, checked),
+          smartphone_pct: pct_val(totals[:smartphone], checked),
+          camera_pct: pct_val(totals[:camera], checked),
+          no_exif_pct: pct_val(totals[:no_exif], checked),
+          smartphone_users_pct: pct_val(smartphone_users, total_users),
+          camera_users_pct: pct_val(camera_users, total_users)
         }
       end
 
@@ -218,7 +273,7 @@ class DashboardInsights
           source: src,
           total: tot_i,
           no_exif: no_ex_i,
-          no_exif_pct: tot_i > 0 ? (no_ex_i.to_f / tot_i * 100.0).round(1) : 0.0
+          no_exif_pct: pct_val(no_ex_i, tot_i)
         }
       end.sort_by { |r| -r[:total] }
 
@@ -882,32 +937,38 @@ class DashboardInsights
     end
 
     def compute_territory_and_type_trends(ordered_years, photo_scope)
-      return nil unless Monument.exists?
+      year_ids = ordered_years.map(&:id)
+      return nil if year_ids.empty? || !Monument.where.not(wlmid: [nil, ""]).exists?
 
-      mon_info = {}
-      Monument.where.not(wlmid: [nil, ""]).pluck(:wlmid, :normalized_wlmid, :municipality_population, :monument_type).each do |wlmid, norm, pop, mtype|
-        is_small = !pop.nil? && pop.to_i < 5000
-        info = [is_small, mtype.presence]
-        mon_info[wlmid] = info
-        mon_info[norm] = info if norm.present?
-      end
-      return nil if mon_info.empty?
+      mon_sub = Monument
+        .where.not(wlmid: [nil, ""])
+        .select(
+          "wlmid",
+          "MAX(CASE WHEN municipality_population IS NOT NULL AND municipality_population < 5000 THEN 1 ELSE 0 END) AS is_small",
+          "MAX(monument_type) AS monument_type"
+        )
+        .group(:wlmid)
 
-      counts = photo_scope.where.not(wlmid: [nil, ""]).group(:year_id, :wlmid).count
+      rows = photo_scope
+        .where(year_id: year_ids)
+        .where.not(wlmid: [nil, ""])
+        .joins("INNER JOIN (#{mon_sub.to_sql}) mon_ref ON mon_ref.wlmid = photos.wlmid")
+        .group(Arel.sql("photos.year_id, mon_ref.is_small, mon_ref.monument_type"))
+        .pluck(Arel.sql("photos.year_id, mon_ref.is_small, mon_ref.monument_type, COUNT(*)"))
+
       per_year = {}
       type_totals = {}
-
-      counts.each do |(yid, wlmid), cnt|
-        info = mon_info[wlmid] || mon_info[AnalyticsCalculator.normalize_wlmid(wlmid)]
-        next if info.nil?
-
+      rows.each do |yid, is_small, mtype, cnt|
         c = cnt.to_i
+        next if c <= 0
+
         per_year[yid] ||= { known_total: 0, small: 0, types: {} }
         per_year[yid][:known_total] += c
-        per_year[yid][:small] += c if info[0]
-        if info[1]
-          per_year[yid][:types][info[1]] = (per_year[yid][:types][info[1]] || 0) + c
-          type_totals[info[1]] = (type_totals[info[1]] || 0) + c
+        per_year[yid][:small] += c if is_small.to_i == 1
+        mt = mtype.presence
+        if mt
+          per_year[yid][:types][mt] = per_year[yid][:types][mt].to_i + c
+          type_totals[mt] = type_totals[mt].to_i + c
         end
       end
 
@@ -939,21 +1000,44 @@ class DashboardInsights
 
     def compute_wlmid_quality(ordered_years, photo_scope)
       has_ref = Monument.exists?
-      known_norms = has_ref ? Monument.where.not(normalized_wlmid: [nil, ""]).pluck(:normalized_wlmid).to_set : nil
+      year_ids = ordered_years.map(&:id)
+      return { rows: [], has_monuments_ref: has_ref } if year_ids.empty?
+
+      totals_by_year = {}
+      photo_scope.where(year_id: year_ids).group(:year_id).pluck(
+        :year_id,
+        Arel.sql("COUNT(*)"),
+        Arel.sql("SUM(CASE WHEN wlmid IS NULL OR wlmid = '' THEN 1 ELSE 0 END)")
+      ).each do |yid, tot, miss|
+        totals_by_year[yid] = [tot.to_i, miss.to_i]
+      end
+
+      unknown_by_year = Hash.new(0)
+      if has_ref
+        unmatched = photo_scope
+          .where(year_id: year_ids)
+          .where.not(wlmid: [nil, ""])
+          .where.not(wlmid: Monument.where.not(wlmid: [nil, ""]).select(:wlmid))
+          .group(:year_id, :wlmid)
+          .count
+
+        if unmatched.any?
+          norms = unmatched.keys.map { |_, w| AnalyticsCalculator.normalize_wlmid(w) }.uniq
+          known_norms = Set.new
+          norms.each_slice(2000) do |slice|
+            known_norms.merge(Monument.where(normalized_wlmid: slice).pluck(:normalized_wlmid))
+          end
+          unmatched.each do |(yid, w), cnt|
+            unknown_by_year[yid] += cnt.to_i unless known_norms.include?(AnalyticsCalculator.normalize_wlmid(w))
+          end
+        end
+      end
 
       rows = ordered_years.filter_map do |y|
-        y_scope = photo_scope.where(year_id: y.id)
-        total = y_scope.count
-        next if total == 0
+        total, missing = totals_by_year[y.id]
+        next if total.nil? || total == 0
 
-        missing = y_scope.where(wlmid: [nil, ""]).count
-        unknown = if known_norms
-                    wlmid_counts = y_scope.where.not(wlmid: [nil, ""]).group(:wlmid).count
-                    wlmid_counts.sum { |w, c| known_norms.include?(AnalyticsCalculator.normalize_wlmid(w)) ? 0 : c }
-                  else
-                    0
-                  end
-
+        unknown = unknown_by_year[y.id]
         {
           year: y.year,
           total: total,
