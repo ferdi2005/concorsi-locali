@@ -940,35 +940,47 @@ class DashboardInsights
       year_ids = ordered_years.map(&:id)
       return nil if year_ids.empty? || !Monument.where.not(wlmid: [nil, ""]).exists?
 
-      mon_sub = Monument
-        .where.not(wlmid: [nil, ""])
-        .select(
-          "wlmid",
-          "MAX(CASE WHEN municipality_population IS NOT NULL AND municipality_population < 5000 THEN 1 ELSE 0 END) AS is_small",
-          "MAX(monument_type) AS monument_type"
-        )
-        .group(:wlmid)
+      counts = photo_scope.where(year_id: year_ids).where.not(wlmid: [nil, ""]).group(:year_id, :wlmid).count
+      return { small_muni_photos_pct_series: {}, type_share_series: [] } if counts.empty?
 
-      rows = photo_scope
-        .where(year_id: year_ids)
-        .where.not(wlmid: [nil, ""])
-        .joins("INNER JOIN (#{mon_sub.to_sql}) mon_ref ON mon_ref.wlmid = photos.wlmid")
-        .group(Arel.sql("photos.year_id, mon_ref.is_small, mon_ref.monument_type"))
-        .pluck(Arel.sql("photos.year_id, mon_ref.is_small, mon_ref.monument_type, COUNT(*)"))
+      distinct_wlmids = counts.keys.map(&:last).uniq
+      mon_info = {}
+      distinct_wlmids.each_slice(5000) do |slice|
+        Monument.where(wlmid: slice).pluck(:wlmid, :municipality_population, :monument_type).each do |w, pop, mtype|
+          mon_info[w] = [!pop.nil? && pop.to_i < 5000, mtype.presence]
+        end
+      end
+
+      missing = distinct_wlmids.reject { |w| mon_info.key?(w) }
+      if missing.any?
+        norms = missing.map { |w| AnalyticsCalculator.normalize_wlmid(w) }.uniq
+        norm_map = {}
+        norms.each_slice(5000) do |slice|
+          Monument.where(normalized_wlmid: slice).pluck(:normalized_wlmid, :municipality_population, :monument_type).each do |nw, pop, mtype|
+            norm_map[nw] = [!pop.nil? && pop.to_i < 5000, mtype.presence]
+          end
+        end
+        missing.each do |w|
+          info = norm_map[AnalyticsCalculator.normalize_wlmid(w)]
+          mon_info[w] = info if info
+        end
+      end
 
       per_year = {}
       type_totals = {}
-      rows.each do |yid, is_small, mtype, cnt|
+      counts.each do |(yid, wlmid), cnt|
+        info = mon_info[wlmid]
+        next if info.nil?
+
         c = cnt.to_i
         next if c <= 0
 
         per_year[yid] ||= { known_total: 0, small: 0, types: {} }
         per_year[yid][:known_total] += c
-        per_year[yid][:small] += c if is_small.to_i == 1
-        mt = mtype.presence
-        if mt
-          per_year[yid][:types][mt] = per_year[yid][:types][mt].to_i + c
-          type_totals[mt] = type_totals[mt].to_i + c
+        per_year[yid][:small] += c if info[0]
+        if info[1]
+          per_year[yid][:types][info[1]] = per_year[yid][:types][info[1]].to_i + c
+          type_totals[info[1]] = type_totals[info[1]].to_i + c
         end
       end
 

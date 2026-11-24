@@ -26,6 +26,15 @@ end
 
 Sidekiq.configure_server do |config|
   config.redis = redis_config
+  config.on(:startup) do
+    Thread.new do
+      Rails.application.executor.wrap do
+        DashboardInsights.warm_historical_cache!
+      end
+    rescue StandardError => e
+      Rails.logger.warn("Startup cache warm skipped: #{e.message}")
+    end
+  end
 end
 
 Sidekiq.configure_client do |config|
